@@ -26,27 +26,22 @@ Just open `index.html` in a browser, or:
 npx serve .
 ```
 
-## Push to GitHub (Day 1)
+## Push to GitHub (Day 1) — DONE
+
+Repo live: https://github.com/emma493/favemoney.site (public, `main`)
 
 ```powershell
 cd D:\Favmoney\favemoney.site
 git init -b main
 git add .
 git commit -m "chore: day-1 white placeholder + memory infra"
-gh repo create favmoney-site --public --source=. --push
-```
-
-Or create the repo on github.com manually, then:
-
-```powershell
-git remote add origin https://github.com/<you>/favmoney-site.git
-git push -u origin main
+gh repo create favemoney.site --public --source=. --push
 ```
 
 ## Deploy to Cloudflare Pages
 
 1. Cloudflare Dashboard → Workers & Pages → Create → Pages → Connect to Git
-2. Select repo `favmoney-site`
+2. Select repo `emma493/favemoney.site`
 3. Framework preset: `None`
 4. Build command: (empty)
 5. Output directory: `/` (root)

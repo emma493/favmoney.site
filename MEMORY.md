@@ -9,6 +9,7 @@
 - **Timeline:** 7-day project. Day 1 = placeholder deploy only.
 - **Stack decision (Day 1):** Static HTML/CSS/JS. No framework. Cloudflare Pages compatible.
 - **Repo visibility:** Public.
+- **Repo URL:** https://github.com/emma493/favemoney.site (created 2026-10-07, `main`, pushed, clean).
 
 ## 2. Domain & Deployment Status
 - Domain bought: YES, not yet ready / not connected.
@@ -35,7 +36,7 @@
 - Day 7: Launch prep + connect domain + remove `noindex`.
 
 ## 5. Open Questions / TODOs
-- [ ] User to create GitHub repo and push (see README).
+- [x] GitHub repo created and pushed (https://github.com/emma493/favemoney.site) — 2026-10-07.
 - [ ] User to connect repo to Cloudflare Pages.
 - [ ] Confirm domain registrar + when DNS will be ready.
 - [ ] Confirm task types, payout logic, anti-fraud needs (affects Day 3+ backend choice).
@@ -43,3 +44,4 @@
 
 ## 6. Session Log
 - 2026-10-07 Day 1: Initialized project, created placeholder files. Next: git push + Pages deploy.
+- 2026-10-07 Day 1 (cont.): Created public repo `emma493/favemoney.site`, pushed `d21a070`, updated README. Next: Cloudflare Pages connect.

@@ -15,3 +15,15 @@ User said:
 > create memmory file to store memory and you can refer to it
 > create userchats file and store all the chat I sent to you so that you can refer to it to know what I said Yesterday or last week,
 > create these for me, use better infrastructure from day1
+
+## 2026-10-07 — Entry 2 — Build approval
+
+User said:
+
+> Build
+
+## 2026-10-07 — Entry 3 — Continue GitHub repo
+
+User said:
+
+> continue with the github repo

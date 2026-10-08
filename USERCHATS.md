@@ -145,3 +145,13 @@ User said:
 User said:
 
 > I have renamed it to favmoney
+
+## 2026-10-08 — Entry 15 — Cloudflare build failed (bad _headers) → Pages fix
+
+User said (build log):
+
+> Executing user deploy command: npx wrangler deploy ... Invalid _headers configuration: Line 2: Expected a colon-separated header pair / Line 3: Expected a colon-separated header pair [code: 100324] ... Failed: error occurred while running deploy command
+
+User decided:
+
+> Switch to Pages

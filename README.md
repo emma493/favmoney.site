@@ -1,4 +1,4 @@
-# Favmoney — favemoney.site
+# Favmoney — favmoney.site
 
 Day-1 placeholder for the 7-day Favmoney project (task-to-earn site).
 
@@ -28,20 +28,20 @@ npx serve .
 
 ## Push to GitHub (Day 1) — DONE
 
-Repo live: https://github.com/emma493/favemoney.site (public, `main`)
+Repo live: https://github.com/emma493/favmoney.site (public, `main`)
 
 ```powershell
-cd D:\Favmoney\favemoney.site
+cd D:\Favmoney\favmoney.site
 git init -b main
 git add .
 git commit -m "chore: day-1 white placeholder + memory infra"
-gh repo create favemoney.site --public --source=. --push
+gh repo create favmoney.site --public --source=. --push
 ```
 
 ## Deploy to Cloudflare Pages
 
 1. Cloudflare Dashboard → Workers & Pages → Create → Pages → Connect to Git
-2. Select repo `emma493/favemoney.site`
+2. Select repo `emma493/favmoney.site`
 3. Framework preset: `None`
 4. Build command: (empty)
 5. Output directory: `/` (root)
@@ -49,6 +49,6 @@ gh repo create favemoney.site --public --source=. --push
 
 ## Connect domain later
 
-Pages project → Custom domains → Add `favemoney.site` (+ `www` if wanted) → follow DNS prompts. No code change needed.
+Pages project → Custom domains → Add `favmoney.site` (+ `www` if wanted) → follow DNS prompts. No code change needed.
 
 Before launch, remember to remove `<meta name="robots" content="noindex, nofollow">` from `index.html` / `404.html`.

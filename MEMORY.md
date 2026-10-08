@@ -9,12 +9,12 @@
 - **Stack:** Static HTML/CSS/JS, vanilla, Cloudflare Pages compatible. `main` always deployable.
 
 ## 1. Project Overview
-- **Name:** Favmoney (favemoney.site)
+- **Name:** Favmoney (favmoney.site)
 - **Idea:** Website where users complete tasks to earn money.
 - **Timeline:** 7-day project. Day 1 = placeholder deploy only.
 - **Stack decision (Day 1):** Static HTML/CSS/JS. No framework. Cloudflare Pages compatible.
 - **Repo visibility:** Public.
-- **Repo URL:** https://github.com/emma493/favemoney.site (created 2026-10-07, `main`, pushed, clean).
+- **Repo URL:** https://github.com/emma493/favmoney.site (created 2026-10-07, `main`, pushed, clean).
 - **Secrets rule (2026-10-08):** Repo is PUBLIC. All API keys / domains / IDs go in `VAULT.local.md` (gitignored, local-only, never commit). Before asking user for a value, Read `VAULT.local.md` first. Auto-save any vital value user drops in chat or assistant discovers, with date.
 
 ## 2. Domain & Deployment Status
@@ -47,7 +47,7 @@
 - Day 7: Launch prep + connect domain + remove `noindex`.
 
 ## 5. Open Questions / TODOs
-- [x] GitHub repo created and pushed (https://github.com/emma493/favemoney.site) — 2026-10-07.
+- [x] GitHub repo created and pushed (https://github.com/emma493/favmoney.site) — 2026-10-07.
 - [ ] User to connect repo to Cloudflare Pages (settings: None / empty / `/`).
 - [ ] User to paste `firestore.rules` into Firebase Console (Auth already enabled).
 - [ ] Firebase test matrix: sign-up → tasks synced → proof → cashout → sign-out/in.
@@ -56,7 +56,7 @@
 
 ## 6. Session Log
 - 2026-10-07 Day 1: Initialized project, created placeholder files. Next: git push + Pages deploy.
-- 2026-10-07 Day 1 (cont.): Created public repo `emma493/favemoney.site`, pushed `d21a070`, updated README. Next: Cloudflare Pages connect.
+- 2026-10-07 Day 1 (cont.): Created public repo `emma493/favmoney.site`, pushed `d21a070`, updated README. Next: Cloudflare Pages connect.
 - 2026-10-07 Day 1-3 build: No-emoji rule stored (permanent). Browser `localStorage` temporal via `js/store.js` (Firebase-ready). Rebuilt `index.html` with real SVG system (42 icons), Day3 pages `tasks.html`/`task-detail.html`/`cashout.html`/`signin.html`/`signup.html`, updated `404/terms/privacy/_headers`. Next: user connects Firebase, then Pages deploy.
 - 2026-10-08 Firebase live: added `js/firebase.js` (CDN v12.4.0, Auth+Firestore+Analytics guarded), wired signup/signin (email+Google), tasks wallet sync, task-detail proofs, cashout requests, landing waitlist. Offline `FavStore` fallback kept. Next: enable Email/Password + Google in Firebase Console, set Firestore rules, test, deploy.
 - 2026-10-08 Real website day: yesterday-blank vs today-full reconciled; `firestore.rules` added; hygiene decided (exclude `.agents/`, `.claude/`, `skills-lock.json`, `images/img.png` unused). Next: 3 clean commits + push + Pages preview.

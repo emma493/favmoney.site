@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up · Favmoney</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<header class="topnav" style="background:rgba(29,30,48,.9)"><div class="topnav-inner">
+<a class="brand" href="index.html"><span class="brand-word"><span class="g">FAV</span><span class="w">MONEY</span></span></a>
+<div class="auth"><a class="btn btn-ghost" href="signin.html">Sign In</a></div>
+</div></header>
+<main class="section" style="padding-top:130px"><div class="wrap">
+<div class="auth-card">
+<h1 style="font-size:28px;margin:0 0 6px">Create your account</h1>
+<p style="color:var(--muted);font-size:14px;margin:0 0 8px">Free forever. Secured by Firebase Auth. Offline preview still works.</p>
+<label for="email">Email</label>
+<input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
+<label for="pass">Password (min 6)</label>
+<input id="pass" type="password" placeholder="••••••••" autocomplete="new-password" />
+<button class="btn btn-green btn-block" id="go" style="margin-top:16px">Create free account</button>
+<div class="or">OR</div>
+<div class="social">
+<button class="sbtn" data-oauth="Google">Continue with Google (mock)</button>
+<button class="sbtn" data-oauth="Facebook">Continue with Facebook (mock)</button>
+<button class="sbtn" data-oauth="Apple">Continue with Apple (mock)</button>
+</div>
+<p class="tiny">By continuing you agree to <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy</a>. Already have one? <a href="signin.html">Sign in</a>.</p>
+</div>
+</div></main>
+<div class="toast" id="toast" role="status"></div>
+<script src="js/store.js"></script>
+<script type="module">
+import { auth, ensureUserDoc, joinWaitlist, track, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from './js/firebase.js';
+(function(){
+  var toast=document.getElementById('toast'),tm=null;function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
+  function friendly(code){
+    if(code==='auth/email-already-in-use')return 'Email already registered. Try Sign In instead.';
+    if(code==='auth/weak-password')return 'Password too weak (min 6 characters).';
+    if(code==='auth/invalid-email')return 'Enter a valid email.';
+    if(code==='auth/operation-not-allowed')return 'Email sign-up is disabled in Firebase Console. Enable Email/Password provider.';
+    if(code==='auth/popup-closed-by-user')return 'Google popup closed. Try again.';
+    return 'Sign-up failed. Saved locally; check Firebase config/rules.';
+  }
+  document.getElementById('go').addEventListener('click',async function(){
+    var e=document.getElementById('email').value.trim(),p=document.getElementById('pass').value;
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)){show('Enter a valid email.');return;}
+    if(p.length<6){show('Password min 6 characters.');return;}
+    try{
+      var cred=await createUserWithEmailAndPassword(auth,e,p);
+      await ensureUserDoc(cred.user,'email');
+      try{await joinWaitlist(e,'signup');}catch(_){}
+      FavStore.setUser({uid:cred.user.uid,email:e,at:new Date().toISOString(),provider:'email'});FavStore.addToWaitlist(e);
+      track('sign_up',{method:'email'});
+      show('Account created. Redirecting to quests…');setTimeout(function(){location.href='tasks.html';},900);
+    }catch(err){
+      FavStore.setUser({email:e,at:new Date().toISOString(),provider:'email-offline'});FavStore.addToWaitlist(e);
+      show(friendly(err && err.code));
+    }
+  });
+  document.querySelectorAll('[data-oauth]').forEach(function(b){b.addEventListener('click',async function(){
+    var provider=b.dataset.oauth;
+    if(provider!=='Google'){show(provider+' is not enabled. Use Google or email for now.');return;}
+    try{
+      var cred=await signInWithPopup(auth,new GoogleAuthProvider());
+      await ensureUserDoc(cred.user,'google');
+      FavStore.setUser({uid:cred.user.uid,email:cred.user.email,at:new Date().toISOString(),provider:'google'});
+      track('login',{method:'google'});
+      show('Signed in with Google. Redirecting…');setTimeout(function(){location.href='tasks.html';},900);
+    }catch(err){show(friendly(err && err.code));}
+  });});
+})();
+</script>
+</body>
+</html>

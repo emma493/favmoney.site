@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In · Favmoney</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<header class="topnav" style="background:rgba(29,30,48,.9)"><div class="topnav-inner">
+<a class="brand" href="index.html"><span class="brand-word"><span class="g">FAV</span><span class="w">MONEY</span></span></a>
+<div class="auth"><a class="btn btn-green" href="signup.html">Sign Up</a></div>
+</div></header>
+<main class="section" style="padding-top:130px"><div class="wrap">
+<div class="auth-card">
+<h1 style="font-size:28px;margin:0 0 6px">Welcome back</h1>
+<p style="color:var(--muted);font-size:14px;margin:0 0 8px">Secured by Firebase Auth. Offline preview still works.</p>
+<label for="email">Email</label>
+<input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
+<label for="pass">Password</label>
+<input id="pass" type="password" placeholder="••••••••" autocomplete="current-password" />
+<button class="btn btn-green btn-block" id="go" style="margin-top:16px">Sign in</button>
+<div class="or">OR</div>
+<div class="social"><button class="sbtn" id="oauth">Continue with Google</button></div>
+<p class="tiny">No account? <a href="signup.html">Create one free</a>.</p>
+</div>
+</div></main>
+<div class="toast" id="toast" role="status"></div>
+<script src="js/store.js"></script>
+<script type="module">
+import { auth, ensureUserDoc, track, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from './js/firebase.js';
+(function(){
+  var toast=document.getElementById('toast'),tm=null;function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
+  var prev=FavStore.getUser();if(prev&&prev.email){document.getElementById('email').value=prev.email;}
+  document.getElementById('go').addEventListener('click',async function(){
+    var e=document.getElementById('email').value.trim(),p=document.getElementById('pass').value;
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)){show('Enter a valid email.');return;}
+    if(p.length<1){show('Enter your password.');return;}
+    try{
+      var cred=await signInWithEmailAndPassword(auth,e,p);
+      await ensureUserDoc(cred.user,'email');
+      FavStore.setUser({uid:cred.user.uid,email:cred.user.email,at:new Date().toISOString(),provider:'email'});
+      track('login',{method:'email'});
+      show('Signed in. Redirecting…');setTimeout(function(){location.href='tasks.html';},900);
+    }catch(err){
+      var msg='Sign-in failed. Check email/password.';
+      if(err&&err.code==='auth/invalid-credential')msg='Wrong email or password.';
+      if(err&&err.code==='auth/user-not-found')msg='No account for this email. Try Sign Up.';
+      show(msg);
+    }
+  });
+  document.getElementById('oauth').addEventListener('click',async function(){
+    try{
+      var cred=await signInWithPopup(auth,new GoogleAuthProvider());
+      await ensureUserDoc(cred.user,'google');
+      FavStore.setUser({uid:cred.user.uid,email:cred.user.email,at:new Date().toISOString(),provider:'google'});
+      track('login',{method:'google'});
+      show('Signed in with Google. Redirecting…');setTimeout(function(){location.href='tasks.html';},900);
+    }catch(err){show('Google sign-in failed. Popup blocked or provider disabled.');}
+  });
+})();
+</script>
+</body>
+</html>

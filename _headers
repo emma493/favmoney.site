@@ -1,0 +1,11 @@
+/*
+  Cache static assets; keep HTML fresh for Day-3 iteration.
+*/
+/css/*
+  Cache-Control: public, max-age=3600
+/js/*
+  Cache-Control: public, max-age=3600
+/assets/*
+  Cache-Control: public, max-age=86400
+/images/*
+  Cache-Control: public, max-age=86400

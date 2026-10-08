@@ -13,6 +13,9 @@ import {
 } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
 
 export const firebaseConfig = {
+  // Public web key (ships in client JS by design; GitHub secret-scan alert
+  // expected — see repo Security tab. Restrict by referrer + API in Cloud
+  // Console; backend secured via firestore.rules, not key secrecy).
   apiKey: 'AIzaSyBbPQlrTQHFk6XBPEDUrE7a3gIMNvvlric',
   authDomain: 'favmoney.firebaseapp.com',
   projectId: 'favmoney',

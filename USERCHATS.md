@@ -68,3 +68,19 @@ User said:
 User said:
 
 > yesterday was just a blank page, but today, am creating the real website,
+
+## 2026-10-08 — Entry 9 — Google icon like Freecash
+
+User said:
+
+> check freecash.com/en  on their login o sign up page, with the sign in with google or sign up with google they used a  real google icon/svg so use same
+
+## 2026-10-08 — Entry 10 — Continue + Build
+
+User said:
+
+> continue
+
+User said:
+
+> Build

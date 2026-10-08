@@ -1,0 +1,26 @@
+// Favmoney Firestore rules — paste into Firebase Console → Firestore → Rules.
+// Auth is already enabled (Email/Password + Google). These rules make the
+// web apiKey safe: users can only touch their own docs; waitlist is open-create.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /wallets/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /proofs/{docId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+    match /cashouts/{docId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+    match /waitlist/{docId} {
+      allow create: if true;
+      allow read: if false;
+    }
+  }
+}

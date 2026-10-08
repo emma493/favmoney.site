@@ -27,3 +27,44 @@ User said:
 User said:
 
 > continue with the github repo
+
+## 2026-10-07 — Entry 4 — Day1-Day3 re-request + memory rule
+
+User said:
+
+> before ending this session you gave me a day1 to day3 plan so I want you to give them to me again.
+> And since I told you to keep memory and keep my chats you should never tell me that you dont remember
+
+## 2026-10-07 — Entry 5 — Map Day1-3 from Freecash
+
+User said:
+
+> MAP out DAY1, DAY2 and DAY3, fetch all that you need from https://freecash.com/en  and create day1 - day 3 now
+
+## 2026-10-07 — Entry 6 — No emojis + browser storage + build all
+
+User said:
+
+> for testing purpose lets use browser storage, but keep in mind that it is temporal as I will be connecting firebase within few minutes,
+> So Build from DAY 1 to the maximum day according to your scope
+> for the index.html that you have created, I want you to remove those emoji and use real icons, real svg, real image, never ever use an emoji, store this in the memory that I hate emoji
+> Start Work!
+
+## 2026-10-08 — Entry 7 — Firebase connect
+
+User said:
+
+> npm install firebase
+> [firebaseConfig for project favmoney + initializeApp + getAnalytics snippet]
+
+## 2026-10-08 — Entry 7 — Vault file for API keys and vital stuff
+
+User said:
+
+> I will be giving you some vital API keys, domain, important numbers, and digits, and many vital stuffs, so I want you to create a file for that, sometimes I may drop an important element in the chat, or you may discover something very important, so there should be a file for that so that you can cross check when you need something
+
+## 2026-10-08 — Entry 8 — Real website day
+
+User said:
+
+> yesterday was just a blank page, but today, am creating the real website,

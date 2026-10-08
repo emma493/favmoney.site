@@ -20,3 +20,10 @@ npm-debug.log*
 
 # Logs
 *.log
+
+# Favmoney VAULT - LOCAL ONLY, repo is PUBLIC. Never commit secrets.
+VAULT.local.md
+*.local.md
+.env
+.env.*
+.dev.vars

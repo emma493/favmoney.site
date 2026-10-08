@@ -121,3 +121,16 @@ User said:
 User said:
 
 > Build
+
+## 2026-10-08 — Entry 13 — Inspo folder real-asset swap
+
+User said:
+
+> the freecash.com/en page that you cloned had different elements and different UI,
+> so by default there are some elements that shouldn't be included, so aside those stuffs like the sign methods, academy, policies and stuffs that should be excluded should not be added.
+> I have created inspo folder that contains the souce code and elements that exist on the index.html, scan through it and anything that you saw that it was fake, AI Generated, change it to the real thing that exist on the souce code,
+> I have added two samples of the source code in the inspo folder
+
+User said:
+
+> build

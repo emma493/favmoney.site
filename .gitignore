@@ -27,3 +27,6 @@ VAULT.local.md
 .env
 .env.*
 .dev.vars
+
+# Freecash inspo dump - reference only, never deploy
+inspo/

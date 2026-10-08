@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>History · Favmoney</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<header class="topnav" style="background:rgba(29,30,48,.9)"><div class="topnav-inner">
+<a class="brand" href="index.html"><span class="brand-word"><span class="g">FAV</span><span class="w">MONEY</span></span></a>
+<div class="auth"><a class="btn btn-ghost" href="dashboard.html">Dashboard</a><a class="btn btn-green" href="cashout.html">Cashout</a></div>
+</div></header>
+<main class="section" style="padding-top:130px"><div class="wrap" style="max-width:760px">
+<a href="dashboard.html" style="color:#9be9c4;font-size:14px;text-decoration:none">← Back to dashboard</a>
+<h1 style="font-size:32px;margin:12px 0 6px">Earnings history</h1>
+<p style="color:var(--muted)">Every proof and cashout on your account, newest first.</p>
+<h2 style="font-size:20px;margin-top:24px">Quest rewards</h2>
+<div id="proofs"></div>
+<h2 style="font-size:20px;margin-top:24px">Cashouts</h2>
+<div id="outs"></div>
+</div></main>
+<div class="toast" id="toast" role="status"></div>
+<script src="js/store.js"></script>
+<script type="module">
+import { auth, onAuthStateChanged, fetchUserDocs } from './js/firebase.js';
+(function(){
+  function row(t,s){return '<div class="mile"><span>'+t+' · '+s+'</span></div>';}
+  function paintLocal(){
+    var p=FavStore.getProofs().slice().reverse();
+    document.getElementById('proofs').innerHTML=p.length?p.map(function(x){return row((x.label||'Quest')+' — $'+Number(x.amount||0).toFixed(2),x.status||'pending');}).join(''):'<p style="color:var(--muted)">No quest rewards yet.</p>';
+    var c=[];try{c=JSON.parse(localStorage.getItem('favmoney_cashouts')||'[]').slice().reverse();}catch(e){}
+    document.getElementById('outs').innerHTML=c.length?c.map(function(x){return row('Cashout '+x.method+' — $'+Number(x.amount||0).toFixed(2),x.status||'review');}).join(''):'<p style="color:var(--muted)">No cashouts yet.</p>';
+  }
+  try{
+    onAuthStateChanged(auth,async function(user){
+      if(!user){paintLocal();return;}
+      try{
+        var p=await fetchUserDocs(user.uid,'proofs',50),c=await fetchUserDocs(user.uid,'cashouts',50);
+        document.getElementById('proofs').innerHTML=p.length?p.map(function(x){return row(((x.title||x.label||'Quest')+' — $'+Number(x.amount||0).toFixed(2)),x.status||'pending');}).join(''):'<p style="color:var(--muted)">No quest rewards yet.</p>';
+        document.getElementById('outs').innerHTML=c.length?c.map(function(x){return row(('Cashout '+x.method+' — $'+Number(x.amount||0).toFixed(2)),x.status||'review');}).join(''):'<p style="color:var(--muted)">No cashouts yet.</p>';
+      }catch(e){paintLocal();}
+    });
+  }catch(e){paintLocal();}
+})();
+</script>
+</body>
+</html>

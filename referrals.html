@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Referrals · Favmoney</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<header class="topnav" style="background:rgba(29,30,48,.9)"><div class="topnav-inner">
+<a class="brand" href="index.html"><span class="brand-word"><span class="g">FAV</span><span class="w">MONEY</span></span></a>
+<div class="auth"><a class="btn btn-ghost" href="dashboard.html">Dashboard</a><a class="btn btn-green" href="signup.html">Sign Up</a></div>
+</div></header>
+<main class="section" style="padding-top:130px"><div class="wrap" style="max-width:760px">
+<a href="dashboard.html" style="color:#9be9c4;font-size:14px;text-decoration:none">← Back to dashboard</a>
+<h1 style="font-size:32px;margin:12px 0 6px">Invite friends, earn forever</h1>
+<p style="color:var(--muted)">Share your link. You earn a cut of every friend's quest rewards — they earn too.</p>
+<div class="auth-card" style="max-width:none">
+<label for="reflink">Your referral link</label>
+<input id="reflink" readonly value="Sign in to generate your link" />
+<button class="btn btn-green btn-block" id="copy" style="margin-top:14px">Copy invite link</button>
+<p class="tiny" id="refcount">Invited so far: 0</p>
+</div>
+<h2 style="font-size:20px;margin-top:28px">How it pays</h2>
+<div class="biz"><div class="b1">Tier 1<br />10% of rewards</div><div class="b2">Tier 2<br />5% of rewards</div><div class="b3">Bonus<br />$5 per 10 invites</div></div>
+<div class="notice">Abuse voids referral credit: one account per human, no self-referrals, no VPN farming.</div>
+</div></main>
+<div class="toast" id="toast" role="status"></div>
+<script src="js/store.js"></script>
+<script type="module">
+import { auth, onAuthStateChanged } from './js/firebase.js';
+(function(){
+  var toast=document.getElementById('toast'),tm=null;function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3200);}
+  var link=document.getElementById('reflink');
+  try{
+    onAuthStateChanged(auth,function(user){
+      if(user){link.value=location.origin+'/signup.html?ref='+user.uid.slice(0,8);}
+    });
+  }catch(e){}
+  var u=FavStore.getUser();if(u&&u.uid){link.value=location.origin+'/signup.html?ref='+u.uid.slice(0,8);}
+  document.getElementById('copy').addEventListener('click',async function(){
+    try{await navigator.clipboard.writeText(link.value);show('Invite link copied.');}
+    catch(e){link.select();try{document.execCommand('copy');show('Invite link copied.');}catch(_){show('Copy this link manually.');}}
+  });
+})();
+</script>
+</body>
+</html>

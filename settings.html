@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings · Favmoney</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<header class="topnav" style="background:rgba(29,30,48,.9)"><div class="topnav-inner">
+<a class="brand" href="index.html"><span class="brand-word"><span class="g">FAV</span><span class="w">MONEY</span></span></a>
+<div class="auth"><a class="btn btn-ghost" href="dashboard.html">Dashboard</a></div>
+</div></header>
+<main class="section" style="padding-top:130px"><div class="wrap" style="max-width:560px">
+<a href="dashboard.html" style="color:#9be9c4;font-size:14px;text-decoration:none">← Back to dashboard</a>
+<h1 style="font-size:32px;margin:12px 0 6px">Settings</h1>
+<div class="auth-card" style="max-width:none">
+<p style="color:var(--muted);font-size:14px;margin:0">Signed in as <b id="who" style="color:#fff">—</b></p>
+<button class="btn btn-ghost btn-block" id="out" style="margin-top:16px">Sign out</button>
+<button class="btn btn-ghost btn-block" id="wipe" style="margin-top:10px">Erase this browser's local data</button>
+<p class="tiny">Erases local wallet, proofs and streak on this device only. Synced Firebase records stay.</p>
+</div>
+</div></main>
+<div class="toast" id="toast" role="status"></div>
+<script src="js/store.js"></script>
+<script type="module">
+import { auth, onAuthStateChanged, signOut } from './js/firebase.js';
+(function(){
+  var toast=document.getElementById('toast'),tm=null;function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3200);}
+  try{onAuthStateChanged(auth,function(u){if(u)document.getElementById('who').textContent=u.email||'member';});}catch(e){}
+  var u=FavStore.getUser();if(u&&u.email)document.getElementById('who').textContent=u.email;
+  document.getElementById('out').addEventListener('click',async function(){try{await signOut(auth);}catch(e){}FavStore.clearUser();location.href='index.html';});
+  document.getElementById('wipe').addEventListener('click',function(){
+    ['favmoney_wallet','favmoney_proofs','favmoney_streak','favmoney_cashouts'].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+    show('Browser local data erased.');
+  });
+})();
+</script>
+</body>
+</html>

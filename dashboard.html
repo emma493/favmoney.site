@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard · Favmoney</title>
+  <meta name="description" content="Your Favmoney dashboard: balance, streaks, offers, leaderboard and referrals." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+<symbol id="i-cash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></symbol>
+<symbol id="i-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.6c2.6.3 4.7 2 5.5 5"/></symbol>
+<symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12L13 2Z"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3H9.8l-.4 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.7h4.4l.4-2.7a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.06-.4.1-.8.1-1.2Z"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+</defs></svg>
+<header class="topnav" id="topnav"><div class="topnav-inner">
+<a class="brand" href="index.html"><span class="brand-word"><span class="g">FAV</span><span class="w">MONEY</span></span></a>
+<nav class="nav-links" aria-label="Primary">
+<a href="dashboard.html" class="active"><svg class="nav-ico"><use href="#i-home"/></svg>Dashboard<span class="dot"></span></a>
+<a href="tasks.html"><svg class="nav-ico"><use href="#i-grid"/></svg>Earn<span class="dot"></span></a>
+<a href="cashout.html"><svg class="nav-ico"><use href="#i-cash"/></svg>Cashout<span class="dot"></span></a>
+</nav>
+<div class="auth"><a class="btn btn-ghost" href="settings.html" aria-label="Settings"><svg class="ic"><use href="#i-gear"/></svg></a><button class="btn btn-ghost" id="signout">Sign out</button></div>
+</div></header>
+<main>
+<section class="page-hero"><div class="wrap">
+<h1 id="hello">Your dashboard</h1>
+<p>Balance, streaks and fresh offers — everything in one place.</p>
+<div id="auth-wall" class="notice" style="display:none">You are signed out. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> or <a href="signup.html" style="color:#8ff0bd;font-weight:700">create a free account</a> to sync your dashboard.</div>
+<div class="earn-grid" style="grid-template-columns:1.2fr 1fr 1fr;margin-top:18px">
+<div class="earn"><div class="earn-ico"><svg><use href="#i-cash"/></svg></div><h3>Wallet</h3><p style="font-size:28px;font-weight:800;color:var(--green);margin:0 0 4px" id="w-pending">$0.00</p><p style="font-size:13px" id="w-life">$0.00 lifetime earned</p><a class="btn btn-green" href="cashout.html">Cash out</a> <a class="link-more" href="history.html">History</a></div>
+<div class="earn"><div class="earn-ico"><svg><use href="#i-bolt"/></svg></div><h3>Daily streak</h3><p style="font-size:28px;font-weight:800;margin:0 0 4px" id="streak">0 days</p><p style="font-size:13px">Check in daily to keep it alive.</p><button class="btn btn-ghost" id="claim">Claim today</button></div>
+<div class="earn"><div class="earn-ico"><svg><use href="#i-users"/></svg></div><h3>Referrals</h3><p style="font-size:13px">Earn a cut of every friend's rewards, forever.</p><a class="btn btn-ghost" href="referrals.html">Invite friends</a></div>
+</div>
+</div></section>
+<section class="section" style="padding-top:24px"><div class="wrap">
+<div class="chips" id="tabs">
+<button class="chip on" data-cat="games">Games</button>
+<button class="chip" data-cat="surveys">Surveys</button>
+<button class="chip" data-cat="cashback">Cashback</button>
+<a class="link-more" href="tasks.html" style="margin:0 0 0 auto">All offers</a>
+</div>
+<div class="task-grid" id="offers"></div>
+<h2 style="font-size:20px;margin:8px 0 4px;display:flex;align-items:center;gap:8px"><svg class="ic" style="color:var(--green)"><use href="#i-trophy"/></svg> Weekly leaderboard</h2>
+<p class="sub" style="text-align:left;margin:0 0 12px">Top earners this week. Contest ends Sunday.</p>
+<div class="task-grid" id="board" style="grid-template-columns:repeat(3,1fr)"></div>
+<h2 style="font-size:20px;margin:8px 0 4px;display:flex;align-items:center;gap:8px"><svg class="ic" style="color:var(--green)"><use href="#i-clock"/></svg> Recent activity</h2>
+<div id="activity"></div>
+</div></section>
+</main>
+<footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favemoney.site</span><span><a href="index.html">Home</a> · <a href="tasks.html">Earn</a> · <a href="cashout.html">Cashout</a></span></div></div></footer>
+<div class="toast" id="toast" role="status"></div>
+<script src="js/store.js"></script>
+<script type="module">
+import { auth, onAuthStateChanged, signOut, getWallet, fetchUserDocs, track } from './js/firebase.js';
+(function(){
+  var toast=document.getElementById('toast'),tm=null;function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3200);}
+  var OFFERS=[
+    {id:'merge-quest',cat:'games',t:'Merge Quest — Level 12',pay:18.20},
+    {id:'royal-riches',cat:'games',t:'Royal Riches — 40 boards',pay:42.50},
+    {id:'blade-arena',cat:'games',t:'Blade Arena — 20 PvP wins',pay:65.00},
+    {id:'opinion-5min',cat:'surveys',t:'Opinion Pulse — 5-min pack',pay:1.20},
+    {id:'shopper-panel',cat:'surveys',t:'Shopper Panel — weekly diary',pay:4.00},
+    {id:'grocery-cashback',cat:'cashback',t:'Grocery Cashback — 8% back',pay:8.00}
+  ];
+  var BOARD=[{n:'QuestQueen',e:212.40},{n:'MergeMax',e:184.10},{n:'SurveySam',e:96.75},{n:'CashbackCat',e:88.20},{n:'GrindGuru',e:74.55},{n:'NightOwl',e:61.30}];
+  var cat='games',uid=null;
+  function paintOffers(){
+    var g=document.getElementById('offers');g.innerHTML='';
+    OFFERS.filter(function(o){return o.cat===cat;}).forEach(function(o){
+      var el=document.createElement('article');el.className='task';
+      el.innerHTML='<div><h3>'+o.t+'</h3><div class="meta">'+o.cat+'</div></div><div class="payline"><span class="amt">Up to $'+o.pay.toFixed(2)+'</span><a class="btn btn-green" href="task-detail.html?id='+o.id+'">Start</a></div>';
+      g.appendChild(el);
+    });
+  }
+  function paintBoard(){
+    var b=document.getElementById('board');b.innerHTML='';
+    BOARD.forEach(function(r,i){
+      var el=document.createElement('article');el.className='task';
+      el.innerHTML='<div class="task-top"><div class="task-ico">#'+(i+1)+'</div><div><h3>'+r.n+'</h3><div class="meta">this week</div></div></div><div class="payline"><span class="amt">$'+r.e.toFixed(2)+'</span></div>';
+      b.appendChild(el);
+    });
+  }
+  function streak(){
+    var s={days:0,last:''};try{s=JSON.parse(localStorage.getItem('favmoney_streak')||'{"days":0,"last":""}');}catch(e){}
+    var today=new Date().toISOString().slice(0,10);
+    document.getElementById('streak').textContent=s.days+(s.days===1?' day':' days');
+    document.getElementById('claim').addEventListener('click',function(){
+      if(s.last===today){show('Already claimed today. Come back tomorrow.');return;}
+      s.days=(s.last===new Date(Date.now()-864e5).toISOString().slice(0,10))?s.days+1:1;s.last=today;
+      try{localStorage.setItem('favmoney_streak',JSON.stringify(s));}catch(e){}
+      document.getElementById('streak').textContent=s.days+(s.days===1?' day':' days');
+      track('streak_claim',{days:s.days});show('Streak claimed: day '+s.days+'.');
+    });
+  }
+  async function activity(){
+    var box=document.getElementById('activity');
+    var local=FavStore.getProofs().slice(-5).reverse().map(function(p){return '<div class="mile"><span>'+(p.label||'Quest')+' — $'+Number(p.amount||0).toFixed(2)+' · '+(p.status||'pending')+'</span></div>';}).join('');
+    if(!uid){box.innerHTML=local||'<p style="color:var(--muted)">No activity yet. <a href="tasks.html" style="color:#8ff0bd">Start your first quest.</a></p>';return;}
+    try{
+      var proofs=await fetchUserDocs(uid,'proofs',5),outs=await fetchUserDocs(uid,'cashouts',5);
+      var rows=proofs.map(function(p){return {t:(p.title||p.label||'Quest')+' — $'+Number(p.amount||0).toFixed(2),s:p.status||'pending'};})
+        .concat(outs.map(function(c){return {t:'Cashout '+c.method+' — $'+Number(c.amount||0).toFixed(2),s:c.status||'review'};}));
+      box.innerHTML=rows.length?rows.map(function(r){return '<div class="mile"><span>'+r.t+' · '+r.s+'</span></div>';}).join(''):(local||'<p style="color:var(--muted)">No activity yet.</p>');
+    }catch(e){box.innerHTML=local||'<p style="color:var(--muted)">Activity unavailable offline.</p>';}
+  }
+  document.getElementById('tabs').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;cat=b.dataset.cat;document.querySelectorAll('#tabs .chip').forEach(function(c){c.classList.toggle('on',c===b);});paintOffers();});
+  document.getElementById('signout').addEventListener('click',async function(){try{await signOut(auth);}catch(e){}FavStore.clearUser();location.href='index.html';});
+  try{
+    onAuthStateChanged(auth,async function(user){
+      if(!user){document.getElementById('auth-wall').style.display='block';activity();return;}
+      uid=user.uid;
+      document.getElementById('hello').textContent='Welcome back'+(user.email?', '+user.email.split('@')[0]:'');
+      try{var w=await getWallet(uid);document.getElementById('w-pending').textContent='$'+Number(w.pending).toFixed(2);document.getElementById('w-life').textContent='$'+Number(w.lifetime).toFixed(2)+' lifetime earned';}catch(e){}
+      activity();
+    });
+  }catch(e){activity();}
+  paintOffers();paintBoard();streak();
+  var root=document.documentElement;function onS(){if(scrollY>0)root.setAttribute('data-top-nav-scrolled','true');else root.removeAttribute('data-top-nav-scrolled');}addEventListener('scroll',onS,{passive:true});onS();
+})();
+</script>
+</body>
+</html>

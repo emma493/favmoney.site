@@ -5,11 +5,12 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.4.0/firebas
 import { isSupported as analyticsSupported, getAnalytics, logEvent } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js';
 import {
   getAuth, onAuthStateChanged, createUserWithEmailAndPassword,
-  signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup
+  signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup,
+  sendPasswordResetEmail
 } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
 import {
   getFirestore, doc, getDoc, setDoc, addDoc, collection,
-  serverTimestamp, updateDoc, increment
+  serverTimestamp, updateDoc, increment, query, where, getDocs, limit
 } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
 
 export const firebaseConfig = {
@@ -101,7 +102,22 @@ export async function joinWaitlist(email, source) {
   });
 }
 
+// Recent docs for one user (client-sorted, no composite index needed).
+export async function fetchUserDocs(uid, name, n) {
+  const snap = await getDocs(query(
+    collection(db, name), where('uid', '==', uid), limit(n || 20)
+  ));
+  const rows = [];
+  snap.forEach(function (d) { rows.push({ id: d.id, ...d.data() }); });
+  rows.sort(function (a, b) {
+    const ta = (a.at && a.at.seconds) || 0, tb = (b.at && b.at.seconds) || 0;
+    return tb - ta;
+  });
+  return rows;
+}
+
 export {
   onAuthStateChanged, createUserWithEmailAndPassword,
-  signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup
+  signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup,
+  sendPasswordResetEmail
 };

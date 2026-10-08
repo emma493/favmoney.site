@@ -6,7 +6,7 @@
   <title>Quest detail · Favmoney</title>
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -22,7 +22,7 @@
 <a href="tasks.html" style="color:#9be9c4;font-size:14px;text-decoration:none">← Back to quests</a>
 <h1 id="t-title" style="font-size:32px;margin:12px 0 6px">Quest</h1>
 <p id="t-meta" style="color:var(--muted)">Loading…</p>
-<div class="wallet-bar"><span>Potential payout:</span><b id="t-pay">$0.00</b><span style="color:var(--faint);font-size:13px">illustrative · browser test only</span></div>
+<div class="wallet-bar"><span>Potential payout:</span><b id="t-pay">$0.00</b><span style="color:var(--faint);font-size:13px">varies by offer</span></div>
 <h2 style="font-size:20px;margin:28px 0 6px">Milestones</h2>
 <div id="miles"></div>
 <h2 style="font-size:20px;margin:28px 0 6px">Submit proof</h2>
@@ -32,7 +32,7 @@
 <label for="email">Contact email for review</label>
 <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
 <button class="btn btn-green btn-block" id="submit-proof" style="margin-top:14px">Submit for review</button>
-<p class="tiny">Stored in this browser only (<code>localStorage favmoney_proofs</code>). Firebase review queue connects next.</p>
+<p class="tiny">Proofs are reviewed within 24 hours. Track status in <a href="history.html" style="color:#9be9c4">History</a>.</p>
 </div>
 <div class="notice"><span style="display:flex;gap:8px;align-items:flex-start"><svg class="ic"><use href="#i-shield"/></svg><span>One account per human. Finish quests yourself, no VPN farming. Reviews protect the pool for real earners.</span></span></div>
 </div></main>
@@ -41,7 +41,7 @@
 <script type="module">
 import { auth, onAuthStateChanged, creditWallet, submitProof, joinWaitlist, track } from './js/firebase.js';
 (function(){
-  var DATA={'merge-quest':{title:'Merge Quest — Reach Level 12',meta:'Puzzle · 6 milestones · ~5 days',pay:18.20,miles:['Install via Favmoney link and open the game','Complete tutorial (Level 3) — $1.10','Reach Level 6 — $4.30','Reach Level 12 — $12.80']},'royal-riches':{title:'Royal Riches — Clear 40 boards',meta:'Match-3 · 4 milestones · ~7 days',pay:42.50,miles:['Install and finish 5 boards — $2.00','Clear 20 boards — $14.50','Clear 40 boards — $26.00']},'default':{title:'Starter Quest',meta:'Games · beginner friendly',pay:5.10,miles:['Start the quest from this page','Hit the first milestone','Payout moves to pending after mock review']}};
+  var DATA={'merge-quest':{title:'Merge Quest — Reach Level 12',meta:'Puzzle · 6 milestones · ~5 days',pay:18.20,miles:['Install via Favmoney link and open the game','Complete tutorial (Level 3) — $1.10','Reach Level 6 — $4.30','Reach Level 12 — $12.80']},'royal-riches':{title:'Royal Riches — Clear 40 boards',meta:'Match-3 · 4 milestones · ~7 days',pay:42.50,miles:['Install and finish 5 boards — $2.00','Clear 20 boards — $14.50','Clear 40 boards — $26.00']},'default':{title:'Starter Quest',meta:'Games · beginner friendly',pay:5.10,miles:['Start the quest from this page','Hit the first milestone','Payout moves to pending after review']}};
   var id=(new URLSearchParams(location.search).get('id'))||'default';
   var t=DATA[id]||DATA['default'];
   document.getElementById('t-title').textContent=t.title;

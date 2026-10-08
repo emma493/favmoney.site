@@ -4,10 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cashout · Favmoney</title>
-  <meta name="description" content="Favmoney cashout preview: PayPal, crypto, gift cards. Browser test, $5 minimum." />
+  <meta name="description" content="Favmoney cashout: PayPal, crypto, gift cards. $5 minimum, fast review." />
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -18,24 +18,63 @@
 <main>
 <section class="page-hero"><div class="wrap">
 <h1>Cash out your earnings</h1>
-<p>PayPal, crypto and gift cards. Low $5 minimum. Preview uses browser storage — real rails + Firebase next.</p>
+<p>PayPal, crypto and gift cards. Low $5 minimum. Availability varies by region.</p>
 <div class="wallet-bar"><span>Pending balance:</span><b id="w-bal">$0.00</b><span id="w-life" style="color:var(--faint);font-size:13px">$0.00 lifetime</span></div>
 </div></section>
 <section class="section" style="padding-top:24px"><div class="wrap">
 <h2 style="font-size:20px">1 · Pick a method</h2>
+<p style="color:var(--muted);font-size:14px">Cash &amp; crypto — tap to select.</p>
 <div class="cash-grid" id="methods">
-<button class="cash blue sel" data-m="PayPal">PayPal<small>from $5.00 · same-day review</small></button>
-<button class="cash dark" data-m="Bitcoin">Bitcoin<small>from $10 · on-chain</small></button>
-<button class="cash" data-m="Litecoin">Litecoin<small>from $5</small></button>
-<button class="cash" data-m="Dogecoin">Dogecoin<small>from $5</small></button>
-<button class="cash" data-m="Ethereum">Ethereum<small>from $10</small></button>
-<button class="cash gold" data-m="VISA">VISA Prepaid<small>from $5</small></button>
-<button class="cash" data-m="Amazon">Amazon<small>from $5 · email code</small></button>
-<button class="cash" data-m="Google Play">Google Play<small>from $5</small></button>
-<button class="cash dark" data-m="Steam">Steam<small>from $5</small></button>
-<button class="cash" data-m="Netflix">Netflix<small>from $10</small></button>
-<button class="cash blue" data-m="Venmo">Venmo<small>from $5</small></button>
-<button class="cash gold" data-m="Starbucks">Starbucks<small>from $5</small></button>
+<button class="cash blue sel" data-m="PayPal"><img src="assets/brands/paypal.svg" alt="PayPal" width="28" height="28" loading="lazy" />PayPal<small>from $5.00 · same-day review</small></button>
+<button class="cash dark" data-m="Bitcoin"><img src="assets/brands/bitcoin.svg" alt="Bitcoin" width="28" height="28" loading="lazy" />Bitcoin<small>from $10 · on-chain</small></button>
+<button class="cash" data-m="Litecoin"><img src="assets/brands/litecoin.svg" alt="Litecoin" width="28" height="28" loading="lazy" />Litecoin<small>from $5</small></button>
+<button class="cash" data-m="Dogecoin"><img src="assets/brands/dogecoin.svg" alt="Dogecoin" width="28" height="28" loading="lazy" />Dogecoin<small>from $5</small></button>
+<button class="cash" data-m="Ethereum"><img src="assets/brands/ethereum.svg" alt="Ethereum" width="28" height="28" loading="lazy" />Ethereum<small>from $10</small></button>
+<button class="cash gold" data-m="VISA"><img src="assets/brands/visa.svg" alt="VISA" width="28" height="28" loading="lazy" />VISA Prepaid<small>from $5</small></button>
+<button class="cash" data-m="Amazon"><img src="assets/brands/amazon.svg" alt="Amazon" width="28" height="28" loading="lazy" />Amazon<small>from $5 · email code</small></button>
+<button class="cash" data-m="Google Play"><img src="assets/brands/google-play.webp" alt="Google Play" width="28" height="28" loading="lazy" />Google Play<small>from $5</small></button>
+<button class="cash dark" data-m="Steam"><img src="assets/brands/steam.webp" alt="Steam" width="28" height="28" loading="lazy" />Steam<small>from $5</small></button>
+<button class="cash" data-m="Netflix"><img src="assets/brands/netflix.svg" alt="Netflix" width="28" height="28" loading="lazy" />Netflix<small>from $10</small></button>
+<button class="cash blue" data-m="Venmo"><img src="assets/brands/venmo.svg" alt="Venmo" width="28" height="28" loading="lazy" />Venmo<small>from $5</small></button>
+<button class="cash gold" data-m="Starbucks"><img src="assets/brands/starbucks.svg" alt="Starbucks" width="28" height="28" loading="lazy" />Starbucks<small>from $5</small></button>
+<button class="cash" data-m="Bank">Bank transfer<small>from $10 · 1-3 days</small></button>
+<button class="cash" data-m="Mastercard">Mastercard<small>from $10</small></button>
+<button class="cash" data-m="PaysafeCard">PaysafeCard<small>from $5</small></button>
+<button class="cash" data-m="Revolut">Revolut<small>from $5</small></button>
+<button class="cash" data-m="Apple">Apple<small>from $10</small></button>
+</div>
+<h3 style="font-size:15px;margin:18px 0 0">Gift cards</h3>
+<p style="color:var(--muted);font-size:14px">Codes land by email within minutes to hours.</p>
+<div class="cash-grid" id="methods-gift">
+<button class="cash" data-m="Walmart">Walmart<small>from $5</small></button>
+<button class="cash" data-m="Target">Target<small>from $5</small></button>
+<button class="cash" data-m="Best Buy">Best Buy<small>from $10</small></button>
+<button class="cash" data-m="eBay">eBay<small>from $5</small></button>
+<button class="cash" data-m="Ikea">Ikea<small>from $10</small></button>
+<button class="cash" data-m="Nike">Nike<small>from $10</small></button>
+<button class="cash" data-m="Adidas">Adidas<small>from $10</small></button>
+<button class="cash" data-m="H&M">H&amp;M<small>from $10</small></button>
+<button class="cash" data-m="Zara">Zara<small>from $10</small></button>
+<button class="cash" data-m="Sephora">Sephora<small>from $10</small></button>
+<button class="cash" data-m="Airbnb">Airbnb<small>from $25</small></button>
+<button class="cash" data-m="Lego">Lego<small>from $10</small></button>
+<button class="cash" data-m="Roblox">Roblox<small>from $5</small></button>
+<button class="cash" data-m="PlayStation">PlayStation<small>from $10</small></button>
+<button class="cash" data-m="Xbox">Xbox<small>from $10</small></button>
+<button class="cash" data-m="Nintendo">Nintendo<small>from $10</small></button>
+<button class="cash" data-m="Disney">Disney<small>from $10</small></button>
+<button class="cash" data-m="Spotify">Spotify<small>from $10</small></button>
+<button class="cash" data-m="Uber">Uber<small>from $10</small></button>
+<button class="cash" data-m="Uber Eats">Uber Eats<small>from $10</small></button>
+<button class="cash" data-m="DoorDash">DoorDash<small>from $10</small></button>
+</div>
+<h3 style="font-size:15px;margin:18px 0 0">Dining &amp; daily</h3>
+<div class="cash-grid" id="methods-food">
+<button class="cash" data-m="McDonald's">McDonald's<small>from $5</small></button>
+<button class="cash" data-m="KFC">KFC<small>from $5</small></button>
+<button class="cash" data-m="Subway">Subway<small>from $5</small></button>
+<button class="cash" data-m="Pizza Hut">Pizza Hut<small>from $5</small></button>
+<button class="cash" data-m="7-Eleven">7-Eleven<small>from $5</small></button>
 </div>
 <h2 style="font-size:20px">2 · Amount + destination</h2>
 <div class="auth-card" style="max-width:none">
@@ -43,14 +82,14 @@
 <input id="amt" type="number" min="5" step="0.01" placeholder="25.00" />
 <label for="dest">Destination (PayPal email / wallet address / gift-card email)</label>
 <input id="dest" type="text" placeholder="you@example.com or 0x…" autocomplete="off" />
-<button class="btn btn-green btn-block" id="req" style="margin-top:14px">Request cashout (mock)</button>
-<p class="tiny">Saved to <code>localStorage</code> only. Real payout + fraud review ships with Firebase.</p>
+<button class="btn btn-green btn-block" id="req" style="margin-top:14px">Request cashout</button>
+<p class="tiny">Requests are reviewed promptly. Track status in <a href="history.html" style="color:#9be9c4">History</a>.</p>
 </div>
 <h2 style="font-size:20px;margin-top:28px">3 · How it works</h2>
 <div class="steps" style="grid-template-columns:1fr 1fr 1fr;margin-top:16px">
 <div class="step-visual"><b>Select an offer</b><p style="color:var(--muted);font-size:14px">Complete quests on the Earn page.</p></div>
 <div class="step-visual"><b>Earn coins</b><p style="color:var(--muted);font-size:14px">Play, survey, cashback — balance goes pending.</p></div>
-<div class="step-visual"><b>Get rewarded</b><p style="color:var(--muted);font-size:14px">Hit $5, pick a method, request. Mock review is instant.</p></div>
+<div class="step-visual"><b>Get rewarded</b><p style="color:var(--muted);font-size:14px">Hit $5, pick a method, request. Reviewed promptly.</p></div>
 </div>
 </div></section>
 </main>
@@ -72,7 +111,7 @@ import { auth, onAuthStateChanged, getWallet, requestCashout, track } from './js
       }catch(e){}
     });
   }catch(e){}
-  document.getElementById('methods').addEventListener('click',function(e){var b=e.target.closest('.cash');if(!b)return;sel=b.dataset.m;document.querySelectorAll('.cash').forEach(function(c){c.classList.toggle('sel',c===b);});});
+  document.querySelectorAll('.cash-grid').forEach(function(g){g.addEventListener('click',function(e){var b=e.target.closest('.cash');if(!b)return;sel=b.dataset.m;document.querySelectorAll('.cash').forEach(function(c){c.classList.toggle('sel',c===b);});});});
   var toast=document.getElementById('toast'),tm=null;function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
   document.getElementById('req').addEventListener('click',async function(){
     var amt=parseFloat(document.getElementById('amt').value),dest=document.getElementById('dest').value.trim(),w=FavStore.getWallet();

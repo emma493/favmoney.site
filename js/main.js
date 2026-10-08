@@ -51,13 +51,48 @@
     });
   }
   document.querySelectorAll('[data-oauth]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      showToast(btn.getAttribute('data-oauth') + ' sign-in is a Day-2 mock — email waitlist works today, real auth lands Day 3+.');
+    btn.addEventListener('click', async function () {
+      var provider = btn.getAttribute('data-oauth');
+      if (provider !== 'Google') {
+        showToast(provider + ' is not enabled. Use Google or email.');
+        return;
+      }
+      try {
+        var fb = await import('./firebase.js');
+        var cred = await fb.signInWithPopup(fb.auth, new fb.GoogleAuthProvider());
+        await fb.ensureUserDoc(cred.user, 'google');
+        if (window.FavStore) FavStore.setUser({ uid: cred.user.uid, email: cred.user.email, at: new Date().toISOString(), provider: 'google' });
+        try { fb.track('login', { method: 'google' }); } catch (e) {}
+        showToast('Signed in with Google. Redirecting…');
+        setTimeout(function () { location.href = 'tasks.html'; }, 900);
+      } catch (err) {
+        if (err && err.code === 'auth/popup-closed-by-user') showToast('Google popup closed. Try again.');
+        else showToast('Google sign-in failed here. Continue on Sign Up page.');
+      }
     });
   });
   var signin = document.querySelector('[data-signin]');
   if (signin) signin.addEventListener('click', function () {
     setTimeout(function () { showToast('Sign-in is coming soon — join the waitlist above to get early access.'); }, 350);
+  });
+
+  // 3b. Footer stubs: cookie settings, language, social placeholders
+  document.querySelectorAll('[data-cookie]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      try { localStorage.setItem('favmoney_cookies', JSON.stringify({ choice: 'essential', at: new Date().toISOString() })); } catch (e) {}
+      showToast('Cookie preferences saved for this browser.');
+    });
+  });
+  document.querySelectorAll('[data-lang]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      showToast('English is the current language. More languages coming soon.');
+    });
+  });
+  document.querySelectorAll('[data-soon]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      showToast('Our social pages launch soon. Join the waitlist to hear first.');
+    });
   });
 
   // 4. FAQ accordion (single-open)
@@ -124,10 +159,10 @@
     sio.observe(statsEl);
   }
 
-  // 7. Odometer $2,400,000
+  // 7. Odometer (total seeded by js/stats.js)
   var odo = document.getElementById('odometer');
   if (odo) {
-    var str = '$2,400,000';
+    var str = odo.getAttribute('data-total') || '$2,400,000';
     str.split('').forEach(function (ch) {
       var d = document.createElement('span');
       if (ch === '$' || ch === ',') { d.className = 'digit sym'; d.textContent = ch; }

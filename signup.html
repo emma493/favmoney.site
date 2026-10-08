@@ -31,6 +31,7 @@
 <p class="tiny" style="margin-top:10px">Prohibited: multiple accounts, completing offers on another user's account, or any VPN, VPS or emulator software.</p>
 </div>
 </div></main>
+<nav class="mobilenav" aria-label="Mobile"><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>Home</a><a href="tasks.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="cashout.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
 <div class="toast" id="toast" role="status"></div>
 <script src="js/store.js"></script>
 <script type="module">
@@ -41,8 +42,14 @@ import { auth, ensureUserDoc, joinWaitlist, track, createUserWithEmailAndPasswor
     if(code==='auth/email-already-in-use')return 'Email already registered. Try Sign In instead.';
     if(code==='auth/weak-password')return 'Password too weak (min 6 characters).';
     if(code==='auth/invalid-email')return 'Enter a valid email.';
-    if(code==='auth/operation-not-allowed')return 'Email sign-up is disabled in Firebase Console. Enable Email/Password provider.';
+    if(code==='auth/operation-not-allowed')return 'Provider disabled in Firebase Console. Enable Email/Password AND Google (Auth > Sign-in method).';
     if(code==='auth/popup-closed-by-user')return 'Google popup closed. Try again.';
+    if(code==='auth/popup-blocked')return 'Browser blocked the Google popup. Allow popups for this site and try again.';
+    if(code==='auth/cancelled-popup-request')return 'Popup already open. Close it and try once.';
+    if(code==='auth/unauthorized-domain')return 'Domain not authorized: Firebase Console > Auth > Settings > Authorized domains > add this host (localhost, *.pages.dev, favmoney.site).';
+    if(code==='auth/network-request-failed')return 'Network error reaching Google. Check connection and try again.';
+    if(code==='permission-denied')return 'Signed in, but Firestore blocked the write. Paste firestore.rules into Firebase Console > Firestore > Rules.';
+    if(code) return 'Sign-up failed ('+code+'). Saved locally; check Console for details.';
     return 'Sign-up failed. Saved locally; check Firebase config/rules.';
   }
   document.getElementById('go').addEventListener('click',async function(){
@@ -64,13 +71,16 @@ import { auth, ensureUserDoc, joinWaitlist, track, createUserWithEmailAndPasswor
   document.querySelectorAll('[data-oauth]').forEach(function(b){b.addEventListener('click',async function(){
     var provider=b.dataset.oauth;
     if(provider!=='Google'){show(provider+' is not enabled. Use Google or email for now.');return;}
+    var cred=null;
     try{
-      var cred=await signInWithPopup(auth,new GoogleAuthProvider());
+      cred=await signInWithPopup(auth,new GoogleAuthProvider());
+    }catch(err){ console.error('[google-auth]', err && err.code, err && err.message); show(friendly(err && err.code)); return; }
+    try{
       await ensureUserDoc(cred.user,'google');
-      FavStore.setUser({uid:cred.user.uid,email:cred.user.email,at:new Date().toISOString(),provider:'google'});
-      track('login',{method:'google'});
-      show('Signed in with Google. Redirecting…');setTimeout(function(){location.href='dashboard.html';},900);
-    }catch(err){show(friendly(err && err.code));}
+    }catch(err){ console.error('[firestore-userdoc]', err && err.code, err && err.message); show(friendly(err && err.code)); return; }
+    FavStore.setUser({uid:cred.user.uid,email:cred.user.email,at:new Date().toISOString(),provider:'google'});
+    track('login',{method:'google'});
+    show('Signed in with Google. Redirecting…');setTimeout(function(){location.href='dashboard.html';},900);
   });});
 })();
 </script>

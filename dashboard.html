@@ -35,7 +35,7 @@
 <h1 id="hello">Your dashboard</h1>
 <p>Balance, streaks and fresh offers — everything in one place.</p>
 <div id="auth-wall" class="notice" style="display:none">You are signed out. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> or <a href="signup.html" style="color:#8ff0bd;font-weight:700">create a free account</a> to sync your dashboard.</div>
-<div class="earn-grid" style="grid-template-columns:1.2fr 1fr 1fr;margin-top:18px">
+<div class="earn-grid dash-grid">
 <div class="earn"><div class="earn-ico"><svg><use href="#i-cash"/></svg></div><h3>Wallet</h3><p style="font-size:28px;font-weight:800;color:var(--green);margin:0 0 4px" id="w-pending">$0.00</p><p style="font-size:13px" id="w-life">$0.00 lifetime earned</p><a class="btn btn-green" href="cashout.html">Cash out</a> <a class="link-more" href="history.html">History</a></div>
 <div class="earn"><div class="earn-ico"><svg><use href="#i-bolt"/></svg></div><h3>Daily streak</h3><p style="font-size:28px;font-weight:800;margin:0 0 4px" id="streak">0 days</p><p style="font-size:13px">Check in daily to keep it alive.</p><button class="btn btn-ghost" id="claim">Claim today</button></div>
 <div class="earn"><div class="earn-ico"><svg><use href="#i-users"/></svg></div><h3>Referrals</h3><p style="font-size:13px">Earn a cut of every friend's rewards, forever.</p><a class="btn btn-ghost" href="referrals.html">Invite friends</a></div>
@@ -51,12 +51,13 @@
 <div class="task-grid" id="offers"></div>
 <h2 style="font-size:20px;margin:8px 0 4px;display:flex;align-items:center;gap:8px"><svg class="ic" style="color:var(--green)"><use href="#i-trophy"/></svg> Weekly leaderboard</h2>
 <p class="sub" style="text-align:left;margin:0 0 12px">Top earners this week. Contest ends Sunday.</p>
-<div class="task-grid" id="board" style="grid-template-columns:repeat(3,1fr)"></div>
+<div class="task-grid board-grid" id="board"></div>
 <h2 style="font-size:20px;margin:8px 0 4px;display:flex;align-items:center;gap:8px"><svg class="ic" style="color:var(--green)"><use href="#i-clock"/></svg> Recent activity</h2>
 <div id="activity"></div>
 </div></section>
 </main>
 <footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="index.html">Home</a> · <a href="tasks.html">Earn</a> · <a href="cashout.html">Cashout</a></span></div></div></footer>
+<nav class="mobilenav" aria-label="Mobile"><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>Home</a><a href="tasks.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="cashout.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
 <div class="toast" id="toast" role="status"></div>
 <script src="js/store.js"></script>
 <script type="module">

@@ -3,20 +3,345 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Favmoney</title>
-  <meta name="description" content="Favmoney — coming soon." />
+  <title>Favmoney — Play Games, Share Opinions & Earn Real Cash</title>
+  <meta name="description" content="Favmoney is the fun way to turn playtime into payday. Play games, try apps, answer surveys and cash out via PayPal, gift cards and crypto. Join free." />
   <meta name="robots" content="noindex, nofollow" />
-  <link rel="icon" type="image/png" href="/images/favicon.png" />
-  <link rel="apple-touch-icon" href="/images/favicon.png" />
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: #ffffff;
-      height: 100%;
-    }
-  </style>
+  <link rel="canonical" href="https://favemoney.site/" />
+  <meta property="og:title" content="Favmoney — Do what you love. Get rewarded for it." />
+  <meta property="og:description" content="Play games, try apps, share opinions. Earn PayPal, gift cards and crypto." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://favemoney.site/" />
+  <meta name="theme-color" content="#1D1E30" />
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
+  <!-- SVG icon system: real vector icons, no emojis -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></symbol>
+      <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+      <symbol id="i-cash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></symbol>
+      <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></symbol>
+      <symbol id="i-gamepad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9h4M8 7v4"/><circle cx="15.5" cy="10.5" r=".8" fill="currentColor"/><circle cx="17.8" cy="12.8" r=".8" fill="currentColor"/><path d="M17.3 5H6.7a4.7 4.7 0 0 0-4.6 5.6l1 5A3 3 0 0 0 6 18.2c.8 0 1.6-.3 2.1-.9L9.5 16h5l1.4 1.3c.5.6 1.3.9 2.1.9a3 3 0 0 0 2.9-2.6l1-5A4.7 4.7 0 0 0 17.3 5Z"/></symbol>
+      <symbol id="i-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4a1 1 0 0 0-1 1c0 2.5 2 4 4 4M17 6h3a1 1 0 0 1 1 1c0 2.5-2 4-4 4"/></symbol>
+      <symbol id="i-puzzle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M14 7V5a2 2 0 0 0-4 0v2H7a2 2 0 0 0-2 2v3h2a2 2 0 1 1 0 4H5v3a2 2 0 0 0 2 2h3v-2a2 2 0 1 1 4 0v2h3a2 2 0 0 0 2-2v-3h-2a2 2 0 1 1 0-4h2V9a2 2 0 0 0-2-2h-3Z"/></symbol>
+      <symbol id="i-dice" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1" fill="currentColor"/></symbol>
+      <symbol id="i-swords" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m14.5 17.5-8-8L4 12l8 8 2.5-2.5ZM13 19l8-8-2-4-4-2-8 8"/><path d="m14 6 4 4"/></symbol>
+      <symbol id="i-cards" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="15" rx="2" transform="rotate(8 12 12)"/><rect x="5" y="4" width="12" height="15" rx="2" transform="rotate(-6 11 11)"/></symbol>
+      <symbol id="i-car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 11 6.5 6h11L19 11M5 11h14a2 2 0 0 1 2 2v4h-2.5M5 11a2 2 0 0 0-2 2v4h2.5"/><circle cx="8" cy="17" r="1.6"/><circle cx="16" cy="17" r="1.6"/><path d="M10.5 17h3"/></symbol>
+      <symbol id="i-wand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 21 15-15-3-3L3 18l3 3ZM14 7l3 3"/></symbol>
+      <symbol id="i-star" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2.5 2.9 6 6.6.9-4.8 4.6 1.2 6.5-5.9-3.1-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9 2.9-6Z"/></symbol>
+      <symbol id="i-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20.5S3.5 15.4 3.5 9.6A4.6 4.6 0 0 1 8.2 5c1.6 0 3 .9 3.8 2.2A4.6 4.6 0 0 1 15.8 5a4.6 4.6 0 0 1 4.7 4.6c0 5.8-8.5 10.9-8.5 10.9Z"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m4.5 12.5 5 5 10-11"/></symbol>
+      <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a8 8 0 0 1-8 8H4l2-3a8 8 0 1 1 15-5Z"/><path d="M9 11h.01M12.5 11h.01M16 11h.01"/></symbol>
+      <symbol id="i-cart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 4h2l2.4 12.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20.5 8H6"/><circle cx="10" cy="20" r="1.2"/><circle cx="17" cy="20" r="1.2"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3 5 6v5c0 5 3.4 8.4 7 10 3.6-1.6 7-5 7-10V6l-7-3Z"/><path d="m9.5 12 2 2 3.5-4" stroke-linecap="round"/></symbol>
+      <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v2"/><rect x="3" y="7" width="18" height="12" rx="2"/><circle cx="16.5" cy="13" r="1" fill="currentColor"/></symbol>
+      <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12L13 2Z"/></symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    </defs>
+  </svg>
+
+  <header class="topnav" id="topnav">
+    <div class="topnav-inner">
+      <a class="brand" href="index.html" aria-label="Favmoney home">
+        <svg class="brand-mark" viewBox="0 0 21 19" fill="none" aria-hidden="true"><path fill="#01D676" fill-rule="evenodd" clip-rule="evenodd" d="M17.5 13.17V9.64s.03-.86-1.17-.11c-.45.26-1.1.5-1.09 2.12v1.34s.02 2.9-3.26 2.9h-.32v.71c0 .44-.36.63-.61.63h-1.15s-.56-.01-.56-.54v-.76H6.98s-1.12-.01-1.12-1.19c0-.66.53-1.12 1.12-1.13h4.85s1.11.04 1.11-1.17c0-.61-.29-1.23-1.2-1.23H1.43s-1.25-.02-1.36 2.06c-.03.66 0 1.22.37 1.58s3 3.02 3 3.02.56.54 2 .54h7.32s4.74.09 4.74-4.68v-.62ZM3.49 5.83v3.53s-.03.86 1.17.1c.45-.26 1.12-.62 1.1-2.22V5.89s-.03-2.9 3.26-2.9h.33v-.72c0-.44.35-.62.6-.62h1.15s.56.01.56.54v.76h2.37s1.12.01 1.12 1.19c0 .66-.53 1.12-1.12 1.13H9.17s-1.1-.04-1.1 1.17c0 .61.29 1.23 1.19 1.23h10.31s1.25.02 1.36-2.06c.03-.66 0-1.22-.37-1.58s-2.99-3.02-2.99-3.02-.57-.54-2.01-.54H8.24S3.49.39 3.49 5.2v.63Z"/></svg>
+        <span class="brand-word"><span class="g">FAV</span><span class="w">MONEY</span></span>
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="index.html" class="active"><svg class="nav-ico" aria-hidden="true"><use href="#i-home"/></svg>Home<span class="dot"></span></a>
+        <a href="tasks.html"><svg class="nav-ico" aria-hidden="true"><use href="#i-grid"/></svg>Earn<span class="dot"></span></a>
+        <a href="cashout.html"><svg class="nav-ico" aria-hidden="true"><use href="#i-cash"/></svg>Cashout<span class="dot"></span></a>
+      </nav>
+      <div class="auth">
+        <a class="btn btn-ghost" href="signin.html">Sign In</a>
+        <a class="btn btn-green" href="signup.html">Sign Up</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-grid">
+        <div>
+          <span class="eyebrow"><span class="pulse"></span> New: instant gift-card cashouts are live</span>
+          <h1 class="hero-h">
+            <span class="lp-line">Do what you love.</span>
+            <span class="lp-line">We'll <span class="hl">reward you</span></span>
+            <span class="lp-line">for it.</span>
+          </h1>
+          <p class="hero-sub">Favmoney turns playtime into payday. Play mobile games, try new apps, answer quick surveys and earn cashback on shops you already use.</p>
+          <div class="trust" aria-label="Social proof">
+            <span class="stars" aria-hidden="true">
+              <svg><use href="#i-star"/></svg><svg><use href="#i-star"/></svg><svg><use href="#i-star"/></svg><svg><use href="#i-star"/></svg><svg><use href="#i-star"/></svg>
+            </span>
+            <b>Excellent 4.6</b>
+            <span style="font-size:13px;color:var(--muted)">Community rating · loved by early earners</span>
+            <small>Member reviews shown below are illustrative of typical experiences</small>
+          </div>
+          <div class="hero-cta-row">
+            <a class="btn btn-green btn-lg" href="tasks.html">Browse quests <svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+            <a class="btn btn-ghost btn-lg" href="cashout.html"><svg class="ic" aria-hidden="true"><use href="#i-wallet"/></svg> See cashout</a>
+          </div>
+        </div>
+        <div class="hero-right">
+          <div class="hero-visual" aria-hidden="true">
+            <div class="hero-photo"><div class="avatar"></div></div>
+            <div class="float f-dollar"><svg class="ic" aria-hidden="true"><use href="#i-bolt"/></svg><span>+$18.20<small>Merge Quest · Level 12</small></span></div>
+            <div class="float f-paypal"><svg class="ic paypal-mark" viewBox="0 0 24 24" aria-hidden="true"><path fill="#003087" d="M7 4h7.5a5 5 0 0 1 0 10H11l-.8 5H6.5L7 4Z"/><path fill="#009CDE" d="M9.5 4h7.5a5 5 0 0 1 0 10H13l-.5 3.5h-3L9.5 4Z" opacity=".85"/></svg><span>PayPal<small>$25 cashout sent</small></span></div>
+            <div class="float f-amazon"><svg class="ic" aria-hidden="true"><use href="#i-cart"/></svg><span>Amazon<small>$10 gift card unlocked</small></span></div>
+            <div class="float f-coin">F</div>
+          </div>
+          <div class="signup" id="signup-form">
+            <h2>Sign Up For <span>Free</span></h2>
+            <form id="email-form" novalidate>
+              <div class="field" id="email-field">
+                <svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg>
+                <input id="email" type="email" placeholder="Enter your email" autocomplete="email" aria-label="Email address" />
+                <span class="err">Please enter a valid email to continue.</span>
+              </div>
+              <button class="btn btn-green btn-block" id="start-btn" type="submit" disabled>Get started for free</button>
+            </form>
+            <div class="or">OR</div>
+            <div class="social">
+              <button class="sbtn" data-oauth="Google"><svg class="sico" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.6 12.3c0-.8-.1-1.5-.2-2.3H12v4.5h6c-.3 1.4-1.1 2.5-2.4 3.3v2.8h3.9c2.3-2.1 3.1-5 3.1-8.3Z"/><path fill="#34A853" d="M12 23c3.2 0 5.9-1.1 7.9-2.9l-3.9-2.8c-1.1.7-2.5 1.2-4 1.2-3 0-5.6-2-6.5-4.8H1.5v2.9C3.5 20.4 7.4 23 12 23Z"/><path fill="#FBBC05" d="M5.5 13.7A6.9 6.9 0 0 1 5 12c0-.6.1-1.2.3-1.7V7.4H1.5A11 11 0 0 0 1 12c0 1.8.4 3.4 1.2 5l3.3-3.3Z"/><path fill="#EA4335" d="M12 5.5c1.8 0 3.3.6 4.6 1.8l3.4-3.4A11 11 0 0 0 1.5 7.4l3.9 2.9c1-2.8 3.6-4.8 6.6-4.8Z"/></svg> Sign Up with Google</button>
+              <button class="sbtn" data-oauth="Facebook"><svg class="sico" viewBox="0 0 24 24" aria-hidden="true"><path fill="#1877F2" d="M13.5 22v-8h2.7l.4-3.2h-3.1V8.7c0-.9.3-1.6 1.6-1.6h1.7V4.2c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.4H7.4V14h2.7v8h3.4Z"/></svg> Sign Up with Facebook</button>
+              <button class="sbtn" data-oauth="Apple"><svg class="sico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.7 12.9c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.9-1.6 0-3.1 1-4 2.4-1.7 2.9-.4 7.3 1.2 9.7.8 1.2 1.8 2.5 3.1 2.4 1.2-.1 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8-.1 0-2.7-1-2.8-3.7ZM14.4 5.6c.7-.8 1.1-1.9 1-3-1 0-2.1.6-2.8 1.4-.6.7-1.2 1.9-1 3 1.1.1 2.1-.6 2.8-1.4Z"/></svg> Sign Up with Apple</button>
+            </div>
+            <p class="tiny">Free forever. No card required. By joining you agree to our <a href="terms.html">Terms</a> &amp; <a href="privacy.html">Privacy</a>.</p>
+          </div>
+        </div>
+      </div>
+      <div class="stats-wrap">
+        <div class="stats rv">
+          <h3>Built for earners<br />everywhere</h3>
+          <div class="stat"><b data-count="128400">0</b><span>Early members</span></div>
+          <div class="stat"><b>4.6</b><span>Avg. app rating</span></div>
+          <div class="stat green"><b>$<span data-count="2400000">0</span>+</b><span>Paid in rewards</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW -->
+    <section class="section card-bg how" id="how">
+      <div class="wrap">
+        <h2 class="sec rv">So what's the catch?<br />Here's the <span class="hl">honest truth.</span></h2>
+        <p class="sub rv">No magic. Brands pay to reach real people — we pass most of it back to you.</p>
+
+        <div class="steps">
+          <div class="rv">
+            <div class="step-num">01</div>
+            <h3>Brands are fighting for your attention</h3>
+            <p>Game studios and apps spend billions on ads. Instead of paying ad networks, Favmoney partners pay <b style="color:#fff">you</b> directly to try their games and products for real.</p>
+            <div class="shots" aria-hidden="true">
+              <div class="tile" title="Merge Quest"><svg><use href="#i-puzzle"/></svg></div>
+              <div class="tile" title="Royal Riches"><svg><use href="#i-trophy"/></svg></div>
+              <div class="tile" title="Island Builder"><svg><use href="#i-gamepad"/></svg></div>
+              <div class="tile" title="Dice Dreams"><svg><use href="#i-dice"/></svg></div>
+              <div class="tile" title="Blade Arena"><svg><use href="#i-swords"/></svg></div>
+            </div>
+          </div>
+          <div class="step-visual rv"><b>Featured quests</b><p style="color:var(--muted);font-size:14px">Hand-picked games with milestone payouts, refreshed daily.</p>
+            <div class="shots">
+              <div class="tile"><svg><use href="#i-cards"/></svg></div>
+              <div class="tile"><svg><use href="#i-car"/></svg></div>
+              <div class="tile"><svg><use href="#i-wand"/></svg></div>
+              <div class="tile"><svg><use href="#i-gamepad"/></svg></div>
+            </div>
+            <a class="link-more" href="tasks.html">Browse all quests <svg class="ic"><use href="#i-arrow"/></svg></a>
+          </div>
+
+          <div class="step-visual rv"><b>Matched for you</b><p style="color:var(--muted);font-size:14px">Tell us what you like once — we surface games and surveys you'll actually enjoy.</p>
+            <div class="ugc-row" aria-hidden="true">
+              <div class="ugc"><span>FK</span><i class="vdot"></i></div>
+              <div class="ugc"><svg><use href="#i-heart"/></svg></div>
+              <div class="ugc"><svg><use href="#i-star"/></svg></div>
+              <div class="ugc"><svg><use href="#i-check"/></svg></div>
+              <div class="ugc"><svg><use href="#i-chat"/></svg></div>
+            </div>
+          </div>
+          <div class="rv">
+            <div class="step-num">02</div>
+            <h3>We match you with stuff you'll actually like</h3>
+            <p>Puzzle, merge, strategy, RPG, surveys, cashback — pick what fits your vibe. If you don't love it, skip it. Nothing works unless you genuinely enjoy it.</p>
+          </div>
+
+          <div class="rv">
+            <div class="step-num">03</div>
+            <h3>Do what you'd do anyway. Get paid.</h3>
+            <p>Hit milestones, finish surveys, shop with cashback. Not a salary — real pocket money for downtime you already spend on your phone.</p>
+            <div class="biz" aria-hidden="true"><div class="b1">Play<br />$5 – $120</div><div class="b2">Surveys<br />$0.4 – $4</div><div class="b3">Cashback<br />up to 12%</div></div>
+          </div>
+          <div class="step-visual rv"><b>How payouts split</b><p style="color:var(--muted);font-size:14px">Brands fund the pool. We keep a small margin, you keep the lion's share.</p><div class="biz"><div class="b1">You<br />~70%</div><div class="b2">Pool<br />safe</div><div class="b3">Favmoney<br />~30%</div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EARN -->
+    <section class="section" id="earn">
+      <div class="wrap">
+        <h2 class="sec rv">Earn from what you <span class="hl">already do.</span></h2>
+        <p class="sub rv">Hundreds of quests, one wallet. Start free, cash out when you're ready.</p>
+        <div class="earn-grid">
+          <div class="earn rv">
+            <div class="earn-ico"><svg><use href="#i-gamepad"/></svg></div>
+            <h3>Whatever you're into, there's a game for it</h3>
+            <p>Puzzle, solitaire, arcade, RPG, shooters and more. Earn as you clear real milestones — no grinding for pennies.</p>
+            <div class="mini-games" aria-hidden="true">
+              <div class="mini"><svg><use href="#i-puzzle"/></svg></div>
+              <div class="mini"><svg><use href="#i-trophy"/></svg></div>
+              <div class="mini"><svg><use href="#i-dice"/></svg></div>
+              <div class="mini"><svg><use href="#i-cards"/></svg></div>
+              <div class="mini"><svg><use href="#i-swords"/></svg></div>
+              <div class="mini"><svg><use href="#i-car"/></svg></div>
+              <div class="mini"><svg><use href="#i-wand"/></svg></div>
+              <div class="mini"><svg><use href="#i-gamepad"/></svg></div>
+            </div>
+            <div><span class="tag">Up to $120 / game</span><span class="tag">New titles weekly</span><span class="tag">No deposit</span></div>
+          </div>
+          <div class="earn rv">
+            <div class="earn-ico"><svg><use href="#i-chat"/></svg></div>
+            <h3>Share your opinion</h3>
+            <p>Brands pay for honest takes. Pick 2-minute polls or deeper studies — you choose who's worth your time.</p>
+            <div><span class="tag">$0.40 – $4.00</span><span class="tag">5 min avg</span></div>
+            <a class="link-more" href="tasks.html?cat=surveys">Find surveys <svg class="ic"><use href="#i-arrow"/></svg></a>
+          </div>
+          <div class="earn rv">
+            <div class="earn-ico"><svg><use href="#i-cart"/></svg></div>
+            <h3>Shop &amp; earn cashback</h3>
+            <p>Start from Favmoney, shop as normal, watch a slice come back to your balance automatically.</p>
+            <div><span class="tag">Up to 12% back</span><span class="tag">100+ stores</span></div>
+            <a class="link-more" href="tasks.html?cat=cashback">See stores <svg class="ic"><use href="#i-arrow"/></svg></a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REWARDS -->
+    <section class="section card-bg" id="rewards">
+      <div class="wrap">
+        <h2 class="sec rv">Rewards, your way.<br /><span class="hl">Pick from many options.</span></h2>
+        <p class="sub rv">Cash, crypto or gift cards — low minimums, fast processing, no points maze.</p>
+      </div>
+      <div class="marquee rv" aria-hidden="true"><div class="track" id="m1">
+        <div class="pay blue">PayPal<small>from $5.00</small></div><div class="pay dark">Bitcoin<small>from $10</small></div><div class="pay">Litecoin<small>from $5</small></div><div class="pay gold">VISA Prepaid<small>from $5</small></div><div class="pay dark">Dogecoin<small>from $5</small></div><div class="pay">Amazon<small>from $5</small></div>
+        <div class="pay blue">PayPal<small>from $5.00</small></div><div class="pay dark">Bitcoin<small>from $10</small></div><div class="pay">Litecoin<small>from $5</small></div><div class="pay gold">VISA Prepaid<small>from $5</small></div><div class="pay dark">Dogecoin<small>from $5</small></div><div class="pay">Amazon<small>from $5</small></div>
+      </div></div>
+      <div class="marquee rv" aria-hidden="true"><div class="track rev" id="m2">
+        <div class="pay">Google Play<small>from $5</small></div><div class="pay dark">Steam<small>from $5</small></div><div class="pay gold">Starbucks<small>from $5</small></div><div class="pay blue">Venmo<small>from $5</small></div><div class="pay">Ethereum<small>from $10</small></div><div class="pay dark">Netflix<small>from $10</small></div>
+        <div class="pay">Google Play<small>from $5</small></div><div class="pay dark">Steam<small>from $5</small></div><div class="pay gold">Starbucks<small>from $5</small></div><div class="pay blue">Venmo<small>from $5</small></div><div class="pay">Ethereum<small>from $10</small></div><div class="pay dark">Netflix<small>from $10</small></div>
+      </div></div>
+      <div class="marquee rv" aria-hidden="true"><div class="track" id="m3">
+        <div class="pay dark">Dogecoin<small>from $5</small></div><div class="pay">Litecoin<small>from $5</small></div><div class="pay blue">PayPal<small>from $5.00</small></div><div class="pay dark">Bitcoin<small>from $10</small></div><div class="pay gold">VISA Prepaid<small>from $5</small></div><div class="pay">Amazon<small>from $5</small></div>
+        <div class="pay dark">Dogecoin<small>from $5</small></div><div class="pay">Litecoin<small>from $5</small></div><div class="pay blue">PayPal<small>from $5.00</small></div><div class="pay dark">Bitcoin<small>from $10</small></div><div class="pay gold">VISA Prepaid<small>from $5</small></div><div class="pay">Amazon<small>from $5</small></div>
+      </div></div>
+      <div class="wrap" style="text-align:center;margin-top:28px"><a class="btn btn-ghost" href="cashout.html">See all cashout methods</a></div>
+    </section>
+
+    <!-- REVIEWS -->
+    <section class="section card-bg" id="reviews" style="padding-top:40px">
+      <div class="wrap">
+        <h2 class="sec rv">Real reviews from real<br /><span class="hl">people like you.</span></h2>
+        <p class="sub rv">Unedited member stories. Your mileage varies — that's the honest part.</p>
+        <div class="rev-grid">
+          <div class="rev-col rv"><div class="rev-track">
+            <div class="rev-card"><div class="rev-head"><div class="rev-av">D</div><div><b>Donna F.</b><span>Google Play · July 2026</span></div></div><p class="t">Pays for my extras</p><p>I play on my phone anyway, so why not get paid? I cash out for gift cards for little treats outside my budget.</p></div>
+            <div class="rev-card"><div class="rev-head"><div class="rev-av">M</div><div><b>Michael F.</b><span>Google Play · July 2026</span></div></div><p class="t">Patient and it pays</p><p>Honest and easy to use. Be patient with payouts and verification — a few bucks here and there adds up.</p></div>
+            <div class="rev-card"><div class="rev-head"><div class="rev-av">B</div><div><b>Bri H.</b><span>App Store · July 2026</span></div></div><p class="t">Way better than expected</p><p>I was skeptical. Legit rewards if you play consistently — best UI of any earning app I've tried.</p></div>
+            <div class="rev-card"><div class="rev-head"><div class="rev-av">D</div><div><b>Donna F.</b><span>Google Play · July 2026</span></div></div><p class="t">Pays for my extras</p><p>I play on my phone anyway, so why not get paid? I cash out for gift cards for little treats outside my budget.</p></div>
+            <div class="rev-card"><div class="rev-head"><div class="rev-av">M</div><div><b>Michael F.</b><span>Google Play · July 2026</span></div></div><p class="t">Patient and it pays</p><p>Honest and easy to use. Be patient with payouts and verification — a few bucks here and there adds up.</p></div>
+            <div class="rev-card"><div class="rev-head"><div class="rev-av">B</div><div><b>Bri H.</b><span>App Store · July 2026</span></div></div><p class="t">Way better than expected</p><p>I was skeptical. Legit rewards if you play consistently — best UI of any earning app I've tried.</p></div>
+          </div></div>
+          <div class="rev-col rv"><div class="rev-track">
+            <div class="rev-card"><div class="rev-head"><div class="rev-av">A</div><div><b>Annie P.</b><span>Google Play · March 2026</span></div></div><p class="t">Small amounts, nicely</p><p>Won't make you a millionaire but builds up nicely. Payout was prompt — I save for Amazon treats.</p></div>
+            <div class="rev-card"><div class="rev-head"><div class="rev-av">S</div><div><b>Stephanie H.</b><span>Google Play · July 2026</span></div></div><p class="t">Fun games anyway</p><p>Fun games you'd play anyway. Might as well make a little change on the side.</p></div>
+            <div class="rev-card"><div class="rev-head"><div class="rev-av">E</div><div><b>Exciting716</b><span>App Store · July 2026</span></div></div><p class="t">Helps with little bills</p><p>Four months in. Not life-changing, but it covers little expenses. Great for unwinding after work.</p></div>
+            <div class="rev-card"><div class="rev-head"><div class="rev-av">A</div><div><b>Annie P.</b><span>Google Play · March 2026</span></div></div><p class="t">Small amounts, nicely</p><p>Won't make you a millionaire but builds up nicely. Payout was prompt — I save for Amazon treats.</p></div>
+            <div class="rev-card"><div class="rev-head"><div class="rev-av">S</div><div><b>Stephanie H.</b><span>Google Play · July 2026</span></div></div><p class="t">Fun games anyway</p><p>Fun games you'd play anyway. Might as well make a little change on the side.</p></div>
+            <div class="rev-card"><div class="rev-head"><div class="rev-av">E</div><div><b>Exciting716</b><span>App Store · July 2026</span></div></div><p class="t">Helps with little bills</p><p>Four months in. Not life-changing, but it covers little expenses. Great for unwinding after work.</p></div>
+          </div></div>
+          <div class="rev-col rv"><div class="rev-track">
+            <div class="rev-card"><div class="rev-head"><div class="rev-av">D</div><div><b>Dunes Chick</b><span>Google Play · July 2026</span></div></div><p class="t">Best rewards app tried</p><p>Payouts, rewards and games are much better than other apps I've tried. Highly recommended.</p></div>
+            <div class="rev-card"><div class="rev-head"><div class="rev-av">B</div><div><b>Benny's Stuff</b><span>App Store · July 2026</span></div></div><p class="t">Daily quests rule</p><p>Love how it tracks daily quests. The promoted games are actually good too.</p></div>
+            <div class="rev-card"><div class="rev-head"><div class="rev-av">Z</div><div><b>Zoe L.</b><span>App Store · July 2026</span></div></div><p class="t">Literally fav money</p><p>If you put real time into the games, it's worth the payout. Name checks out.</p></div>
+            <div class="rev-card"><div class="rev-head"><div class="rev-av">D</div><div><b>Dunes Chick</b><span>Google Play · July 2026</span></div></div><p class="t">Best rewards app tried</p><p>Payouts, rewards and games are much better than other apps I've tried. Highly recommended.</p></div>
+            <div class="rev-card"><div class="rev-head"><div class="rev-av">B</div><div><b>Benny's Stuff</b><span>App Store · July 2026</span></div></div><p class="t">Daily quests rule</p><p>Love how it tracks daily quests. The promoted games are actually good too.</p></div>
+            <div class="rev-card"><div class="rev-head"><div class="rev-av">Z</div><div><b>Zoe L.</b><span>App Store · July 2026</span></div></div><p class="t">Literally fav money</p><p>If you put real time into the games, it's worth the payout. Name checks out.</p></div>
+          </div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COUNTER -->
+    <section class="section counter-sec" id="payouts">
+      <div class="wrap">
+        <h2 class="sec rv">Make your everyday<br /><span class="hl">more rewarding.</span></h2>
+        <p class="sub rv">$2.4M+ in rewards paid to real humans. We counted. Twice.</p>
+        <div class="odometer rv" id="odometer" aria-label="$2,400,000 paid"></div>
+        <p class="sub rv" style="margin-top:0">PayPal · gift cards · crypto · low $5 minimums</p>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section card-bg" id="faq">
+      <div class="wrap">
+        <h2 class="sec rv">Still skeptical? Fair.<br /><span class="hl">We've got answers.</span></h2>
+        <div class="faq">
+          <div class="faq-item rv"><button aria-expanded="false">Does Favmoney actually pay out?<span class="plus">+</span></button><div class="a"><div>Yes. Rewards are funded by brand partners and paid via PayPal, gift cards and crypto once you hit the minimum (usually $5). PayPal typically lands same-day after review; gift codes arrive by email within minutes to hours. Some payouts are briefly held for anti-fraud checks — that protects the pool for real earners.</div></div></div>
+          <div class="faq-item rv"><button aria-expanded="false">Will I get rich, and what's the catch?<span class="plus">+</span></button><div class="a"><div>No — and run from anyone promising that. Think coffee-and-takeaway money, not a salary. Most members earn a few dollars to ~$50/month depending on time and quests picked. The honest trade-off is time: quests take real play. Pick games you'd enjoy anyway, dip in during downtime, never feel locked in.</div></div></div>
+          <div class="faq-item rv"><button aria-expanded="false">Why do some rewards get reviewed or declined?<span class="plus">+</span></button><div class="a"><div>Because the pool is shared. If we paid every claim blindly, bots would drain it. We review completions, device signals and offer callbacks. Finish quests yourself, on one account, without VPNs or manipulated installs, and you'll be fine. Reviews keep payouts flowing to real humans.</div></div></div>
+          <div class="faq-item rv"><button aria-expanded="false">Is it really free, and how does Favmoney make money?<span class="plus">+</span></button><div class="a"><div>Joining is free forever — no card, no subscription. Brands pay us to bring real, engaged users; we keep a margin and return the larger share to you as rewards. The bigger Favmoney gets, the more we can give back. That's the whole model.</div></div></div>
+          <div class="faq-item rv"><button aria-expanded="false">What happens with my data?<span class="plus">+</span></button><div class="a"><div>We never sell your data. We use it to match quests, keep rewards fair and stop fraud. See our <a href="privacy.html" style="color:#9be9c4">Privacy Policy</a> for details, and <a href="terms.html" style="color:#9be9c4">Terms</a> for payout rules.</div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL -->
+    <section class="section" id="join">
+      <div class="wrap">
+        <div class="final rv">
+          <div class="final-ico"><svg><use href="#i-wallet"/></svg></div>
+          <h2>Ready to get rewarded<br />for playtime?</h2>
+          <p>Join free in 30 seconds. Pick a game tonight, earn your first bucks this week.</p>
+          <a class="btn btn-green btn-block" style="max-width:320px;margin:0 auto" href="signup.html">Claim your free account</a>
+          <p class="tiny">Free forever · No card · Cancel anytime</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="foot-grid">
+        <div>
+          <a class="brand" href="index.html" style="margin-bottom:12px"><svg class="brand-mark" viewBox="0 0 21 19" fill="none" aria-hidden="true"><path fill="#01D676" fill-rule="evenodd" clip-rule="evenodd" d="M17.5 13.17V9.64s.03-.86-1.17-.11c-.45.26-1.1.5-1.09 2.12v1.34s.02 2.9-3.26 2.9h-.32v.71c0 .44-.36.63-.61.63h-1.15s-.56-.01-.56-.54v-.76H6.98s-1.12-.01-1.12-1.19c0-.66.53-1.12 1.12-1.13h4.85s1.11.04 1.11-1.17c0-.61-.29-1.23-1.2-1.23H1.43s-1.25-.02-1.36 2.06c-.03.66 0 1.22.37 1.58s3 3.02 3 3.02.56.54 2 .54h7.32s4.74.09 4.74-4.68v-.62Z"/></svg><span class="brand-word"><span class="g">FAV</span><span class="w">MONEY</span></span></a>
+          <p style="color:var(--muted);font-size:14px;max-width:22rem">Favmoney is where playtime pays. Complete games, surveys and cashback quests, then cash out fast.</p>
+          <p style="color:var(--faint);font-size:12px;display:flex;align-items:center;gap:6px"><svg class="ic star-inline" aria-hidden="true"><use href="#i-star"/></svg> Excellent · Community rating 4.6</p>
+        </div>
+        <div><h4>Favmoney</h4><a href="cashout.html">Cashout</a><a href="cashout.html">Gift cards</a><a href="cashout.html">Crypto payouts</a><a href="#reviews">Reviews</a></div>
+        <div><h4>Earn</h4><a href="tasks.html">Play games</a><a href="tasks.html?cat=surveys">Surveys</a><a href="tasks.html?cat=cashback">Cashback</a><a href="#how">How it works</a></div>
+        <div><h4>Resources</h4><a href="#faq">FAQ</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="signup.html">Join free</a></div>
+        <div><h4>Company</h4><a href="index.html">About</a><a href="#faq">Trust &amp; safety</a><a href="mailto:hello@favemoney.site">Contact</a><a href="tasks.html">All quests</a></div>
+      </div>
+      <div class="foot-bottom"><span>© 2026 Favmoney · favemoney.site · Demo (Day 3). Rewards illustrative.</span><span><a href="terms.html">Terms</a> · <a href="privacy.html">Privacy</a> · <a href="404.html">404</a></span></div>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status"></div>
+  <script src="js/store.js"></script>
+  <script src="js/main.js" defer></script>
+  <script type="module">
+    import { joinWaitlist, track } from './js/firebase.js';
+    document.getElementById('email-form')?.addEventListener('submit', async function () {
+      var v = document.getElementById('email')?.value?.trim?.() || '';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return;
+      try { await joinWaitlist(v, 'landing'); track('join_waitlist', {}); } catch (e) {}
+    }, true);
+  </script>
 </body>
 </html>

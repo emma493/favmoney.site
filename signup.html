@@ -69,7 +69,7 @@ import { auth, ensureUserDoc, joinWaitlist, track, createUserWithEmailAndPasswor
       try{await joinWaitlist(e,'signup');}catch(_){}
       FavStore.setUser({uid:cred.user.uid,email:e,at:new Date().toISOString(),provider:'email',refcode:ref||null});FavStore.addToWaitlist(e);
       track('sign_up',{method:'email'});
-      show('Account created. Redirecting to your dashboard…');setTimeout(function(){location.href='dashboard.html';},900);
+      show('Account created. Redirecting to earn…');setTimeout(function(){location.href='earn.html';},900);
     }catch(err){
       console.error('[signup-email]', err && err.code, err && err.message);
       FavStore.setUser({email:e,at:new Date().toISOString(),provider:'email-offline',refcode:ref||null});FavStore.addToWaitlist(e);

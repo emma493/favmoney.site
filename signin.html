@@ -46,7 +46,7 @@ import { auth, ensureUserDoc, track, signInWithEmailAndPassword } from './js/fir
       await ensureUserDoc(cred.user,'email');
       FavStore.setUser({uid:cred.user.uid,email:cred.user.email,at:new Date().toISOString(),provider:'email'});
       track('login',{method:'email'});
-      show('Signed in. Redirecting…');setTimeout(function(){location.href='dashboard.html';},900);
+      show('Signed in. Redirecting…');setTimeout(function(){location.href='earn.html';},900);
     }catch(err){
       var msg='Sign-in failed. Check email/password.';
       if(err&&err.code==='auth/invalid-credential')msg='Wrong email or password.';

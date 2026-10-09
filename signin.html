@@ -31,12 +31,12 @@
 </div></main>
 <nav class="mobilenav" aria-label="Mobile"><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>Home</a><a href="earn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
 <div class="toast" id="toast" role="status"></div>
-<script src="js/store.js"></script>
+
 <script type="module">
 import { auth, ensureUserDoc, track, signInWithEmailAndPassword } from './js/firebase.js';
 (function(){
   var toast=document.getElementById('toast'),tm=null;function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
-  var prev=FavStore.getUser();if(prev&&prev.email){document.getElementById('email').value=prev.email;}
+
   document.getElementById('go').addEventListener('click',async function(){
     var e=document.getElementById('email').value.trim(),p=document.getElementById('pass').value;
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)){show('Enter a valid email.');return;}
@@ -44,8 +44,7 @@ import { auth, ensureUserDoc, track, signInWithEmailAndPassword } from './js/fir
     try{
       var cred=await signInWithEmailAndPassword(auth,e,p);
       await ensureUserDoc(cred.user,'email');
-      FavStore.setUser({uid:cred.user.uid,email:cred.user.email,at:new Date().toISOString(),provider:'email'});
-      track('login',{method:'email'});
+      try{track('login',{method:'email'});}catch(_){}
       show('Signed in. Redirecting…');setTimeout(function(){location.href='earn.html';},900);
     }catch(err){
       var msg='Sign-in failed. Check email/password.';

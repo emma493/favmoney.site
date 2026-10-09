@@ -33,9 +33,8 @@
 </div></main>
 <nav class="mobilenav" aria-label="Mobile"><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>Home</a><a href="earn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
 <div class="toast" id="toast" role="status"></div>
-<script src="js/store.js"></script>
 <script type="module">
-import { auth, ensureUserDoc, joinWaitlist, track, createUserWithEmailAndPassword } from './js/firebase.js';
+import { auth, ensureUserDoc, updateUserDoc, joinWaitlist, track, createUserWithEmailAndPassword } from './js/firebase.js';
 (function(){
   var toast=document.getElementById('toast'),tm=null;function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
   function friendly(code){
@@ -45,8 +44,8 @@ import { auth, ensureUserDoc, joinWaitlist, track, createUserWithEmailAndPasswor
     if(code==='auth/operation-not-allowed')return 'Email sign-up is disabled in Firebase Console. Enable Email/Password provider.';
     if(code==='auth/network-request-failed')return 'Network error. Check connection and try again.';
     if(code==='permission-denied')return 'Account created, but Firestore blocked the write. Paste firestore.rules into Firebase Console > Firestore > Rules.';
-    if(code) return 'Sign-up failed ('+code+'). Saved locally; check Console for details.';
-    return 'Sign-up failed. Saved locally; check Firebase config/rules.';
+    if(code) return 'Sign-up failed ('+code+'). Check Console for details.';
+    return 'Sign-up failed. Check connection and Firebase config/rules.';
   }
   function cleanRef(v){ return (v||'').toUpperCase().replace(/[^A-Z]/g,'').slice(0,6); }
   var refInput=document.getElementById('refcode');
@@ -67,12 +66,11 @@ import { auth, ensureUserDoc, joinWaitlist, track, createUserWithEmailAndPasswor
       var cred=await createUserWithEmailAndPassword(auth,e,p);
       await ensureUserDoc(cred.user,'email');
       try{await joinWaitlist(e,'signup');}catch(_){}
-      FavStore.setUser({uid:cred.user.uid,email:e,at:new Date().toISOString(),provider:'email',refcode:ref||null});FavStore.addToWaitlist(e);
-      track('sign_up',{method:'email'});
+      if(ref){try{await updateUserDoc(cred.user.uid,{refcode:ref});}catch(_){}}
+      try{track('sign_up',{method:'email'});}catch(_){}
       show('Account created. Redirecting to earn…');setTimeout(function(){location.href='earn.html';},900);
     }catch(err){
       console.error('[signup-email]', err && err.code, err && err.message);
-      FavStore.setUser({email:e,at:new Date().toISOString(),provider:'email-offline',refcode:ref||null});FavStore.addToWaitlist(e);
       show(friendly(err && err.code));
     }
   });

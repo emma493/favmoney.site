@@ -20,11 +20,12 @@
 <a href="withdraw.html">Cashout<span class="dot"></span></a>
 <a href="rewards.html" class="active">Rewards<span class="dot"></span></a>
 </nav>
-<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal">$0.00</span><span id="chip-name">Guest</span></a></div>
+<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal">—</span><span id="chip-name">Sign in</span></a></div>
 </div></header>
 <main>
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
 <h1 class="dash-title">Bonuses <span style="font-size:12px;font-weight:800;color:#06240f;background:var(--green);border-radius:6px;padding:2px 8px;vertical-align:middle">NEW</span></h1>
+<div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to claim streaks and bonuses.</div>
 <div class="bonus-tabs" role="tablist" aria-label="Bonus categories">
 <button class="on" data-tab="streak" role="tab" aria-selected="true">Daily Streak</button>
 <button data-tab="lottery" role="tab" aria-selected="false">Weekly Lottery</button>
@@ -35,18 +36,18 @@
 <div class="streak-strip" id="strip"></div>
 <div class="prog"><i id="s-prog" style="width:0%"></i></div>
 <div class="prog-lbl"><span><b id="s-have">$0</b> / $1 today</span><span id="s-day">Day 1</span></div>
-<button class="btn btn-green btn-block" id="claim" disabled>Claim $0</button>
+<button class="btn btn-green btn-block" id="claim" disabled>Sign in to claim</button>
 </div>
 <div class="bonus-card" id="panel-lottery" style="display:none">
 <h2 style="font-size:20px;margin:0 0 8px">Weekly Lottery</h2>
 <p style="color:var(--muted);font-size:14px;margin:0 0 6px">Every $1 you earn is a ticket. Draw every Sunday.</p>
-<div class="reward-row gold"><span class="amt">$50,000</span><span class="tt">This week's jackpot<br /><small style="color:var(--faint)" id="tickets">0 tickets</small></span></div>
+<div class="reward-row gold"><span class="amt">$50,000</span><span class="tt">This week's jackpot<br /><small style="color:var(--faint)" id="tickets">Sign in to see tickets</small></span></div>
 <button class="btn btn-ghost btn-block" id="lottery-info">How it works</button>
 </div>
 <div class="bonus-card" id="panel-codes" style="display:none">
 <h2 style="font-size:20px;margin:0 0 8px">Have a bonus code?</h2>
 <p style="color:var(--muted);font-size:14px;margin:0 0 12px">Follow our socials to get notified when we drop new bonus codes.</p>
-<div class="share-row" style="margin:0 0 14px"><a class="btn btn-ghost" href="index.html" data-soon>Facebook</a><a class="btn btn-ghost" href="index.html" data-soon>Instagram</a><a class="btn btn-ghost" href="index.html" data-soon">X</a></div>
+<div class="share-row" style="margin:0 0 14px"><a class="btn btn-ghost" href="index.html" data-soon>Facebook</a><a class="btn btn-ghost" href="index.html" data-soon>Instagram</a><a class="btn btn-ghost" href="index.html" data-soon>X</a></div>
 <label for="code" style="font-size:13px;font-weight:700;color:#c9cce4">Bonus code</label>
 <input id="code" class="search" style="padding-left:16px" placeholder="BONUS CODE" autocomplete="off" />
 <button class="btn btn-green btn-block" id="apply" style="margin-top:12px">Apply</button>
@@ -56,61 +57,71 @@
 <footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="earn.html">Earn</a> · <a href="quests.html">Quests</a> · <a href="terms.html">Terms</a></span></div></div></footer>
 <nav class="mobilenav" aria-label="Mobile"><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>Home</a><a href="earn.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
 <div class="toast" id="toast" role="status"></div>
-<script src="js/store.js"></script>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet, track } from './js/firebase.js';
+import { auth, onAuthStateChanged, getWallet, getUserDoc, updateUserDoc, creditReward, fetchUserDocs, track } from './js/firebase.js';
 (function(){
   var PAYOUTS=[0.10,0.15,0.20,0.30,0.50,1.00,150.00];
+  var uid=null, streak={days:0,last:''}, lifetime=0, proofsCache=[];
   var toast=document.getElementById('toast'),tm=null;
   function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3000);}
-  function streak(){
-    try{return JSON.parse(localStorage.getItem('favmoney_streak')||'{"days":0,"last":""}');}catch(e){return {days:0,last:''};}
-  }
   function today(){return new Date().toISOString().slice(0,10);}
   function todayEarned(){
     var sum=0,cut=Date.now()-864e5;
-    FavStore.getProofs().forEach(function(p){if(p.at&&new Date(p.at).getTime()>cut)sum+=Number(p.amount||0);});
+    proofsCache.forEach(function(p){
+      var t=p.at&&(p.at.seconds?p.at.seconds*1000:new Date(p.at).getTime());
+      if(t&&t>cut)sum+=Number(p.amount||0);
+    });
     return Math.round(sum*100)/100;
   }
   function render(){
-    var s=streak(),claimed=s.last===today();
-    var dayIdx=claimed?s.days:((s.days%7)+1);
-    if(!claimed&&s.days>0){
-      var yest=new Date(Date.now()-864e5).toISOString().slice(0,10);
-      dayIdx=(s.last===yest)?((s.days%7)+1):1;
+    var claimed=streak.last===today();
+    var dayIdx=1;
+    if(uid){
+      dayIdx=claimed?streak.days:((streak.days%7)+1);
+      if(!claimed&&streak.days>0){
+        var yest=new Date(Date.now()-864e5).toISOString().slice(0,10);
+        dayIdx=(streak.last===yest)?((streak.days%7)+1):1;
+      }
     }
     var html='';
     for(var d=1;d<=7;d++){
-      var cls=d<dayIdx||(claimed&&d<=s.days)?'hit':'';
-      if(d===dayIdx&&!claimed)cls+=' today';
+      var cls=(uid&&(d<dayIdx||(claimed&&d<=streak.days)))?'hit':'';
+      if(uid&&d===dayIdx&&!claimed)cls+=' today';
       var prize=d===7?'up to $150':'$'+PAYOUTS[d-1].toFixed(2);
       var mark=d===7?'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ECC206" stroke-width="2" style="margin:0 auto 4px;display:block"><rect x="3" y="8" width="18" height="4"/><path d="M5 12v8h14v-8M12 8v12M12 8S7 8 5 6a2 2 0 0 1 3-2c1.5 1 4 4 4 4Zm0 0s5 0 7-2a2 2 0 0 0-3-2c-1.5 1-4 4-4 4Z"/></svg>':'<span style="display:block;width:10px;height:10px;border-radius:50%;background:currentColor;margin:6px auto;opacity:.7"></span>';
       html+='<div class="day-cell '+cls+'">'+mark+'<b>Day '+d+'</b>'+prize+'</div>';
     }
     document.getElementById('strip').innerHTML=html;
-    var have=todayEarned();
+    var have=uid?todayEarned():0;
     document.getElementById('s-have').textContent='$'+have.toFixed(2);
     document.getElementById('s-prog').style.width=Math.min(100,have*100)+'%';
     document.getElementById('s-day').textContent='Day '+dayIdx;
+    document.getElementById('tickets').textContent=uid?(Math.floor(lifetime)+' tickets'):'Sign in to see tickets';
     var btn=document.getElementById('claim');
-    if(claimed){btn.disabled=true;btn.textContent='Claimed — come back tomorrow';}
+    if(!uid){btn.disabled=true;btn.textContent='Sign in to claim';}
+    else if(claimed){btn.disabled=true;btn.textContent='Claimed — come back tomorrow';}
     else if(have>=1){btn.disabled=false;btn.textContent='Claim $'+PAYOUTS[(dayIdx-1)%7].toFixed(2);}
     else{btn.disabled=true;btn.textContent='Earn $'+(1-have).toFixed(2)+' more to claim';}
-    document.getElementById('tickets').textContent=Math.floor(FavStore.getWallet().lifetime)+' tickets';
   }
-  document.getElementById('claim').addEventListener('click',function(){
-    var s=streak();
-    if(s.last===today())return;
+  document.getElementById('claim').addEventListener('click',async function(){
+    if(!uid){show('Sign in to claim your streak.');setTimeout(function(){location.href='signin.html';},1200);return;}
+    if(streak.last===today())return;
     var yest=new Date(Date.now()-864e5).toISOString().slice(0,10);
-    var days=(s.last===yest)?s.days+1:1;
+    var days=(streak.last===yest)?streak.days+1:1;
     var prize=PAYOUTS[(days-1)%7];
     if(days%7===0&&days>0)prize=PAYOUTS[6];
-    FavStore.addReward(prize,'Daily streak day '+days);
-    try{localStorage.setItem('favmoney_streak',JSON.stringify({days:days,last:today()}));}catch(e){}
-    try{track('streak_claim',{days:days});}catch(e){}
-    show('Streak claimed: $'+prize.toFixed(2)+' (day '+days+')');
-    paintChip();render();
+    btn_busy(true);
+    try{
+      await creditReward(uid,prize,'Daily streak day '+days);
+      streak={days:days,last:today()};
+      await updateUserDoc(uid,{streak:streak});
+      try{track('streak_claim',{days:days});}catch(e){}
+      show('Streak claimed: $'+prize.toFixed(2)+' (day '+days+')');
+      await refresh();
+    }catch(err){show('Claim failed — check connection.');}
+    btn_busy(false);
   });
+  function btn_busy(b){document.getElementById('claim').disabled=b;}
   document.getElementById('lottery-info').addEventListener('click',function(){
     show('Every $1 earned = 1 ticket. Winner drawn Sunday, paid Monday.');
   });
@@ -128,30 +139,35 @@ import { auth, onAuthStateChanged, getWallet, track } from './js/firebase.js';
     ['streak','lottery','codes'].forEach(function(t){
       document.getElementById('panel-'+t).style.display=(t===b.dataset.tab)?'':'none';
     });
-    var tab=new URLSearchParams({tab:b.dataset.tab==='streak'?'streak7Days':b.dataset.tab});
-    history.replaceState(null,'','rewards.html?'+tab.toString());
+    history.replaceState(null,'','rewards.html?tab='+(b.dataset.tab==='streak'?'streak7Days':b.dataset.tab));
   });
-  (function(){
-    var t=new URLSearchParams(location.search).get('tab');
-    if(t==='lottery'||t==='codes'||t==='quests'){
-      var map={lottery:'lottery',codes:'codes',quests:'streak'};
-      var btn=document.querySelector('.bonus-tabs button[data-tab="'+map[t]+'"]');
-      if(btn&&t!=='quests')btn.click();
-    }
-  })();
-  function paintChip(){
-    var w=FavStore.getWallet(),u=FavStore.getUser();
-    document.getElementById('chip-bal').textContent='$'+w.pending.toFixed(2);
-    if(u&&u.email)document.getElementById('chip-name').textContent=u.email.split('@')[0];
+  async function refresh(){
+    if(!uid)return;
+    try{
+      var w=await getWallet(uid);
+      lifetime=Number(w.lifetime);
+      document.getElementById('chip-bal').textContent='$'+Number(w.pending).toFixed(2);
+      proofsCache=await fetchUserDocs(uid,'proofs',50);
+    }catch(e){}
+    render();
   }
   try{
     onAuthStateChanged(auth,async function(user){
-      if(!user)return;
-      try{var w=await getWallet(user.uid);document.getElementById('chip-bal').textContent='$'+Number(w.pending).toFixed(2);}catch(e){}
-      var u=FavStore.getUser();if(u&&u.email)document.getElementById('chip-name').textContent=u.email.split('@')[0];
+      if(!user){
+        uid=null;streak={days:0,last:''};lifetime=0;proofsCache=[];
+        document.getElementById('auth-wall').style.display='';
+        document.getElementById('user-chip').setAttribute('href','signin.html');
+        render();return;
+      }
+      uid=user.uid;
+      document.getElementById('auth-wall').style.display='none';
+      document.getElementById('user-chip').setAttribute('href','profile.html');
+      document.getElementById('chip-name').textContent=(user.email||'Member').split('@')[0];
+      try{var doc=await getUserDoc(uid);streak=doc.streak||{days:0,last:''};}catch(e){}
+      await refresh();
     });
-  }catch(e){}
-  paintChip();render();
+  }catch(e){document.getElementById('auth-wall').style.display='';render();}
+  render();
   var root=document.documentElement;function onS(){if(scrollY>0)root.setAttribute('data-top-nav-scrolled','true');else root.removeAttribute('data-top-nav-scrolled');}addEventListener('scroll',onS,{passive:true});onS();
 })();
 </script>

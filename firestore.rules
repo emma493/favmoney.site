@@ -1,23 +1,60 @@
 // Favmoney Firestore rules — paste into Firebase Console → Firestore → Rules.
-// Auth is already enabled (Email/Password + Google). These rules make the
-// web apiKey safe: users can only touch their own docs; waitlist is open-create.
+// Auth: Email/Password (+ Google if re-enabled). No anonymous.
+// Model is Firestore-only: no localStorage. Users touch only their own docs.
+// NOTE: client-side increments are validated for shape here; full authoritative
+// accounting (server-set amounts) needs a Cloud Function when backend lands.
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function self(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if self(userId);
+      allow create: if self(userId)
+        && request.resource.data.keys().hasOnly(['email', 'provider', 'createdAt', 'updatedAt', 'streak', 'started', 'claimedQuests', 'refcode'])
+        && (request.resource.data.email is string || request.resource.data.email == null);
+      allow update: if self(userId)
+        && request.resource.data.keys().hasOnly(['email', 'provider', 'createdAt', 'updatedAt', 'streak', 'started', 'claimedQuests', 'refcode'])
+        && (!('streak' in request.resource.data) || (request.resource.data.streak is map
+          && request.resource.data.streak.days is number
+          && request.resource.data.streak.last is string))
+        && (!('claimedQuests' in request.resource.data) || request.resource.data.claimedQuests is list)
+        && (!('started' in request.resource.data) || request.resource.data.started is map)
+        && (!('refcode' in request.resource.data) || request.resource.data.refcode is string);
+      allow delete: if false;
     }
+
     match /wallets/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if self(userId);
+      allow create: if self(userId)
+        && request.resource.data.pending is number && request.resource.data.pending >= 0
+        && request.resource.data.lifetime is number && request.resource.data.lifetime >= 0;
+      allow update: if self(userId)
+        && request.resource.data.pending is number && request.resource.data.pending >= 0
+        && request.resource.data.lifetime is number && request.resource.data.lifetime >= 0;
+      allow delete: if false;
     }
+
     match /proofs/{docId} {
-      allow create: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.amount is number && request.resource.data.amount >= 0
+        && request.resource.data.status == 'pending';
       allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
     }
+
     match /cashouts/{docId} {
-      allow create: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.amount is number && request.resource.data.amount >= 5
+        && request.resource.data.status == 'review';
       allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
     }
+
     match /waitlist/{docId} {
       allow create: if true;
       allow read: if false;

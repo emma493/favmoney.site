@@ -16,6 +16,7 @@
 <div class="auth"><a class="btn btn-ghost" href="earn.html">Earn</a><a class="btn btn-green" href="signup.html">Sign Up</a></div>
 </div></header>
 <main class="section" style="padding-top:130px"><div class="wrap" style="max-width:760px">
+<div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to get your referral link.</div>
 <a href="earn.html" style="color:#9be9c4;font-size:14px;text-decoration:none">← Back to earn</a>
 <h1 style="font-size:32px;margin:12px 0 6px">Invite friends, earn forever</h1>
 <p style="color:var(--muted)">Share your link. You earn a cut of every friend's quest rewards — they earn too.</p>
@@ -31,7 +32,6 @@
 </div></main>
 <nav class="mobilenav" aria-label="Mobile"><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>Home</a><a href="earn.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
 <div class="toast" id="toast" role="status"></div>
-<script src="js/store.js"></script>
 <script type="module">
 import { auth, onAuthStateChanged } from './js/firebase.js';
 (function(){
@@ -39,10 +39,10 @@ import { auth, onAuthStateChanged } from './js/firebase.js';
   var link=document.getElementById('reflink');
   try{
     onAuthStateChanged(auth,function(user){
-      if(user){link.value=location.origin+'/signup.html?ref='+user.uid.slice(0,8);}
+      if(!user){document.getElementById('auth-wall').style.display='';return;}
+      link.value=location.origin+'/signup.html?ref='+user.uid.slice(0,8);
     });
-  }catch(e){}
-  var u=FavStore.getUser();if(u&&u.uid){link.value=location.origin+'/signup.html?ref='+u.uid.slice(0,8);}
+  }catch(e){document.getElementById('auth-wall').style.display='';}
   document.getElementById('copy').addEventListener('click',async function(){
     try{await navigator.clipboard.writeText(link.value);show('Invite link copied.');}
     catch(e){link.select();try{document.execCommand('copy');show('Invite link copied.');}catch(_){show('Copy this link manually.');}}

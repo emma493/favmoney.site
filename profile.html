@@ -20,10 +20,11 @@
 <a href="withdraw.html">Cashout<span class="dot"></span></a>
 <a href="rewards.html">Rewards<span class="dot"></span></a>
 </nav>
-<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal">$0.00</span><span id="chip-name">Guest</span></a></div>
+<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal">—</span><span id="chip-name">Sign in</span></a></div>
 </div></header>
 <main>
 <section class="page-hero"><div class="dash-shell">
+<div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to see your profile.</div>
 <div class="tabs" role="tablist" aria-label="Profile sections" style="border:0;padding:0;margin-bottom:14px">
 <button class="on" role="tab" aria-selected="true">My Profile</button>
 <a class="btn btn-ghost" href="settings.html" style="margin-left:auto;min-height:44px">Settings</a>
@@ -60,14 +61,14 @@
 <footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="earn.html">Earn</a> · <a href="withdraw.html">Cashout</a> · <a href="terms.html">Terms</a></span></div></div></footer>
 <nav class="mobilenav" aria-label="Mobile"><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>Home</a><a href="earn.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
 <div class="toast" id="toast" role="status"></div>
-<script src="js/store.js"></script>
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, fetchUserDocs } from './js/firebase.js';
 (function(){
-  var cat='all', proofs=[];
-  function relDate(iso){
-    if(!iso)return 'recently';
-    var d=Math.max(0,Math.round((Date.now()-new Date(iso).getTime())/864e5));
+  var cat='all', proofs=[], earn=0, userEmail='', joinedLabel='—';
+  function relDate(ts){
+    if(!ts)return 'recently';
+    var ms=ts.seconds?ts.seconds*1000:new Date(ts).getTime();
+    var d=Math.max(0,Math.round((Date.now()-ms)/864e5));
     if(d===0)return 'today';if(d===1)return '1 day ago';if(d<30)return d+' days ago';
     if(d<365)return Math.floor(d/30)+' mo ago';return Math.floor(d/365)+'Y ago';
   }
@@ -94,11 +95,14 @@ import { auth, onAuthStateChanged, getWallet, fetchUserDocs } from './js/firebas
       return '<tr><td>'+(p.label||p.title||'Quest')+'</td><td>$'+Number(p.amount||0).toFixed(2)+'</td><td>'+pill(p.status)+'</td><td>'+(p.partner||'Favmoney')+'</td><td>'+relDate(p.at||p.createdAt)+'</td></tr>';
     }).join(''):'<tr><td colspan="5" style="color:var(--muted)">No history yet. <a href="earn.html" style="color:#8ff0bd">Start your first offer</a>.</td></tr>';
   }
+  function tsOf(p){
+    if(!p||!p.at)return 0;
+    if(p.at.seconds)return p.at.seconds*1000;
+    return new Date(p.at).getTime()||0;
+  }
   function paintStats(){
-    var w=FavStore.getWallet(),u=FavStore.getUser();
-    var earn=w.lifetime,done=proofs.filter(function(p){return /paid|done|approved/i.test(p.status||'');}).length;
+    var done=proofs.filter(function(p){return /paid|done|approved/i.test(p.status||'');}).length;
     var lvl=Math.floor(earn/10)+1,next=(lvl*10-earn);
-    document.getElementById('chip-bal').textContent='$'+w.pending.toFixed(2);
     document.getElementById('p-earn').textContent='$'+earn.toFixed(2);
     document.getElementById('p-done').textContent=done;
     document.getElementById('p-done2').textContent=done;
@@ -106,15 +110,13 @@ import { auth, onAuthStateChanged, getWallet, fetchUserDocs } from './js/firebas
     document.getElementById('p-level').textContent='Level '+lvl;
     document.getElementById('p-levelbar').style.width=Math.min(100,(earn%10)*10)+'%';
     document.getElementById('p-next').textContent='$'+next.toFixed(2)+' to level up';
-    var cutoff=Date.now()-30*864e5,last30=proofs.filter(function(p){return p.at&&new Date(p.at).getTime()>cutoff;}).reduce(function(s,p){return s+Number(p.amount||0);},0);
+    var cutoff=Date.now()-30*864e5,last30=proofs.filter(function(p){return tsOf(p)>cutoff;}).reduce(function(s,p){return s+Number(p.amount||0);},0);
     document.getElementById('p-30').textContent='$'+last30.toFixed(2);
-    var name='Guest',joined='Joined recently';
-    if(u&&u.email){name=u.email.split('@')[0];document.getElementById('chip-name').textContent=name;document.getElementById('avatar').textContent=name.charAt(0).toUpperCase();}
-    if(u&&u.at){var d=Math.max(0,Math.round((Date.now()-new Date(u.at).getTime())/864e5));joined=d<1?'Joined today':d<30?'Joined '+d+'d ago':d<365?'Joined '+Math.floor(d/30)+'mo ago':'Joined '+Math.floor(d/365)+'Y ago';}
+    var name=userEmail?userEmail.split('@')[0]:'Guest';
+    if(userEmail){document.getElementById('chip-name').textContent=name;document.getElementById('avatar').textContent=name.charAt(0).toUpperCase();}
     document.getElementById('p-name').textContent=name;
-    document.getElementById('p-joined').textContent=joined;
+    document.getElementById('p-joined').textContent=joinedLabel;
   }
-  proofs=FavStore.getProofs().slice().reverse();
   document.getElementById('cat-tabs').addEventListener('click',function(e){
     var b=e.target.closest('button[data-cat]');if(!b)return;cat=b.dataset.cat;
     document.querySelectorAll('#cat-tabs button').forEach(function(x){var on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-selected',on);});
@@ -125,19 +127,36 @@ import { auth, onAuthStateChanged, getWallet, fetchUserDocs } from './js/firebas
     render();
     if(this.value!=='all'){var t=document.getElementById('toast');t.textContent='Partner detail syncs after sign-in.';t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2200);}
   });
+  function ago(ms){
+    var d=Math.max(0,Math.round(ms/864e5));
+    if(d<1)return 'Joined today';if(d<30)return 'Joined '+d+'d ago';
+    if(d<365)return 'Joined '+Math.floor(d/30)+'mo ago';return 'Joined '+Math.floor(d/365)+'Y ago';
+  }
   try{
     onAuthStateChanged(auth,async function(user){
-      if(!user){paintStats();render();return;}
+      if(!user){
+        document.getElementById('auth-wall').style.display='';
+        document.getElementById('user-chip').setAttribute('href','signin.html');
+        earn=0;proofs=[];userEmail='';joinedLabel='—';
+        paintStats();render();return;
+      }
+      userEmail=user.email||'';
+      try{
+        var meta=user.metadata&&user.metadata.creationTime?new Date(user.metadata.creationTime).getTime():Date.now();
+        joinedLabel=ago(Date.now()-meta);
+      }catch(e){joinedLabel='Member';}
       try{
         var w=await getWallet(user.uid);
+        earn=Number(w.lifetime);
         document.getElementById('chip-bal').textContent='$'+Number(w.pending).toFixed(2);
-        var fp=await fetchUserDocs(user.uid,'proofs',50);
-        if(fp.length){proofs=fp.slice().reverse();}
-        paintStats();render();
-      }catch(e){paintStats();render();}
+        proofs=await fetchUserDocs(user.uid,'proofs',50);
+      }catch(e){earn=0;proofs=[];}
+      paintStats();render();
     });
-  }catch(e){paintStats();render();}
-  paintStats();render();
+  }catch(e){
+    document.getElementById('auth-wall').style.display='';
+    paintStats();render();
+  }
   var root=document.documentElement;function onS(){if(scrollY>0)root.setAttribute('data-top-nav-scrolled','true');else root.removeAttribute('data-top-nav-scrolled');}addEventListener('scroll',onS,{passive:true});onS();
 })();
 </script>

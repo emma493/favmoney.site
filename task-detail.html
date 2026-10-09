@@ -20,6 +20,7 @@
 <div class="auth"><a class="btn btn-ghost" href="earn.html">All quests</a><a class="btn btn-green" href="withdraw.html">Cashout</a></div>
 </div></header>
 <main class="section" style="padding-top:130px"><div class="wrap" style="max-width:760px">
+<div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> or <a href="signup.html" style="color:#8ff0bd;font-weight:700">create a free account</a> to submit proof and earn.</div>
 <a href="earn.html" style="color:#9be9c4;font-size:14px;text-decoration:none">← Back to quests</a>
 <h1 id="t-title" style="font-size:32px;margin:12px 0 6px">Quest</h1>
 <p id="t-meta" style="color:var(--muted)">Loading…</p>
@@ -39,9 +40,8 @@
 </div></main>
 <nav class="mobilenav" aria-label="Mobile"><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>Home</a><a href="earn.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
 <div class="toast" id="toast" role="status"></div>
-<script src="js/store.js"></script>
 <script type="module">
-import { auth, onAuthStateChanged, creditWallet, submitProof, joinWaitlist, track } from './js/firebase.js';
+import { auth, onAuthStateChanged, creditWallet, submitProof, track } from './js/firebase.js';
 (function(){
   var DATA={'merge-quest':{title:'Merge Quest — Reach Level 12',meta:'Puzzle · 6 milestones · ~5 days',pay:18.20,miles:['Install via Favmoney link and open the game','Complete tutorial (Level 3) — $1.10','Reach Level 6 — $4.30','Reach Level 12 — $12.80']},'royal-riches':{title:'Royal Riches — Clear 40 boards',meta:'Match-3 · 4 milestones · ~7 days',pay:42.50,miles:['Install and finish 5 boards — $2.00','Clear 20 boards — $14.50','Clear 40 boards — $26.00']},'default':{title:'Starter Quest',meta:'Games · beginner friendly',pay:5.10,miles:['Start the quest from this page','Hit the first milestone','Payout moves to pending after review']}};
   var id=(new URLSearchParams(location.search).get('id'))||'default';
@@ -53,24 +53,21 @@ import { auth, onAuthStateChanged, creditWallet, submitProof, joinWaitlist, trac
   var toast=document.getElementById('toast'),tm=null;
   function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3200);}
   var currentUser=null;
-  try{onAuthStateChanged(auth,function(u){currentUser=u;});}catch(e){}
+  try{onAuthStateChanged(auth,function(u){
+    currentUser=u;
+    document.getElementById('auth-wall').style.display=u?'none':'';
+  });}catch(e){document.getElementById('auth-wall').style.display='';}
   document.getElementById('submit-proof').addEventListener('click',async function(){
     var p=document.getElementById('proof').value.trim(),e=document.getElementById('email').value.trim();
     if(p.length<8){show('Add a short proof note (min 8 chars) so reviewers can verify.');return;}
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)){show('Enter a valid contact email for the review.');return;}
-    FavStore.addReward(t.pay,t.title);
-    FavStore.addToWaitlist(e);
-    if(currentUser){
-      try{
-        await submitProof(currentUser.uid,{email:e,title:t.title,questId:id,amount:t.pay,note:p});
-        await creditWallet(currentUser.uid,t.pay,t.title);
-        track('submit_proof',{quest:id});
-        show('Proof sent to Firebase. $'+t.pay.toFixed(2)+' moved to pending.');
-      }catch(err){show('Saved locally. Firebase write failed — check Firestore rules.');}
-    }else{
-      try{await joinWaitlist(e,'task-proof');}catch(_){}
-      show('Proof saved locally. Sign in to sync it to Firebase. $'+t.pay.toFixed(2)+' pending (offline).');
-    }
+    if(!currentUser){show('Sign in to submit proof and earn.');setTimeout(function(){location.href='signin.html';},1200);return;}
+    try{
+      await submitProof(currentUser.uid,{email:e,title:t.title,questId:id,amount:t.pay,note:p});
+      await creditWallet(currentUser.uid,t.pay,t.title);
+      try{track('submit_proof',{quest:id});}catch(_){}
+      show('Proof submitted. $'+t.pay.toFixed(2)+' moved to pending.');
+    }catch(err){show('Submit failed — check connection and Firestore rules.');}
     document.getElementById('proof').value='';
   });
 })();

@@ -43,11 +43,15 @@
         showToast('Please enter a valid email to claim your free account.');
         return;
       }
-      if (window.FavStore) { FavStore.addToWaitlist(v); FavStore.setUser({ email: v, at: new Date().toISOString(), provider: 'email' }); }
-      else { try { localStorage.setItem('favmoney_waitlist', JSON.stringify({ email: v, at: new Date().toISOString() })); } catch (err) {} }
-      showToast('You are on the list! We saved ' + v + ' — invites open soon.');
-      email.value = '';
-      startBtn.disabled = true;
+      import('./firebase.js').then(function (fb) {
+        return fb.joinWaitlist(v, 'landing');
+      }).then(function () {
+        showToast('You are on the list! We saved ' + v + ' — invites open soon.');
+        email.value = '';
+        startBtn.disabled = true;
+      }).catch(function () {
+        showToast('Could not save. Check connection and try again.');
+      });
     });
   }
   var signin = document.querySelector('[data-signin]');

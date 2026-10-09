@@ -19,34 +19,38 @@
 <a href="earn.html" style="color:#9be9c4;font-size:14px;text-decoration:none">← Back to earn</a>
 <h1 style="font-size:32px;margin:12px 0 6px">Earnings history</h1>
 <p style="color:var(--muted)">Every proof and cashout on your account, newest first.</p>
+<div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to see your history.</div>
 <h2 style="font-size:20px;margin-top:24px">Quest rewards</h2>
-<div id="proofs"></div>
+<div id="proofs"><p style="color:var(--muted)">Loading…</p></div>
 <h2 style="font-size:20px;margin-top:24px">Cashouts</h2>
-<div id="outs"></div>
+<div id="outs"><p style="color:var(--muted)">Loading…</p></div>
 </div></main>
-<nav class="mobilenav" aria-label="Mobile"><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>Home</a><a href="earn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="withdraw.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
+<nav class="mobilenav" aria-label="Mobile"><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>Home</a><a href="earn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
 <div class="toast" id="toast" role="status"></div>
-<script src="js/store.js"></script>
 <script type="module">
 import { auth, onAuthStateChanged, fetchUserDocs } from './js/firebase.js';
 (function(){
   function row(t,s){return '<div class="mile"><span>'+t+' · '+s+'</span></div>';}
-  function paintLocal(){
-    var p=FavStore.getProofs().slice().reverse();
-    document.getElementById('proofs').innerHTML=p.length?p.map(function(x){return row((x.label||'Quest')+' — $'+Number(x.amount||0).toFixed(2),x.status||'pending');}).join(''):'<p style="color:var(--muted)">No quest rewards yet.</p>';
-    var c=[];try{c=JSON.parse(localStorage.getItem('favmoney_cashouts')||'[]').slice().reverse();}catch(e){}
-    document.getElementById('outs').innerHTML=c.length?c.map(function(x){return row('Cashout '+x.method+' — $'+Number(x.amount||0).toFixed(2),x.status||'review');}).join(''):'<p style="color:var(--muted)">No cashouts yet.</p>';
-  }
   try{
     onAuthStateChanged(auth,async function(user){
-      if(!user){paintLocal();return;}
+      if(!user){
+        document.getElementById('auth-wall').style.display='';
+        document.getElementById('proofs').innerHTML='<p style="color:var(--muted)">Sign in to see quest rewards.</p>';
+        document.getElementById('outs').innerHTML='<p style="color:var(--muted)">Sign in to see cashouts.</p>';
+        return;
+      }
       try{
         var p=await fetchUserDocs(user.uid,'proofs',50),c=await fetchUserDocs(user.uid,'cashouts',50);
         document.getElementById('proofs').innerHTML=p.length?p.map(function(x){return row(((x.title||x.label||'Quest')+' — $'+Number(x.amount||0).toFixed(2)),x.status||'pending');}).join(''):'<p style="color:var(--muted)">No quest rewards yet.</p>';
         document.getElementById('outs').innerHTML=c.length?c.map(function(x){return row(('Cashout '+x.method+' — $'+Number(x.amount||0).toFixed(2)),x.status||'review');}).join(''):'<p style="color:var(--muted)">No cashouts yet.</p>';
-      }catch(e){paintLocal();}
+      }catch(e){
+        document.getElementById('proofs').innerHTML='<p style="color:var(--muted)">History unavailable. Check connection.</p>';
+        document.getElementById('outs').innerHTML='<p style="color:var(--muted)">History unavailable. Check connection.</p>';
+      }
     });
-  }catch(e){paintLocal();}
+  }catch(e){
+    document.getElementById('auth-wall').style.display='';
+  }
 })();
 </script>
 </body>

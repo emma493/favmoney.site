@@ -21,7 +21,7 @@
     toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 3200);
   }
 
-  // 3. Email validation + mock signup
+  // 3. Email validation -> hand off to real signup with prefilled email
   var form = document.getElementById('email-form');
   var email = document.getElementById('email');
   var startBtn = document.getElementById('start-btn');
@@ -43,20 +43,12 @@
         showToast('Please enter a valid email to claim your free account.');
         return;
       }
-      import('./firebase.js').then(function (fb) {
-        return fb.joinWaitlist(v, 'landing');
-      }).then(function () {
-        showToast('You are on the list! We saved ' + v + ' — invites open soon.');
-        email.value = '';
-        startBtn.disabled = true;
-      }).catch(function () {
-        showToast('Could not save. Check connection and try again.');
-      });
+      location.href = 'signup.html?email=' + encodeURIComponent(v);
     });
   }
   var signin = document.querySelector('[data-signin]');
   if (signin) signin.addEventListener('click', function () {
-    setTimeout(function () { showToast('Sign-in is coming soon — join the waitlist above to get early access.'); }, 350);
+    setTimeout(function () { showToast('Sign-in is coming soon — enter your email above to create a free account.'); }, 350);
   });
 
   // 3b. Footer stubs: cookie settings, language, social placeholders
@@ -74,7 +66,7 @@
   document.querySelectorAll('[data-soon]').forEach(function (a) {
     a.addEventListener('click', function (e) {
       e.preventDefault();
-      showToast('Our social pages launch soon. Join the waitlist to hear first.');
+      showToast('Our social pages launch soon. Create a free account to hear first.');
     });
   });
 
@@ -154,25 +146,7 @@
     });
   }
 
-  // 8. Active nav link on scroll
-  var sections = ['top', 'rewards'];
-  function setActive() {
-    var y = window.scrollY + 120;
-    var current = 'top';
-    sections.forEach(function (id) {
-      var el = document.getElementById(id);
-      if (el && el.offsetTop <= y) current = id;
-    });
-    document.querySelectorAll('.nav-links a').forEach(function (a) {
-      var href = a.getAttribute('href');
-      var on = (href === '#top' && current === 'top') || (href === '#rewards' && current === 'rewards');
-      a.classList.toggle('active', on);
-    });
-  }
-  window.addEventListener('scroll', setActive, { passive: true });
-  setActive();
-
-  // 9. Deep-link #signup-form focus nudge
+  // 8. Deep-link #signup-form focus nudge
   if (location.hash === '#signup-form') {
     setTimeout(function () {
       var em = document.getElementById('email');

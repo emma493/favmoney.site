@@ -96,12 +96,6 @@ export async function requestCashout(uid, data) {
   });
 }
 
-export async function joinWaitlist(email, source) {
-  await addDoc(collection(db, 'waitlist'), {
-    email, source: source || 'landing', at: serverTimestamp()
-  });
-}
-
 // ---- Favmoney profile fields (replaces localStorage: streak, started, claimed) ----
 export async function getUserDoc(uid) {
   const snap = await getDoc(doc(db, 'users', uid));

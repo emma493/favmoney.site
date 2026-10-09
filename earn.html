@@ -16,9 +16,7 @@
 <a class="brand" href="index.html"><span class="brand-word"><span class="g">FAV</span><span class="w">MONEY</span></span></a>
 <nav class="nav-links" aria-label="Primary">
 <a href="earn.html" class="active">Earn<span class="dot"></span></a>
-<a href="my-offers.html">My Offers<span class="dot"></span></a>
 <a href="withdraw.html">Cashout<span class="dot"></span></a>
-<a href="rewards.html">Rewards<span class="dot"></span></a>
 </nav>
 <div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal">—</span><span id="chip-name">Sign in</span></a><button class="icon-btn" id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="ping"></span></button></div>
 </div></header>
@@ -27,73 +25,24 @@
 <h1 class="dash-title">Earn</h1>
 <p>Play games, answer surveys, earn cashback. New quests drop daily.</p>
 <div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to start offers and earn.</div>
-<div class="dev-filter" role="group" aria-label="Filter offers by device">
-<button class="chip on" data-dev="all">Desktop</button>
-<button class="chip" data-dev="android">Android</button>
-<button class="chip" data-dev="ios">iOS</button>
-</div>
-</div></section>
-<section class="section" style="padding-top:8px"><div class="dash-shell">
-<div class="sec-head"><h2>Continue earning</h2><a class="link-more" href="my-offers.html" style="margin:0">View all <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></div>
-<div class="rail" id="rail-continue"></div>
-<div class="sec-head"><h2>More offers</h2></div>
-<div class="task-grid" id="grid-more"></div>
 </div></section>
 </main>
-<footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="index.html">Home</a> · <a href="withdraw.html">Cashout</a> · <a href="terms.html">Terms</a></span></div></div></footer>
-<nav class="mobilenav" aria-label="Mobile"><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>Home</a><a href="earn.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
+<footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="withdraw.html">Cashout</a> · <a href="terms.html">Terms</a></span></div></div></footer>
+<nav class="mobilenav" aria-label="Mobile"><a href="earn.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet, getUserDoc, updateUserDoc, migrateLocal, wasMigrated, track } from './js/firebase.js';
+import { auth, onAuthStateChanged, getWallet, migrateLocal, wasMigrated, track } from './js/firebase.js';
 (function(){
-  var QUESTS=[
-    {id:'merge-quest',cat:'games',dev:['all','android','ios'],title:'Merge Quest',sub:'Reach Level 12',pay:18.20,img:'assets/games/game-sunshine-island.webp'},
-    {id:'royal-riches',cat:'games',dev:['all','android','ios'],title:'Royal Riches',sub:'Clear 40 boards',pay:42.50,img:'assets/games/game-royal-match.webp'},
-    {id:'blade-arena',cat:'games',dev:['all','android'],title:'Blade Arena',sub:'20 PvP wins',pay:65.00,img:'assets/games/game-dice-dreams.webp'},
-    {id:'island-builder',cat:'games',dev:['all','ios','android'],title:'Island Builder',sub:'Unlock 3 islands',pay:12.75,img:'assets/games/game-domino-dreams.webp'},
-    {id:'opinion-5min',cat:'surveys',dev:['all','android','ios'],title:'Opinion Pulse',sub:'5-min poll pack',pay:1.20,img:''},
-    {id:'shopper-panel',cat:'surveys',dev:['all'],title:'Shopper Panel',sub:'Weekly diary',pay:4.00,img:''},
-    {id:'grocery-cashback',cat:'cashback',dev:['all','android','ios'],title:'Grocery Cashback',sub:'8% back',pay:8.00,img:''},
-    {id:'play-store-topup',cat:'cashback',dev:['all','android'],title:'Play Top-up',sub:'12% back',pay:6.40,img:'assets/games/game-monopoly-go.webp'},
-    {id:'newbie-bundle',cat:'games',dev:['all','android','ios'],title:'Starter Bundle',sub:'3 quick games',pay:5.10,img:'assets/games/game-match-masters.webp'}
-  ];
-  var dev='all', uid=null, started={};
+  var uid=null;
   var toast=document.getElementById('toast'),tm=null;
   function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3000);}
-  function art(q){
-    if(q.img) return '<div class="art"><img src="'+q.img+'" alt="'+q.title+'" loading="lazy" /></div>';
-    return '<div class="art" style="display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:800;color:#9be9c4">'+q.title.charAt(0)+'</div>';
-  }
-  function render(){
-    var list=QUESTS.filter(function(q){return dev==='all'||q.dev.indexOf(dev)>-1;});
-    var cont=list.filter(function(q){return started[q.id];});
-    var more=list.filter(function(q){return !started[q.id];});
-    document.getElementById('rail-continue').innerHTML=cont.length?cont.map(function(q){
-      return '<a class="offer-card" href="my-offers.html?id='+q.id+'">'+art(q)+'<div class="body"><div class="t">'+q.title+'</div><span class="pay-pill">Up to $'+q.pay.toFixed(2)+'</span></div></a>';
-    }).join(''):'<p style="color:var(--muted);font-size:14px">'+(uid?'Nothing in progress — start an offer below.':'Sign in to track started offers.')+'</p>';
-    document.getElementById('grid-more').innerHTML=more.map(function(q){
-      return '<article class="task"><div class="task-top"><div class="task-ico">'+(q.img?'<img src="'+q.img+'" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:10px" />':q.title.charAt(0))+'</div><div><h3>'+q.title+' — '+q.sub+'</h3><div class="meta">'+q.cat+'</div></div></div><div class="payline"><span class="amt">Up to $'+q.pay.toFixed(2)+'</span><a class="btn btn-green" data-start="'+q.id+'" href="my-offers.html?id='+q.id+'">Start</a></div></article>';
-    }).join('');
-  }
-  document.querySelector('.dev-filter').addEventListener('click',function(e){
-    var b=e.target.closest('.chip');if(!b)return;dev=b.dataset.dev;
-    document.querySelectorAll('.dev-filter .chip').forEach(function(c){c.classList.toggle('on',c===b);});
-    render();
-  });
-  document.addEventListener('click',async function(e){
-    var s=e.target.closest('[data-start]');if(!s)return;
-    if(!uid){e.preventDefault();show('Sign in to start offers and earn.');setTimeout(function(){location.href='signin.html';},1200);return;}
-    started[s.dataset.start]=Date.now();
-    try{await updateUserDoc(uid,{started:started});}catch(err){show('Could not save. Check connection.');return;}
-    render();
-  });
   try{
     onAuthStateChanged(auth,async function(user){
       if(!user){
-        uid=null;started={};
+        uid=null;
         document.getElementById('auth-wall').style.display='';
         document.getElementById('user-chip').setAttribute('href','signin.html');
-        render();return;
+        return;
       }
       uid=user.uid;
       document.getElementById('auth-wall').style.display='none';
@@ -103,16 +52,12 @@ import { auth, onAuthStateChanged, getWallet, getUserDoc, updateUserDoc, migrate
         if(!wasMigrated()){await migrateLocal(uid);show('Old browser balance moved to your account.');}
         var w=await getWallet(uid);
         document.getElementById('chip-bal').textContent='$'+Number(w.pending).toFixed(2);
-        var doc=await getUserDoc(uid);
-        started=doc.started||{};
       }catch(err){document.getElementById('chip-bal').textContent='$0.00';}
-      render();
     });
-  }catch(e){document.getElementById('auth-wall').style.display='';render();}
+  }catch(e){document.getElementById('auth-wall').style.display='';}
   document.getElementById('bell').addEventListener('click',function(){
     show('No new notifications.');
   });
-  render();
   var root=document.documentElement;function onS(){if(scrollY>0)root.setAttribute('data-top-nav-scrolled','true');else root.removeAttribute('data-top-nav-scrolled');}addEventListener('scroll',onS,{passive:true});onS();
 })();
 </script>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cashout · Favmoney</title>
+  <meta name="description" content="Cash out Favmoney earnings: PayPal, Visa prepaid, crypto. $5 minimum." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<header class="topnav" id="topnav"><div class="topnav-inner">
+<a class="brand" href="index.html"><span class="brand-word"><span class="g">FAV</span><span class="w">MONEY</span></span></a>
+<nav class="nav-links" aria-label="Primary">
+<a href="earn.html">Earn<span class="dot"></span></a>
+<a href="my-offers.html">My Offers<span class="dot"></span></a>
+<a href="withdraw.html" class="active">Cashout<span class="dot"></span></a>
+<a href="rewards.html">Rewards<span class="dot"></span></a>
+</nav>
+<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal">$0.00</span><span id="chip-name">Guest</span></a></div>
+</div></header>
+<main>
+<section class="page-hero"><div class="dash-shell" style="max-width:1000px">
+<h1 class="dash-title">Cashout</h1>
+<div class="tabs" role="tablist" aria-label="Cashout sections">
+<button class="on" role="tab" aria-selected="true">Cashout</button>
+<a class="btn btn-ghost" href="withdrawals.html" role="tab" aria-selected="false" style="min-height:44px">My Withdrawals</a>
+</div>
+<div class="cashout-hero">
+<p class="avail">Available to withdraw</p>
+<div class="bigamt" id="avail">$0.00</div>
+<span class="pend" id="pend-pill">$0.00 pending</span>
+</div>
+<h2 style="font-size:20px;margin:30px 0 0">Most Popular</h2>
+<div class="method-grid" id="grid-pop"></div>
+<h2 style="font-size:20px;margin:26px 0 0">Crypto</h2>
+<div class="method-grid" id="grid-crypto"></div>
+<div id="denom-zone" style="display:none">
+<h2 style="font-size:20px;margin:26px 0 0" id="denom-title">Select amount</h2>
+<p style="color:var(--muted);font-size:14px;margin:4px 0 0">Higher amounts carry lower fees.</p>
+<div class="denom-strip" id="denoms"></div>
+<div class="auth-card" style="max-width:none">
+<label for="dest">Destination (PayPal email / wallet address)</label>
+<input id="dest" type="text" placeholder="you@example.com or 0x…" autocomplete="off" />
+<button class="btn btn-green btn-block" id="req" style="margin-top:14px">Request cashout</button>
+<p class="tiny">Reviewed promptly. Track status in <a href="withdrawals.html" style="color:#9be9c4">My Withdrawals</a>. Full method list lives on the <a href="cashout.html" style="color:#9be9c4">classic cashout page</a>.</p>
+</div>
+</div>
+</div></section>
+</main>
+<footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="earn.html">Earn</a> · <a href="cashout.html">All methods</a> · <a href="terms.html">Terms</a></span></div></div></footer>
+<nav class="mobilenav" aria-label="Mobile"><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>Home</a><a href="earn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="withdraw.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
+<div class="toast" id="toast" role="status"></div>
+<script src="js/store.js"></script>
+<script type="module">
+import { auth, onAuthStateChanged, getWallet, requestCashout, track } from './js/firebase.js';
+(function(){
+  var METHODS=[
+    {id:'PayPal',sec:'pop',img:'assets/cashout/paypal.webp',min:5,denoms:[5,10,20,30,50,75,100,200]},
+    {id:'Visa Prepaid',sec:'pop',img:'assets/cashout/visa.webp',min:5,denoms:[5,10,25,50,75,100,150,200]},
+    {id:'Bitcoin',sec:'crypto',img:'assets/cashout/bitcoin.png',min:5,denoms:[5,10,25,50,100,200]},
+    {id:'Litecoin',sec:'crypto',img:'assets/cashout/litecoin.png',min:5,denoms:[5,10,25,50,100,200]},
+    {id:'Dogecoin',sec:'crypto',img:'assets/cashout/dogecoin.png',min:5,denoms:[5,10,25,50,100,200]}
+  ];
+  var sel='PayPal',denom=0,currentUser=null,avail=0;
+  var toast=document.getElementById('toast'),tm=null;
+  function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
+  function wallet(){return FavStore.getWallet();}
+  function paintHero(){
+    var w=wallet();avail=w.pending;
+    document.getElementById('avail').textContent='$'+avail.toFixed(2);
+    document.getElementById('chip-bal').textContent='$'+avail.toFixed(2);
+    var pend=FavStore.getProofs().filter(function(p){return (p.status||'pending').toLowerCase()==='pending';}).reduce(function(s,p){return s+Number(p.amount||0);},0);
+    document.getElementById('pend-pill').textContent='$'+pend.toFixed(2)+' pending';
+  }
+  function card(m){
+    var pct=Math.min(100,Math.round(avail/m.min*100));
+    return '<button class="method-card'+(sel===m.id?' sel':'')+'" data-m="'+m.id+'"><h3>'+m.id+'</h3><div class="mart"><img src="'+m.img+'" alt="'+m.id+'" loading="lazy" /></div><div class="minline"><small>Minimum $'+m.min.toFixed(2)+'</small><div class="prog" style="margin:0"><i style="width:'+pct+'%"></i></div><small>$'+avail.toFixed(2)+' / $'+m.min.toFixed(2)+'</small></div></button>';
+  }
+  function renderMethods(){
+    document.getElementById('grid-pop').innerHTML=METHODS.filter(function(m){return m.sec==='pop';}).map(card).join('');
+    document.getElementById('grid-crypto').innerHTML=METHODS.filter(function(m){return m.sec==='crypto';}).map(card).join('');
+  }
+  function renderDenoms(){
+    var m=METHODS.filter(function(x){return x.id===sel;})[0];
+    document.getElementById('denom-zone').style.display='';
+    document.getElementById('denom-title').textContent=m.id+' — select amount';
+    document.getElementById('denoms').innerHTML=m.denoms.map(function(d){
+      var locked=d>avail,cls='denom'+(denom===d?' sel':'')+(locked?' locked':'');
+      var fee=d>=50?'<span class="fee">Lower fees</span>':'';
+      var sub=locked?'Earn $'+(d-avail).toFixed(2)+' more':'$'+avail.toFixed(2)+' / $'+d;
+      return '<button class="'+cls+'" data-d="'+d+'" '+(locked?'disabled':'')+'>$'+d+'<small>'+sub+'</small>'+fee+'</button>';
+    }).join('');
+    document.getElementById('denom-zone').scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+  document.addEventListener('click',function(e){
+    var m=e.target.closest('[data-m]');
+    if(m){sel=m.dataset.m;denom=0;renderMethods();renderDenoms();return;}
+    var d=e.target.closest('[data-d]');
+    if(d&&!d.disabled){denom=parseFloat(d.dataset.d);renderDenoms();}
+  });
+  document.getElementById('req').addEventListener('click',async function(){
+    var dest=document.getElementById('dest').value.trim();
+    if(!denom){show('Pick an amount first.');return;}
+    if(denom<5){show('Minimum cashout is $5.00.');return;}
+    if(dest.length<4){show('Add a destination: email or wallet address.');return;}
+    if(!currentUser){show('Sign in to request a cashout. Your balance is saved on this device.');return;}
+    try{
+      var fw=await getWallet(currentUser.uid);
+      if(denom>Number(fw.pending)){show('Insufficient synced balance ($'+Number(fw.pending).toFixed(2)+').');return;}
+      await requestCashout(currentUser.uid,{method:sel,amount:denom,dest:dest});
+      try{track('cashout_request',{method:sel});}catch(_){}
+      try{var c=JSON.parse(localStorage.getItem('favmoney_cashouts')||'[]');c.push({method:sel,amount:denom,status:'review',at:new Date().toISOString()});localStorage.setItem('favmoney_cashouts',JSON.stringify(c));}catch(_){}
+      paintHero();renderMethods();renderDenoms();
+      show('Cashout requested: $'+denom.toFixed(2)+' via '+sel+'.');
+    }catch(err){show('Request failed — check Firestore rules. Balance unchanged.');}
+  });
+  function paintChip(){
+    var u=FavStore.getUser();
+    if(u&&u.email)document.getElementById('chip-name').textContent=u.email.split('@')[0];
+  }
+  try{
+    onAuthStateChanged(auth,async function(user){
+      currentUser=user;paintChip();
+      if(!user)return;
+      try{var w=await getWallet(user.uid);avail=Number(w.pending);}catch(e){}
+      paintHero();renderMethods();
+      var u=FavStore.getUser();if(u&&u.email)document.getElementById('chip-name').textContent=u.email.split('@')[0];
+    });
+  }catch(e){}
+  paintChip();paintHero();renderMethods();
+  var root=document.documentElement;function onS(){if(scrollY>0)root.setAttribute('data-top-nav-scrolled','true');else root.removeAttribute('data-top-nav-scrolled');}addEventListener('scroll',onS,{passive:true});onS();
+})();
+</script>
+</body>
+</html>

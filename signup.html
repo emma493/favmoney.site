@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sign Up · Favmoney</title>
   <meta name="robots" content="noindex, nofollow" />
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -22,11 +23,10 @@
 <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
 <label for="pass">Password (min 6)</label>
 <input id="pass" type="password" placeholder="••••••••" autocomplete="new-password" />
+<label for="refcode">Referral code (optional)</label>
+<input id="refcode" type="text" placeholder="e.g. GERBON" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="6" style="text-transform:uppercase;letter-spacing:.12em" />
+<p class="tiny" style="margin-top:6px">6 letters, A&ndash;Z only. Uppercase automatic.</p>
 <button class="btn btn-green btn-block" id="go" style="margin-top:16px">Create free account</button>
-<div class="or">OR</div>
-<div class="social">
-<button class="sbtn" data-oauth="Google"><svg class="sico" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g clipPath="url(#fc-google-clip)"><path d="M6.20539 16.9208L5.23075 20.5592L1.66846 20.6346C0.603859 18.66 0 16.4008 0 14C0 11.6785 0.564594 9.48921 1.56537 7.56153L4.73758 8.14297L6.12686 11.2954C5.83609 12.1431 5.6776 13.0531 5.6776 14C5.67771 15.0277 5.86387 16.0123 6.20539 16.9208Z" fill="#FFC700"/><path d="M27.7554 11.3846C27.9162 12.2315 28 13.1061 28 14C28 15.0023 27.8946 15.98 27.6939 16.9231C27.0123 20.1323 25.2316 22.9346 22.7647 24.9177L22.7639 24.9169L18.7693 24.7131L18.2039 21.1839C19.8408 20.2239 21.1201 18.7216 21.794 16.9231H14.3078V11.3846H27.7554Z" fill="#518EF8"/><path d="M22.7639 24.9169L22.7647 24.9177C20.3655 26.8461 17.3177 28 14 28C8.66846 28 4.03309 25.02 1.66846 20.6346L6.20539 16.9208C7.38768 20.0761 10.4315 22.3223 14 22.3223C15.5338 22.3223 16.9709 21.9077 18.2039 21.1839L22.7639 24.9169Z" fill="#01D676"/><path d="M22.9362 3.22306L18.4008 6.93613C17.1246 6.13845 15.6161 5.67766 14 5.67766C10.3508 5.67766 7.24992 8.02687 6.12686 11.2954L1.56537 7.56153C3.89539 3.06923 8.58922 0 14 0C17.3969 0 20.5115 1.21002 22.9362 3.22306Z" fill="#C34646"/></g><defs><clipPath id="fc-google-clip"><rect width="28" height="28" fill="white"/></clipPath></defs></svg> Sign Up with Google</button>
-</div>
 <p class="tiny">By continuing you agree to <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy</a>. Already have one? <a href="signin.html">Sign in</a>.</p>
 <p class="tiny" style="margin-top:10px">Prohibited: multiple accounts, completing offers on another user's account, or any VPN, VPS or emulator software.</p>
 </div>
@@ -35,53 +35,47 @@
 <div class="toast" id="toast" role="status"></div>
 <script src="js/store.js"></script>
 <script type="module">
-import { auth, ensureUserDoc, joinWaitlist, track, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from './js/firebase.js';
+import { auth, ensureUserDoc, joinWaitlist, track, createUserWithEmailAndPassword } from './js/firebase.js';
 (function(){
   var toast=document.getElementById('toast'),tm=null;function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
   function friendly(code){
     if(code==='auth/email-already-in-use')return 'Email already registered. Try Sign In instead.';
     if(code==='auth/weak-password')return 'Password too weak (min 6 characters).';
     if(code==='auth/invalid-email')return 'Enter a valid email.';
-    if(code==='auth/operation-not-allowed')return 'Provider disabled in Firebase Console. Enable Email/Password AND Google (Auth > Sign-in method).';
-    if(code==='auth/popup-closed-by-user')return 'Google popup closed. Try again.';
-    if(code==='auth/popup-blocked')return 'Browser blocked the Google popup. Allow popups for this site and try again.';
-    if(code==='auth/cancelled-popup-request')return 'Popup already open. Close it and try once.';
-    if(code==='auth/unauthorized-domain')return 'Domain not authorized: Firebase Console > Auth > Settings > Authorized domains > add this host (localhost, *.pages.dev, favmoney.site).';
-    if(code==='auth/network-request-failed')return 'Network error reaching Google. Check connection and try again.';
-    if(code==='permission-denied')return 'Signed in, but Firestore blocked the write. Paste firestore.rules into Firebase Console > Firestore > Rules.';
+    if(code==='auth/operation-not-allowed')return 'Email sign-up is disabled in Firebase Console. Enable Email/Password provider.';
+    if(code==='auth/network-request-failed')return 'Network error. Check connection and try again.';
+    if(code==='permission-denied')return 'Account created, but Firestore blocked the write. Paste firestore.rules into Firebase Console > Firestore > Rules.';
     if(code) return 'Sign-up failed ('+code+'). Saved locally; check Console for details.';
     return 'Sign-up failed. Saved locally; check Firebase config/rules.';
   }
+  function cleanRef(v){ return (v||'').toUpperCase().replace(/[^A-Z]/g,'').slice(0,6); }
+  var refInput=document.getElementById('refcode');
+  if(refInput){
+    refInput.addEventListener('input',function(){ var p=refInput.selectionStart; refInput.value=cleanRef(refInput.value); try{refInput.setSelectionRange(p,p);}catch(_){} });
+    try{
+      var q=new URLSearchParams(location.search).get('ref');
+      if(q && !refInput.value) refInput.value=cleanRef(q);
+    }catch(_){}
+  }
   document.getElementById('go').addEventListener('click',async function(){
     var e=document.getElementById('email').value.trim(),p=document.getElementById('pass').value;
+    var ref=cleanRef(refInput ? refInput.value : '');
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)){show('Enter a valid email.');return;}
     if(p.length<6){show('Password min 6 characters.');return;}
+    if(refInput && refInput.value && ref.length!==6){show('Referral code must be 6 letters (A-Z), or leave it empty.');return;}
     try{
       var cred=await createUserWithEmailAndPassword(auth,e,p);
       await ensureUserDoc(cred.user,'email');
       try{await joinWaitlist(e,'signup');}catch(_){}
-      FavStore.setUser({uid:cred.user.uid,email:e,at:new Date().toISOString(),provider:'email'});FavStore.addToWaitlist(e);
+      FavStore.setUser({uid:cred.user.uid,email:e,at:new Date().toISOString(),provider:'email',refcode:ref||null});FavStore.addToWaitlist(e);
       track('sign_up',{method:'email'});
       show('Account created. Redirecting to your dashboard…');setTimeout(function(){location.href='dashboard.html';},900);
     }catch(err){
-      FavStore.setUser({email:e,at:new Date().toISOString(),provider:'email-offline'});FavStore.addToWaitlist(e);
+      console.error('[signup-email]', err && err.code, err && err.message);
+      FavStore.setUser({email:e,at:new Date().toISOString(),provider:'email-offline',refcode:ref||null});FavStore.addToWaitlist(e);
       show(friendly(err && err.code));
     }
   });
-  document.querySelectorAll('[data-oauth]').forEach(function(b){b.addEventListener('click',async function(){
-    var provider=b.dataset.oauth;
-    if(provider!=='Google'){show(provider+' is not enabled. Use Google or email for now.');return;}
-    var cred=null;
-    try{
-      cred=await signInWithPopup(auth,new GoogleAuthProvider());
-    }catch(err){ console.error('[google-auth]', err && err.code, err && err.message); show(friendly(err && err.code)); return; }
-    try{
-      await ensureUserDoc(cred.user,'google');
-    }catch(err){ console.error('[firestore-userdoc]', err && err.code, err && err.message); show(friendly(err && err.code)); return; }
-    FavStore.setUser({uid:cred.user.uid,email:cred.user.email,at:new Date().toISOString(),provider:'google'});
-    track('login',{method:'google'});
-    show('Signed in with Google. Redirecting…');setTimeout(function(){location.href='dashboard.html';},900);
-  });});
 })();
 </script>
 </body>

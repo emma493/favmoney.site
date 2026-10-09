@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Affiliates · Favmoney</title>
+  <meta name="description" content="Favmoney affiliates: invite friends, earn a cut of every reward forever." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<header class="topnav" id="topnav"><div class="topnav-inner">
+<a class="brand" href="index.html"><span class="brand-word"><span class="g">FAV</span><span class="w">MONEY</span></span></a>
+<nav class="nav-links" aria-label="Primary">
+<a href="earn.html">Earn<span class="dot"></span></a>
+<a href="my-offers.html">My Offers<span class="dot"></span></a>
+<a href="withdraw.html">Cashout<span class="dot"></span></a>
+<a href="rewards.html">Rewards<span class="dot"></span></a>
+</nav>
+<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal">$0.00</span><span id="chip-name">Guest</span></a></div>
+</div></header>
+<main>
+<section class="page-hero"><div class="dash-shell" style="max-width:760px">
+<h1 class="dash-title">Affiliates</h1>
+<p>Share your link. You earn a cut of every friend's quest rewards — they earn too.</p>
+<div class="stat-strip" style="grid-template-columns:repeat(3,1fr)">
+<div class="stat-cell"><b id="a-invited">0</b><span>Friends invited</span></div>
+<div class="stat-cell"><b id="a-earned">$0.00</b><span>Affiliate earnings</span></div>
+<div class="stat-cell"><b>$5</b><span>Per 10 invites</span></div>
+</div>
+<div class="auth-card" style="max-width:none;margin-top:16px">
+<label for="reflink">Your referral link</label>
+<input id="reflink" readonly value="Sign in to generate your link" />
+<button class="btn btn-green btn-block" id="copy" style="margin-top:14px">Copy invite link</button>
+<div class="share-row">
+<a class="btn btn-ghost" id="sh-x" href="#" target="_blank" rel="noopener">X</a>
+<a class="btn btn-ghost" id="sh-fb" href="#" target="_blank" rel="noopener">Facebook</a>
+<a class="btn btn-ghost" id="sh-tg" href="#" target="_blank" rel="noopener">Telegram</a>
+<a class="btn btn-ghost" id="sh-wa" href="#" target="_blank" rel="noopener">WhatsApp</a>
+</div>
+</div>
+<h2 style="font-size:20px;margin:28px 0 4px">How it pays</h2>
+<div class="biz"><div class="b1">Tier 1<br />10% of rewards</div><div class="b2">Tier 2<br />5% of rewards</div><div class="b3">Bonus<br />$5 per 10 invites</div></div>
+<h2 style="font-size:20px;margin:28px 0 4px">Top affiliates this week</h2>
+<div class="aff-leader" id="leader"></div>
+<h2 style="font-size:20px;margin:28px 0 4px">Affiliate FAQ</h2>
+<div class="faq" style="margin-top:12px">
+<div class="faq-item"><button aria-expanded="false">When do I get paid?<span class="plus">+</span></button><div class="a"><div>Affiliate credit lands as friends complete quests. It behaves like any other earning: pending first, withdrawable at $5.</div></div></div>
+<div class="faq-item"><button aria-expanded="false">Is there a limit?<span class="plus">+</span></button><div class="a"><div>No cap on invites or earnings. The $5 bonus unlocks every 10 joined friends.</div></div></div>
+<div class="faq-item"><button aria-expanded="false">What voids credit?<span class="plus">+</span></button><div class="a"><div>One account per human. Self-referrals, VPN farming and fake installs void affiliate credit.</div></div></div>
+</div>
+<div class="notice">Full affiliate terms ship before launch. Preview credit is illustrative.</div>
+</div></section>
+</main>
+<footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="referrals.html">Classic view</a> · <a href="terms.html">Terms</a></span></div></div></footer>
+<nav class="mobilenav" aria-label="Mobile"><a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>Home</a><a href="earn.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
+<div class="toast" id="toast" role="status"></div>
+<script src="js/store.js"></script>
+<script type="module">
+import { auth, onAuthStateChanged, getWallet } from './js/firebase.js';
+(function(){
+  var toast=document.getElementById('toast'),tm=null;
+  function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3000);}
+  var BOARD=[{n:'InviteIvy',e:84.20},{n:'LinkLarry',e:61.05},{n:'ShareSam',e:47.90},{n:'ReferRae',e:33.10},{n:'BonusBen',e:21.45}];
+  document.getElementById('leader').innerHTML=BOARD.map(function(r,i){
+    return '<div class="row"><span class="rank">'+(i+1)+'</span><span style="flex:1;font-weight:700">'+r.n+'</span><span style="color:var(--green);font-weight:800">$'+r.e.toFixed(2)+'</span></div>';
+  }).join('');
+  function link(){
+    var u=FavStore.getUser(),v=document.getElementById('reflink');
+    if(u&&u.uid){v.value=location.origin+'/signup.html?ref='+String(u.uid).slice(0,8);}
+    else if(u&&u.email){v.value=location.origin+'/signup.html?ref='+encodeURIComponent(u.email.split('@')[0]);}
+    var msg='Join Favmoney and earn cash for playing games! '+v.value;
+    document.getElementById('sh-x').href='https://twitter.com/intent/tweet?text='+encodeURIComponent(msg);
+    document.getElementById('sh-fb').href='https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(v.value);
+    document.getElementById('sh-tg').href='https://t.me/share/url?url='+encodeURIComponent(v.value)+'&text='+encodeURIComponent('Earn cash for playing games!');
+    document.getElementById('sh-wa').href='https://wa.me/?text='+encodeURIComponent(msg);
+  }
+  document.getElementById('copy').addEventListener('click',async function(){
+    var v=document.getElementById('reflink');
+    try{await navigator.clipboard.writeText(v.value);show('Invite link copied.');}
+    catch(e){v.select();try{document.execCommand('copy');show('Invite link copied.');}catch(_){show('Copy the link manually.');}}
+  });
+  document.querySelectorAll('.faq-item').forEach(function(item){
+    item.querySelector('button').addEventListener('click',function(){
+      var open=item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(function(o){o.classList.remove('open');});
+      if(!open)item.classList.add('open');
+    });
+  });
+  function paintChip(){
+    var w=FavStore.getWallet(),u=FavStore.getUser();
+    document.getElementById('chip-bal').textContent='$'+w.pending.toFixed(2);
+    if(u&&u.email)document.getElementById('chip-name').textContent=u.email.split('@')[0];
+  }
+  try{
+    onAuthStateChanged(auth,async function(user){
+      if(!user){link();return;}
+      try{var w=await getWallet(user.uid);document.getElementById('chip-bal').textContent='$'+Number(w.pending).toFixed(2);}catch(e){}
+      link();
+      var u=FavStore.getUser();if(u&&u.email)document.getElementById('chip-name').textContent=u.email.split('@')[0];
+    });
+  }catch(e){}
+  paintChip();link();
+  var root=document.documentElement;function onS(){if(scrollY>0)root.setAttribute('data-top-nav-scrolled','true');else root.removeAttribute('data-top-nav-scrolled');}addEventListener('scroll',onS,{passive:true});onS();
+})();
+</script>
+</body>
+</html>

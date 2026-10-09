@@ -50,46 +50,6 @@
       startBtn.disabled = true;
     });
   }
-  document.querySelectorAll('[data-oauth]').forEach(function (btn) {
-    btn.addEventListener('click', async function () {
-      var provider = btn.getAttribute('data-oauth');
-      if (provider !== 'Google') {
-        showToast(provider + ' is not enabled. Use Google or email.');
-        return;
-      }
-      var fb = null;
-      try {
-        fb = await import('./firebase.js');
-      } catch (err) {
-        console.error('[firebase-load]', err);
-        showToast('Could not load sign-in. Check connection and reload.');
-        return;
-      }
-      var cred = null;
-      try {
-        cred = await fb.signInWithPopup(fb.auth, new fb.GoogleAuthProvider());
-      } catch (err) {
-        console.error('[google-auth]', err && err.code, err && err.message);
-        if (err && err.code === 'auth/popup-closed-by-user') showToast('Google popup closed. Try again.');
-        else if (err && err.code === 'auth/popup-blocked') showToast('Allow popups for this site, then try again.');
-        else if (err && err.code === 'auth/unauthorized-domain') showToast('Domain not authorized in Firebase Auth settings.');
-        else if (err && err.code === 'auth/operation-not-allowed') showToast('Google provider disabled in Firebase Console.');
-        else showToast('Google sign-in failed here (' + ((err && err.code) || 'unknown') + '). Continue on Sign Up page.');
-        return;
-      }
-      try {
-        await fb.ensureUserDoc(cred.user, 'google');
-      } catch (err) {
-        console.error('[firestore-userdoc]', err && err.code, err && err.message);
-        showToast('Signed in, but Firestore blocked the write. Check firestore.rules.');
-        return;
-      }
-        if (window.FavStore) FavStore.setUser({ uid: cred.user.uid, email: cred.user.email, at: new Date().toISOString(), provider: 'google' });
-        try { fb.track('login', { method: 'google' }); } catch (e) {}
-        showToast('Signed in with Google. Redirecting…');
-        setTimeout(function () { location.href = 'tasks.html'; }, 900);
-    });
-  });
   var signin = document.querySelector('[data-signin]');
   if (signin) signin.addEventListener('click', function () {
     setTimeout(function () { showToast('Sign-in is coming soon — join the waitlist above to get early access.'); }, 350);

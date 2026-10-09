@@ -22,8 +22,9 @@
 <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
 <label for="pass">Password</label>
 <input id="pass" type="password" placeholder="••••••••" autocomplete="new-password" />
-<label for="refcode">Referral code</label>
+<label for="refcode">Referral code <span style="color:#8ff0bd">— get $1.00 instantly</span></label>
 <input id="refcode" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="6" style="text-transform:uppercase;letter-spacing:.12em" />
+<p class="tiny" id="ref-hint" style="text-align:left;margin:6px 0 0">Have a friend's code? Enter it for a $1.00 instant bonus. Your friend gets $0.50 instantly.</p>
 <button class="btn btn-green btn-block" id="go" style="margin-top:16px">Create free account</button>
 <p class="tiny">By continuing you agree to Terms and Privacy. Already have one? <a href="signin.html">Sign in</a>.</p>
 <p class="tiny" style="margin-top:10px">Prohibited: multiple accounts, completing offers on another user's account, or any VPN, VPS or emulator software.</p>
@@ -31,7 +32,7 @@
 </div></main>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, ensureUserDoc, updateUserDoc, track, createUserWithEmailAndPassword } from './js/firebase.js';
+import { auth, ensureUserDoc, redeemReferral, track, createUserWithEmailAndPassword } from './js/firebase.js';
 (function(){
   var toast=document.getElementById('toast'),tm=null;function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
   function friendly(code){
@@ -68,9 +69,17 @@ import { auth, ensureUserDoc, updateUserDoc, track, createUserWithEmailAndPasswo
     try{
       var cred=await createUserWithEmailAndPassword(auth,e,p);
       await ensureUserDoc(cred.user,'email');
-      if(ref){try{await updateUserDoc(cred.user.uid,{refcode:ref});}catch(_){}}
+      var refMsg='';
+      if(ref){
+        try{
+          var res=await redeemReferral(cred.user.uid,ref);
+          if(res&&res.ok){refMsg=' $1.00 referral bonus added instantly.';}
+          else if(res&&res.reason==='invalid'){show('Code not found — account created without the $1.00 bonus.');}
+          else if(res&&res.reason==='self'){show('You cannot use your own code.');}
+        }catch(_){}
+      }
       try{track('sign_up',{method:'email'});}catch(_){}
-      show('Account created. Redirecting to earn…');setTimeout(function(){location.href='earn.html';},900);
+      show('Account created.'+refMsg+' Redirecting to earn…');setTimeout(function(){location.href='earn.html';},900);
     }catch(err){
       console.error('[signup-email]', err && err.code, err && err.message);
       show(friendly(err && err.code));

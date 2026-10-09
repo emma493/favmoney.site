@@ -1,7 +1,7 @@
 # Favmoney — Memory
 
 > Persistent memory for the Favmoney project. Refer to this file every session.
-> Last updated: 2026-10-09 (Earning-models research: Vie, EarnBitMoon, wheel, flip)
+> Last updated: 2026-10-09 (Grow engine built: 3000/4500 APR invest + hourly ad booster)
 
 ## 0. Permanent User Preferences (NEVER violate)
 - **NO EMOJIS EVER.** User hates emojis. Use real icons, real SVG, real images only. No emoji in UI, code comments, or docs. This is permanent.
@@ -198,3 +198,14 @@
 4. Referral: user to supply amounts; menu is 10% flat (Vie), 25/10 split (Cointiply), 10/25 split (DogeMate/AltHub), 40%-headline (EBM), 10%+5%-spend two-sided (AdBTC).
 5. Trust kit: live counters, estimator, published odds tables, low $5 min (already have), instant local credit with Firebase-synced review queue (already have).
 6. Never: deposits, lock-ups, re-denominations, moving minimums, silent shutdowns.
+
+## 9. Grow Engine (2026-10-09, BUILT — needs firestore.rules paste + live test)
+- **Rates (user-locked):** 3000% base APR always on; ad view lights +1500% (4500% total) for exactly 1h; refill tops to 60:00, no stacking/banking; expiry falls back to 3000%. Calibrated 5→3500% ladder in chat; tiered/promo framing recommended if rates ever change.
+- **Seed:** every account gets $1.00 invested (invest-only: principal never moves to available, yield claimable). New signups via `ensureUserDoc`; legacy via `ensureSeed` on Grow visit.
+- **Scope:** only task earnings stakeable (max $100 user principal, min $0.10). Referral $1/$0.50 + commissions excluded from staking AND from commission-on-commission (`recordCommission` + `creditReward` skip `referral-*`/`invest-*`/`ad-*` labels).
+- **Activity gate:** yield accrues only on UTC days with a rewarded action (`users.activeDays`, max 90, stamped by `creditReward`, pruned in `ensureSeed`).
+- **Settlement:** pure timestamp math (`computeYield`: per-day segments × active gate × base/boost split by `boostUntil`), 90-day window cap; settle-then-act ordering on stake/unstake/boost so no double-pay; ticker interpolates locally via rAF (5s fallback for reduced-motion).
+- **Ad viewer:** house promos, 20 visible-seconds (hidden-tab pauses), CONTINUE → `activateBoost`; `ad-view` proof rows; third-party rewarded ads plug into the same callback later.
+- **Pipes fixed en route:** `creditReward` was silently NOT filing commissions (edit had landed in `migrateLocal` loop, which also broke on undefined vars) — both repaired and verified.
+- **Files:** `firestore.rules` (wallets `invested/investedAt/boostUntil`, users `taskEarned/investedUser/activeDays`, proofs `invest-*/ad-view` done-labels), `js/firebase.js` (invest engine + seed + hooks), `grow.html` (ticker, fuel gauge, invest/claim/unstake, history, FAQ, viewer).
+- **Still required:** paste `firestore.rules` to Console; live test (signup seeds $1 → earn task → stake → ticker climbs → ad boosts slope → close 90min → reopen settles 60 boosted + 30 base min → claim/unstake correct, seed stays).

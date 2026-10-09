@@ -4,11 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Invite · Favmoney</title>
+  <meta name="description" content="Invite friends to Favmoney: they get $1.00 instantly, you get $0.50 instantly plus lifetime commission." />
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .inv-linkrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .inv-linkrow input{flex:1;min-width:200px;height:48px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:#101223;color:#fff;padding:0 14px;font-family:var(--font);font-size:13px;outline:none}
+    .inv-linkrow input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(1,214,118,.22)}
+    .inv-code{font-size:30px;font-weight:800;letter-spacing:.18em;color:var(--green);margin:8px 0 0}
+    .share-row a{min-height:44px;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:#fff;border-radius:999px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);text-decoration:none}
+    .share-row a:hover{border-color:rgba(1,214,118,.5)}
+    .share-row svg{width:16px;height:16px}
+    .how-ico{flex:none;width:48px;height:48px;border-radius:12px;background:rgba(1,214,118,.12);border:1px solid rgba(1,214,118,.3);display:flex;align-items:center;justify-content:center;color:#8ff0bd}
+    .how-ico svg{width:24px;height:24px}
+    .faq-item .a div p{margin:0 0 8px}
+    @media(max-width:640px){.inv-linkrow .btn{flex:1 1 100%;min-height:48px}.inv-code{font-size:26px}}
+  </style>
 </head>
 <body>
 <header class="topnav" id="topnav"><div class="topnav-inner">
@@ -20,9 +35,233 @@
 <a href="rewards.html">Rewards<span class="dot"></span></a>
 <a href="withdraw.html">Cashout<span class="dot"></span></a>
 </nav>
-<div class="auth"><a class="user-chip" href="profile.html"><span class="bal">—</span><span>Sign in</span></a></div>
+<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal">—</span><span id="chip-name">Sign in</span></a><button class="icon-btn" id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="ping"></span></button></div>
 </div></header>
-<main style="min-height:70vh"></main>
+<main>
+<section class="page-hero"><div class="dash-shell" style="max-width:1000px">
+<h1 class="dash-title">Invite</h1>
+<p>Give $1.00, get $0.50 — both instantly available. Plus lifetime commission on everything they earn.</p>
+<div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to get your invite link and earn.</div>
+
+<!-- Guest pitch -->
+<div class="bonus-card" id="guest-card" style="display:none">
+<h2 style="margin:0 0 6px;font-size:20px">Have a friend's code? You start with $1.00.</h2>
+<p style="color:var(--muted);font-size:14px;margin:0 0 16px">Sign up with an invite code and $1.00 lands in your balance instantly. Your friend gets $0.50 instantly too.</p>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<a class="btn btn-green" href="signup.html" style="min-height:48px">Create free account</a>
+<a class="btn btn-ghost" href="signin.html" style="min-height:48px">Sign in</a>
+</div>
+</div>
+
+<!-- Member area -->
+<div id="member-zone" style="display:none">
+<div class="bonus-card">
+<h2 style="margin:0 0 4px;font-size:20px">Your invite link</h2>
+<p style="color:var(--muted);font-size:14px;margin:0">Share it anywhere. Every signup with your code pays you $0.50 instantly and pays them $1.00 instantly.</p>
+<div class="inv-linkrow">
+<input id="inv-link" type="text" readonly value="" aria-label="Your invite link" />
+<button class="btn btn-green" id="copy-btn" style="min-height:48px"><i data-lucide="copy" aria-hidden="true"></i>Copy</button>
+<button class="btn btn-ghost" id="share-btn" style="min-height:48px"><i data-lucide="share-2" aria-hidden="true"></i>Share</button>
+</div>
+<p style="font-size:12px;color:var(--faint);margin:10px 0 0">Your code</p>
+<p class="inv-code" id="my-code">——————</p>
+<div class="share-row" id="share-row">
+<a id="sh-wa" href="#" target="_blank" rel="noopener">WhatsApp</a>
+<a id="sh-tg" href="#" target="_blank" rel="noopener">Telegram</a>
+<a id="sh-x" href="#" target="_blank" rel="noopener">X</a>
+<a id="sh-fb" href="#" target="_blank" rel="noopener">Facebook</a>
+<a id="sh-em" href="#">Email</a>
+</div>
+</div>
+
+<div class="notice" id="claim-note" style="display:none"></div>
+
+<div class="stat-strip">
+<div class="stat-cell"><b id="st-invited">0</b><span>Friends invited</span></div>
+<div class="stat-cell"><b id="st-active">0</b><span>Bonuses paid</span></div>
+<div class="stat-cell"><b id="st-bonus">$0.00</b><span>$0.50 bonuses earned</span></div>
+<div class="stat-cell"><b id="st-comm">$0.00</b><span>Commission earned</span></div>
+</div>
+
+<h2 style="font-size:20px;margin:30px 0 0">Your reward</h2>
+<div class="steps-3">
+<div class="bonus-card" style="margin:0"><div class="how-ico"><i data-lucide="gift" aria-hidden="true"></i></div><h3 style="margin:12px 0 4px;font-size:16px">Friend gets $1.00</h3><p style="color:var(--muted);font-size:13px;margin:0">Instantly available the moment they sign up with your code.</p></div>
+<div class="bonus-card" style="margin:0"><div class="how-ico"><i data-lucide="coins" aria-hidden="true"></i></div><h3 style="margin:12px 0 4px;font-size:16px">You get $0.50</h3><p style="color:var(--muted);font-size:13px;margin:0">Instantly available every time your code is used. No waiting, no hold.</p></div>
+<div class="bonus-card" style="margin:0"><div class="how-ico"><i data-lucide="trending-up" aria-hidden="true"></i></div><h3 style="margin:12px 0 4px;font-size:16px">Plus 25% / 10% lifetime</h3><p style="color:var(--muted);font-size:13px;margin:0">25% of their task earnings, 10% of their offer and survey earnings — for life.</p></div>
+</div>
+
+<h2 style="font-size:20px;margin:30px 0 0">How it works</h2>
+<div class="quest-row"><div class="qico">1</div><div class="qmid"><b>Share your link or code</b><div style="font-size:13px;color:var(--muted)">Send it to friends, post it in your groups, anywhere you like.</div></div></div>
+<div class="quest-row"><div class="qico">2</div><div class="qmid"><b>They sign up with your code</b><div style="font-size:13px;color:var(--muted)">The code auto-fills from your link. They get $1.00 instantly.</div></div></div>
+<div class="quest-row"><div class="qico">3</div><div class="qmid"><b>You earn $0.50 instantly + commission for life</b><div style="font-size:13px;color:var(--muted)">Cash out from $5.00 like any other earning.</div></div></div>
+
+<h2 style="font-size:20px;margin:30px 0 0">Top inviters</h2>
+<div class="aff-leader">
+<div class="row"><span class="rank">1</span><span style="flex:1">AVA***</span><b>142 invited</b></div>
+<div class="row"><span class="rank">2</span><span style="flex:1">KOF***</span><b>98 invited</b></div>
+<div class="row"><span class="rank">3</span><span style="flex:1">DER***</span><b>61 invited</b></div>
+<div class="row"><span class="rank">4</span><span style="flex:1">AMA***</span><b>44 invited</b></div>
+<div class="row"><span class="rank">5</span><span style="flex:1">YOU</span><b id="lb-you">0 invited</b></div>
+</div>
+
+<h2 style="font-size:20px;margin:30px 0 0">My referrals</h2>
+<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Friend</th><th>Reward</th><th>Status</th><th>Date</th></tr></thead><tbody id="ref-rows"><tr><td colspan="4" style="color:var(--muted)">Loading…</td></tr></tbody></table></div>
+
+<h2 style="font-size:20px;margin:30px 0 0">Good to know</h2>
+<div class="faq" style="margin-top:14px">
+<div class="faq-item"><button>When do I get my $0.50?<span class="plus">+</span></button><div class="a"><div><p>Instantly. The second a friend creates an account with your code, $0.50 is added to your available balance. They get $1.00 at the same moment.</p></div></div></div>
+<div class="faq-item"><button>How does lifetime commission work?<span class="plus">+</span></button><div class="a"><div><p>You earn 25% of what your referrals make on tasks, faucet, games and quizzes, and 10% of what they make on offers and surveys. It costs them nothing — it is paid on top by Favmoney, for life.</p></div></div></div>
+<div class="faq-item"><button>Is there a limit?<span class="plus">+</span></button><div class="a"><div><p>No. Invite as many friends as you like. Every code use pays.</p></div></div></div>
+<div class="faq-item"><button>What gets a bonus removed?<span class="plus">+</span></button><div class="a"><div><p>One account per person. Multiple accounts, using your own code, completing offers on another user's account, VPN, VPS or emulator use forfeits all referral bonuses and can close the account.</p></div></div></div>
+</div>
+<div class="notice">Fair play: one account per person. Self-referrals and duplicate accounts earn nothing and may be removed at cashout review.</div>
+</div>
+</div></section>
+</main>
+<footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="earn.html">Earn</a> · <a href="withdraw.html">Cashout</a></span></div></div></footer>
 <nav class="mobilenav" aria-label="Mobile"><a href="earn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="grow.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Grow</a><a href="invite.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M18 8v6M15 11h6"/></svg>Invite</a><a href="rewards.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="12" rx="1.5"/><path d="M4 13h16M12 9v12M12 9S7.5 9 6 7.5 5.5 4.8 7 4.5 12 9 12 9Zm0 0s4.5 0 6-1.5S18.5 4.8 17 4.5 12 9 12 9Z"/></svg>Rewards</a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
+<div class="toast" id="toast" role="status"></div>
+<script>if(window.lucide){try{lucide.createIcons();}catch(e){}}</script>
+<script type="module">
+import { auth, onAuthStateChanged, getWallet, getOrCreateMyCode, claimReferrals, claimCommissions, fetchReferrals, fetchUserDocs, track } from './js/firebase.js';
+(function(){
+  var uid=null, myCode='', poll=null;
+  var toast=document.getElementById('toast'),tm=null;
+  function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
+  function money(n){return '$'+Number(n||0).toFixed(2);}
+  function mask(id){id=String(id||'??????');return (id.slice(0,3)+'***').toUpperCase();}
+  function relDate(ts){
+    if(!ts)return 'recently';
+    var ms=ts.seconds?ts.seconds*1000:new Date(ts).getTime();
+    if(!ms)return 'recently';
+    var d=Math.max(0,Math.round((Date.now()-ms)/864e5));
+    if(d===0)return 'today';if(d===1)return '1 day ago';if(d<30)return d+' days ago';
+    return Math.floor(d/30)+'mo ago';
+  }
+  function inviteLink(code){
+    try{
+      var u=new URL('signup.html',location.href);
+      u.searchParams.set('ref',code);
+      return u.toString();
+    }catch(e){return location.origin+location.pathname.replace(/[^/]*$/,'')+'signup.html?ref='+code;}
+  }
+  function paintShare(){
+    var link=inviteLink(myCode);
+    document.getElementById('inv-link').value=link;
+    document.getElementById('my-code').textContent=myCode||'——————';
+    var text='Join me on Favmoney — sign up with my code '+myCode+' and we both get instant cash ($1.00 for you, $0.50 for me). '+link;
+    var enc=encodeURIComponent(text), encLink=encodeURIComponent(link);
+    document.getElementById('sh-wa').href='https://wa.me/?text='+enc;
+    document.getElementById('sh-tg').href='https://t.me/share/url?url='+encLink+'&text='+enc;
+    document.getElementById('sh-x').href='https://twitter.com/intent/tweet?text='+enc;
+    document.getElementById('sh-fb').href='https://www.facebook.com/sharer/sharer.php?u='+encLink;
+    document.getElementById('sh-em').href='mailto:?subject='+encodeURIComponent('Get $1.00 on Favmoney')+'&body='+enc;
+  }
+  async function refreshStats(){
+    if(!uid)return;
+    var refs=[], proofs=[];
+    try{refs=await fetchReferrals(uid,50);}catch(e){refs=[];}
+    try{proofs=await fetchUserDocs(uid,'proofs',100);}catch(e){proofs=[];}
+    var invited=refs.length;
+    var paid=refs.filter(function(r){return r.claimed===true;}).length;
+    var bonus=proofs.filter(function(p){return p.label==='referral-inviter';}).reduce(function(s,p){return s+Number(p.amount||0);},0);
+    var comm=proofs.filter(function(p){return (p.label||'').indexOf('referral-commission')===0;}).reduce(function(s,p){return s+Number(p.amount||0);},0);
+    document.getElementById('st-invited').textContent=invited;
+    document.getElementById('st-active').textContent=paid;
+    document.getElementById('st-bonus').textContent=money(bonus);
+    document.getElementById('st-comm').textContent=money(comm);
+    document.getElementById('lb-you').textContent=invited+' invited';
+    var rows=document.getElementById('ref-rows');
+    if(!refs.length){
+      rows.innerHTML='<tr><td colspan="4" style="color:var(--muted)">No referrals yet. Share your link to earn $0.50 per friend.</td></tr>';
+    }else{
+      rows.innerHTML=refs.map(function(r){
+        var pill=r.claimed?'<span class="pill paid">Paid</span>':'<span class="pill pending">Pending</span>';
+        return '<tr><td>'+mask(r.newUid||r.id)+'</td><td>$0.50</td><td>'+pill+'</td><td>'+relDate(r.createdAt)+'</td></tr>';
+      }).join('');
+    }
+    try{
+      var w=await getWallet(uid);
+      document.getElementById('chip-bal').textContent=money(w.pending);
+    }catch(e){}
+  }
+  async function claimAll(silent){
+    if(!uid)return;
+    var gotR={claimed:0,total:0}, gotC={claimed:0,total:0};
+    try{gotR=await claimReferrals(uid);}catch(e){}
+    try{gotC=await claimCommissions(uid);}catch(e){}
+    var parts=[];
+    if(gotR.claimed>0)parts.push('+$'+gotR.total.toFixed(2)+' referral bonus'+(gotR.claimed>1?'es':''));
+    if(gotC.claimed>0)parts.push('+$'+gotC.total.toFixed(2)+' commission');
+    if(parts.length){
+      var note=document.getElementById('claim-note');
+      note.textContent=parts.join(' + ')+' added to your available balance.';
+      note.style.display='';
+      if(!silent)show(parts.join(' + ')+' added.');
+      try{track('referral_claimed',{count:gotR.claimed+gotC.claimed});}catch(_){}
+      await refreshStats();
+    }
+  }
+  document.getElementById('copy-btn').addEventListener('click',async function(){
+    var link=document.getElementById('inv-link').value;
+    try{await navigator.clipboard.writeText(link);show('Invite link copied.');}
+    catch(e){
+      var inp=document.getElementById('inv-link');inp.select();
+      try{document.execCommand('copy');show('Invite link copied.');}
+      catch(_){show('Copy this link: '+link);}
+    }
+    try{track('invite_copy');}catch(_){}
+  });
+  document.getElementById('share-btn').addEventListener('click',async function(){
+    var link=document.getElementById('inv-link').value;
+    var text='Join me on Favmoney with code '+myCode+' — $1.00 for you, $0.50 for me, instantly.';
+    try{
+      if(navigator.share){await navigator.share({title:'Favmoney invite',text:text,url:link});return;}
+    }catch(e){if(e&&e.name==='AbortError')return;}
+    try{await navigator.clipboard.writeText(link+' — '+text);show('Invite link copied — paste it anywhere.');}
+    catch(_){show('Share this link: '+link);}
+    try{track('invite_share');}catch(_){}
+  });
+  document.querySelectorAll('.faq-item button').forEach(function(b){
+    b.addEventListener('click',function(){b.closest('.faq-item').classList.toggle('open');});
+  });
+  document.getElementById('bell').addEventListener('click',function(){show('No new notifications.');});
+  try{
+    onAuthStateChanged(auth,async function(user){
+      if(!user){
+        uid=null;myCode='';
+        document.getElementById('auth-wall').style.display='';
+        document.getElementById('guest-card').style.display='';
+        document.getElementById('member-zone').style.display='none';
+        document.getElementById('user-chip').setAttribute('href','signin.html');
+        document.getElementById('chip-name').textContent='Sign in';
+        document.getElementById('chip-bal').textContent='—';
+        if(poll){clearInterval(poll);poll=null;}
+        return;
+      }
+      uid=user.uid;
+      document.getElementById('auth-wall').style.display='none';
+      document.getElementById('guest-card').style.display='none';
+      document.getElementById('member-zone').style.display='';
+      document.getElementById('user-chip').setAttribute('href','profile.html');
+      document.getElementById('chip-name').textContent=(user.email||'Member').split('@')[0];
+      try{
+        var w=await getWallet(uid);
+        document.getElementById('chip-bal').textContent=money(w.pending);
+      }catch(e){document.getElementById('chip-bal').textContent='$0.00';}
+      try{myCode=await getOrCreateMyCode(uid);}catch(e){myCode='';}
+      paintShare();
+      await claimAll(true);
+      await refreshStats();
+      if(poll)clearInterval(poll);
+      poll=setInterval(function(){claimAll(true);},20000);
+    });
+  }catch(e){
+    document.getElementById('auth-wall').style.display='';
+    document.getElementById('guest-card').style.display='';
+  }
+  var root=document.documentElement;function onS(){if(scrollY>0)root.setAttribute('data-top-nav-scrolled','true');else root.removeAttribute('data-top-nav-scrolled');}addEventListener('scroll',onS,{passive:true});onS();
+})();
+</script>
 </body>
 </html>

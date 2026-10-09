@@ -12,10 +12,23 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="earn-wheel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17M3.5 12h17M6 6l12 12M18 6 6 18"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></symbol>
+<symbol id="earn-drop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11Z"/><path d="M9.5 14a2.5 2.5 0 0 0 2.5 2.5" stroke-linecap="round"/></symbol>
+<symbol id="earn-store" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5 5.2 5h13.6L20 9.5"/><path d="M4 9.5V19h16V9.5"/><path d="M4 9.5a2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0"/><path d="M9.5 19v-4.5h5V19"/></symbol>
+<symbol id="earn-clip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4a3 3 0 0 1 6 0"/><path d="m10 13.5 2 2 4-4.5"/></symbol>
+<symbol id="earn-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l6-3.5Z" fill="currentColor" stroke="none"/></symbol>
+<symbol id="earn-cap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 4 10 4-10 4L2 8l10-4Z"/><path d="M6 10.5V15c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5"/><path d="M22 8v6"/></symbol>
+<symbol id="earn-dice" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1" fill="currentColor"/></symbol>
+<symbol id="earn-cards" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="15" rx="2" transform="rotate(8 12 12)"/><rect x="5" y="4" width="12" height="15" rx="2" transform="rotate(-6 11 11)"/></symbol>
+</defs></svg>
 <header class="topnav" id="topnav"><div class="topnav-inner">
 <a class="brand" href="index.html"><span class="brand-word"><span class="g">FAV</span><span class="w">MONEY</span></span></a>
 <nav class="nav-links" aria-label="Primary">
 <a href="earn.html" class="active">Earn<span class="dot"></span></a>
+<a href="grow.html">Grow<span class="dot"></span></a>
+<a href="invite.html">Invite<span class="dot"></span></a>
+<a href="rewards.html">Rewards<span class="dot"></span></a>
 <a href="withdraw.html">Cashout<span class="dot"></span></a>
 </nav>
 <div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal">—</span><span id="chip-name">Sign in</span></a><button class="icon-btn" id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="ping"></span></button></div>
@@ -26,9 +39,22 @@
 <p>Play games, answer surveys, earn cashback. New quests drop daily.</p>
 <div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to start offers and earn.</div>
 </div></section>
+<section class="section" style="padding-top:8px"><div class="dash-shell">
+<div class="sec-head"><h2>Choose how you earn</h2></div>
+<div class="task-grid">
+<a class="task" href="offerwalls.html" style="text-decoration:none;color:inherit"><div class="task-top"><div class="task-ico"><svg aria-hidden="true"><use href="#earn-store"/></svg></div><div><h3>Offers &amp; Apps</h3><div class="meta">Apps, games &amp; trials — biggest payouts</div></div></div></a>
+<a class="task" href="surveys.html" style="text-decoration:none;color:inherit"><div class="task-top"><div class="task-ico"><svg aria-hidden="true"><use href="#earn-clip"/></svg></div><div><h3>Paid Surveys</h3><div class="meta">Quick opinion polls — fast cash</div></div></div></a>
+<a class="task" href="ptc.html" style="text-decoration:none;color:inherit"><div class="task-top"><div class="task-ico"><svg aria-hidden="true"><use href="#earn-play"/></svg></div><div><h3>Watch Ads</h3><div class="meta">Short views, instant coins</div></div></div></a>
+<a class="task" href="learn.html" style="text-decoration:none;color:inherit"><div class="task-top"><div class="task-ico"><svg aria-hidden="true"><use href="#earn-cap"/></svg></div><div><h3>Quiz &amp; Earn</h3><div class="meta">Answer questions, get paid</div></div></div></a>
+<a class="task" href="faucet.html" style="text-decoration:none;color:inherit"><div class="task-top"><div class="task-ico"><svg aria-hidden="true"><use href="#earn-drop"/></svg></div><div><h3>Free Faucet</h3><div class="meta">Free claims every few minutes</div></div></div></a>
+<a class="task" href="spin.html" style="text-decoration:none;color:inherit"><div class="task-top"><div class="task-ico"><svg aria-hidden="true"><use href="#earn-wheel"/></svg></div><div><h3>Spin the Wheel</h3><div class="meta">Every spin wins</div></div></div></a>
+<a class="task" href="flip.html" style="text-decoration:none;color:inherit"><div class="task-top"><div class="task-ico"><svg aria-hidden="true"><use href="#earn-cards"/></svg></div><div><h3>Flip to Win</h3><div class="meta">Match pairs, win coins</div></div></div></a>
+<a class="task" href="dice.html" style="text-decoration:none;color:inherit"><div class="task-top"><div class="task-ico"><svg aria-hidden="true"><use href="#earn-dice"/></svg></div><div><h3>Dice Roll</h3><div class="meta">Roll the dice, win crypto</div></div></div></a>
+</div>
+</div></section>
 </main>
-<footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="withdraw.html">Cashout</a> · <a href="terms.html">Terms</a></span></div></div></footer>
-<nav class="mobilenav" aria-label="Mobile"><a href="earn.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
+<footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="withdraw.html">Cashout</a></span></div></div></footer>
+<nav class="mobilenav" aria-label="Mobile"><a href="earn.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="grow.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Grow</a><a href="invite.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M18 8v6M15 11h6"/></svg>Invite</a><a href="rewards.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="12" rx="1.5"/><path d="M4 13h16M12 9v12M12 9S7.5 9 6 7.5 5.5 4.8 7 4.5 12 9 12 9Zm0 0s4.5 0 6-1.5S18.5 4.8 17 4.5 12 9 12 9Z"/></svg>Rewards</a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, migrateLocal, wasMigrated, track } from './js/firebase.js';

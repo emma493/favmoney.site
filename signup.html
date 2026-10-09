@@ -18,20 +18,17 @@
 <main class="section" style="padding-top:130px"><div class="wrap">
 <div class="auth-card">
 <h1 style="font-size:28px;margin:0 0 6px">Create your account</h1>
-<p style="color:var(--muted);font-size:14px;margin:0 0 8px">Free forever. Secured by Firebase Auth. Works offline too.</p>
 <label for="email">Email</label>
 <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
-<label for="pass">Password (min 6)</label>
+<label for="pass">Password</label>
 <input id="pass" type="password" placeholder="••••••••" autocomplete="new-password" />
-<label for="refcode">Referral code (optional)</label>
-<input id="refcode" type="text" placeholder="e.g. GERBON" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="6" style="text-transform:uppercase;letter-spacing:.12em" />
-<p class="tiny" style="margin-top:6px">6 letters, A&ndash;Z only. Uppercase automatic.</p>
+<label for="refcode">Referral code</label>
+<input id="refcode" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="6" style="text-transform:uppercase;letter-spacing:.12em" />
 <button class="btn btn-green btn-block" id="go" style="margin-top:16px">Create free account</button>
-<p class="tiny">By continuing you agree to <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy</a>. Already have one? <a href="signin.html">Sign in</a>.</p>
+<p class="tiny">By continuing you agree to Terms and Privacy. Already have one? <a href="signin.html">Sign in</a>.</p>
 <p class="tiny" style="margin-top:10px">Prohibited: multiple accounts, completing offers on another user's account, or any VPN, VPS or emulator software.</p>
 </div>
 </div></main>
-<nav class="mobilenav" aria-label="Mobile"><a href="earn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
 import { auth, ensureUserDoc, updateUserDoc, track, createUserWithEmailAndPassword } from './js/firebase.js';

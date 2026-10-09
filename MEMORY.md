@@ -204,6 +204,7 @@
 - **Seed:** every account gets $1.00 invested (invest-only: principal never moves to available, yield claimable). New signups via `ensureUserDoc`; legacy via `ensureSeed` on Grow visit.
 - **Scope:** only task earnings stakeable (max $100 user principal, min $0.10). Referral $1/$0.50 + commissions excluded from staking AND from commission-on-commission (`recordCommission` + `creditReward` skip `referral-*`/`invest-*`/`ad-*` labels).
 - **Activity gate:** yield accrues only on UTC days with a rewarded action (`users.activeDays`, max 90, stamped by `creditReward`, pruned in `ensureSeed`).
+- **Seed ignition (fixes frozen-ticker first impression):** the $1 seed accrues base rate for 72h post-signup (`INVEST_SEED_GRACE_MS`, seed-only, boost still applies) even with zero activity; afterwards the gate applies. Bounded ≈$0.25/bot. Ticker shows live countdown of ignition time.
 - **Settlement:** pure timestamp math (`computeYield`: per-day segments × active gate × base/boost split by `boostUntil`), 90-day window cap; settle-then-act ordering on stake/unstake/boost so no double-pay; ticker interpolates locally via rAF (5s fallback for reduced-motion).
 - **Ad viewer:** house promos, 20 visible-seconds (hidden-tab pauses), CONTINUE → `activateBoost`; `ad-view` proof rows; third-party rewarded ads plug into the same callback later.
 - **Pipes fixed en route:** `creditReward` was silently NOT filing commissions (edit had landed in `migrateLocal` loop, which also broke on undefined vars) — both repaired and verified.

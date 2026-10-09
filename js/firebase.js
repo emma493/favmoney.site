@@ -115,7 +115,8 @@ export async function getUserDoc(uid) {
     myCode: d.myCode || null,
     taskEarned: Number(d.taskEarned || 0),
     investedUser: Number(d.investedUser || 0),
-    activeDays: Array.isArray(d.activeDays) ? d.activeDays : []
+    activeDays: Array.isArray(d.activeDays) ? d.activeDays : [],
+    createdAtMs: (d.createdAt && typeof d.createdAt.toMillis === 'function') ? d.createdAt.toMillis() : (Number(d.createdAt) || 0)
   };
 }
 
@@ -333,6 +334,10 @@ export const INVEST_SEED = 1;
 export const INVEST_MAX_STAKE = 100;
 export const INVEST_MIN_STAKE = 0.10;
 export const INVEST_SETTLE_WINDOW_MS = 90 * 86400000;
+// Welcome ignition: the $1 seed accrues at base rate for 72h after signup even
+// with no rewarded activity yet, so the ticker is alive from the first visit.
+// Bounded: at most ~$0.25 per account, then the activity gate takes over.
+export const INVEST_SEED_GRACE_MS = 72 * 3600000;
 const SECONDS_PER_YEAR = 31536000;
 
 export function utcDayStr(ms) {
@@ -341,7 +346,10 @@ export function utcDayStr(ms) {
 
 // Pure yield math — no Firestore, fully unit-testable.
 // Returns { yield, boostedSec, baseSec } for principal over [fromMs, toMs).
-export function computeYield(principal, fromMs, toMs, boostUntilMs, activeDays) {
+// seedGrace ({ seed, graceUntilMs }, optional): on days WITHOUT activity, the
+// seed portion still accrues while segFrom < graceUntilMs. Bounds farmability
+// to a small welcome drip instead of a frozen-at-zero first impression.
+export function computeYield(principal, fromMs, toMs, boostUntilMs, activeDays, seedGrace) {
   const p = Number(principal || 0);
   if (!(p > 0)) return { yield: 0, boostedSec: 0, baseSec: 0 };
   let from = Number(fromMs || 0), to = Number(toMs || 0);
@@ -349,6 +357,13 @@ export function computeYield(principal, fromMs, toMs, boostUntilMs, activeDays) 
   if (to - from > INVEST_SETTLE_WINDOW_MS) from = to - INVEST_SETTLE_WINDOW_MS;
   const active = new Set(Array.isArray(activeDays) ? activeDays : []);
   const boostUntil = Number(boostUntilMs || 0);
+  const graceSeed = seedGrace ? Math.min(Number(seedGrace.seed || 0), p) : 0;
+  const graceUntil = seedGrace ? Number(seedGrace.graceUntilMs || 0) : 0;
+  const boostSplit = (a, b) => {
+    const bTo = Math.min(b, boostUntil);
+    const boosted = bTo > a ? (bTo - a) / 1000 : 0;
+    return [boosted, (b - a) / 1000 - boosted];
+  };
   let y = 0, bSec = 0, baseSec = 0;
   // Walk UTC-day segments so the activity gate applies per calendar day.
   let dayStart = Math.floor(from / 86400000) * 86400000;
@@ -358,12 +373,19 @@ export function computeYield(principal, fromMs, toMs, boostUntilMs, activeDays) 
     const segFrom = Math.max(from, dayStart), segTo = Math.min(to, dayStart + 86400000);
     dayStart += 86400000;
     if (!(segTo > segFrom)) continue;
-    if (!active.has(utcDayStr(segFrom))) continue;
-    const bTo = Math.min(segTo, boostUntil);
-    const boosted = bTo > segFrom ? (bTo - segFrom) / 1000 : 0;
-    const base = (segTo - segFrom) / 1000 - boosted;
-    bSec += boosted; baseSec += base;
-    y += p * (base * (INVEST_BASE_APR / 100) + boosted * (INVEST_BOOST_APR / 100)) / SECONDS_PER_YEAR;
+    if (active.has(utcDayStr(segFrom))) {
+      const [boosted, base] = boostSplit(segFrom, segTo);
+      bSec += boosted; baseSec += base;
+      y += p * (base * (INVEST_BASE_APR / 100) + boosted * (INVEST_BOOST_APR / 100)) / SECONDS_PER_YEAR;
+      continue;
+    }
+    // Inactive day: only the seed drip, only inside the welcome grace.
+    if (graceSeed > 0 && segFrom < graceUntil) {
+      const gTo = Math.min(segTo, graceUntil);
+      const [boosted, base] = boostSplit(segFrom, gTo);
+      bSec += boosted; baseSec += base;
+      y += graceSeed * (base * (INVEST_BASE_APR / 100) + boosted * (INVEST_BOOST_APR / 100)) / SECONDS_PER_YEAR;
+    }
   }
   return { yield: y, boostedSec: bSec, baseSec: baseSec };
 }
@@ -374,8 +396,16 @@ async function readInvestState(uid) {
     pending: Number(w.pending || 0), lifetime: Number(w.lifetime || 0),
     invested: Number(w.invested || 0), investedAt: Number(w.investedAt || 0), boostUntil: Number(w.boostUntil || 0),
     taskEarned: Number(u.taskEarned || 0), investedUser: Number(u.investedUser || 0),
-    activeDays: Array.isArray(u.activeDays) ? u.activeDays : []
+    activeDays: Array.isArray(u.activeDays) ? u.activeDays : [],
+    createdAtMs: Number(u.createdAtMs || 0)
   };
+}
+
+function seedGraceFor(s, now) {
+  if (!s.createdAtMs) return null;
+  const graceUntilMs = s.createdAtMs + INVEST_SEED_GRACE_MS;
+  if (graceUntilMs <= now) return null;
+  return { seed: INVEST_SEED, graceUntilMs };
 }
 
 // Backfill the $1 seed for pre-Grow accounts. Never overwrites existing principal.
@@ -416,7 +446,7 @@ export async function settleInvest(uid) {
     return { yield: 0, boostedSec: 0, baseSec: 0 };
   }
   const from = s.investedAt > 0 ? s.investedAt : now;
-  const r = computeYield(s.invested, from, now, s.boostUntil, s.activeDays);
+  const r = computeYield(s.invested, from, now, s.boostUntil, s.activeDays, seedGraceFor(s, now));
   const y = Math.floor(r.yield * 100000000) / 100000000;
   try {
     const wref = doc(db, 'wallets', uid);
@@ -440,7 +470,8 @@ export async function getLiveState(uid, atMs) {
   const now = Number(atMs || Date.now());
   const s = await readInvestState(uid);
   const from = s.investedAt > 0 ? s.investedAt : now;
-  const r = computeYield(s.invested, from, now, s.boostUntil, s.activeDays);
+  const grace = seedGraceFor(s, now);
+  const r = computeYield(s.invested, from, now, s.boostUntil, s.activeDays, grace);
   const boosted = s.boostUntil > now;
   return {
     invested: s.invested, pending: s.pending,
@@ -448,6 +479,7 @@ export async function getLiveState(uid, atMs) {
     boosted, boostUntil: s.boostUntil, boostRemainingMs: boosted ? s.boostUntil - now : 0,
     apr: boosted ? INVEST_BOOST_APR : INVEST_BASE_APR,
     investedUser: s.investedUser, taskEarned: s.taskEarned,
+    graceMsLeft: grace ? Math.max(0, grace.graceUntilMs - now) : 0,
     stakeable: Math.max(0, Math.floor((s.taskEarned - s.investedUser) * 100) / 100)
   };
 }

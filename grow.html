@@ -66,7 +66,7 @@
 
 <div class="bonus-card" id="guest-card" style="display:none">
 <h2 style="margin:0 0 6px;font-size:20px">Every account starts with a $1.00 grower.</h2>
-<p style="color:var(--muted);font-size:14px;margin:0 0 16px">It earns 3,000% APR from day one. Complete one task to ignite it, stake your earnings beside it, boost it with ads. The $1 seed itself stays invested — its yield is yours to claim.</p>
+<p style="color:var(--muted);font-size:14px;margin:0 0 16px">It grows live for your first 72 hours, then keeps growing on every day you complete a task. Stake your earnings beside it, boost it with ads. The $1 seed itself stays invested — its yield is yours to claim.</p>
 <div style="display:flex;gap:10px;flex-wrap:wrap">
 <a class="btn btn-green" href="signup.html" style="min-height:48px">Create free account</a>
 <a class="btn btn-ghost" href="signin.html" style="min-height:48px">Sign in</a>
@@ -125,7 +125,7 @@
 <h2 style="font-size:20px;margin:30px 0 0">Good to know</h2>
 <div class="faq" style="margin-top:14px">
 <div class="faq-item"><button>Can I withdraw the $1 seed?<span class="plus">+</span></button><div class="a"><div><p>No. The $1 starter is invest-only: its principal stays growing forever, but every cent of yield it earns is yours to claim and cash out from $5 like any earning.</p></div></div></div>
-<div class="faq-item"><button>Why do only active days earn?<span class="plus">+</span></button><div class="a"><div><p>So the rate stays real. Yield accrues on UTC days where you complete at least one rewarded action. Earn something, however small, and that whole day's growth counts.</p></div></div></div>
+<div class="faq-item"><button>Why do only active days earn?<span class="plus">+</span></button><div class="a"><div><p>So the rate stays real. After your first 72 hours — during which the $1 seed grows live no matter what — yield accrues on UTC days where you complete at least one rewarded action. Earn something, however small, and that whole day's growth counts.</p></div></div></div>
 <div class="faq-item"><button>What if I close the app mid-boost?<span class="plus">+</span></button><div class="a"><div><p>Nothing is lost. Boost time is stored as a timestamp, not a live process: return three hours later and exactly one boosted hour plus two base hours settle into your balance.</p></div></div></div>
 <div class="faq-item"><button>Can I lose principal?<span class="plus">+</span></button><div class="a"><div><p>No. There is no downside mechanic — invested funds only move by your own stake, unstake, and accrued yield. Never any loss, fee, or lockup.</p></div></div></div>
 </div>
@@ -154,7 +154,7 @@
 <div class="toast" id="toast" role="status"></div>
 <script>if(window.lucide){try{lucide.createIcons();}catch(e){}}</script>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveState, settleInvest, stakeInvest, unstakeAll, activateBoost, fetchUserDocs, computeYield, utcDayStr, track, INVEST_BASE_APR, INVEST_BOOST_APR, INVEST_BOOST_MS } from './js/firebase.js';
+import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveState, settleInvest, stakeInvest, unstakeAll, activateBoost, fetchUserDocs, computeYield, utcDayStr, track, INVEST_BASE_APR, INVEST_BOOST_APR, INVEST_BOOST_MS, INVEST_SEED } from './js/firebase.js';
 (function(){
   var uid=null, state=null, investAnchor=0, raf=null, lastPaint=0;
   var reduced=false;
@@ -181,12 +181,18 @@ import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveSta
   function paintLive(){
     if(!state)return;
     var now=Date.now();
-    var r=computeYield(state.invested, investAnchor, now, state.boostUntilMs, state.activeDays);
+    var grace=state.graceUntilMs>now?{seed:INVEST_SEED,graceUntilMs:state.graceUntilMs}:null;
+    var r=computeYield(state.invested, investAnchor, now, state.boostUntilMs, state.activeDays, grace);
     var shown=state.invested+r.yield;
     document.getElementById('tick').innerHTML=shown.toFixed(7)+' <small>USD</small>';
     var boosted=state.boostUntilMs>now;
     var perDay=dayYield(state.invested,boosted?INVEST_BOOST_APR:INVEST_BASE_APR);
-    document.getElementById('tick-sub').innerHTML='Growing <b>'+money(perDay,4)+'/day</b> at current rate · unclaimed <b>'+money(r.yield,6)+'</b>';
+    var sub='Growing <b>'+money(perDay,4)+'/day</b> at current rate · unclaimed <b>'+money(r.yield,6)+'</b>';
+    if(grace){
+      var gl=grace.graceUntilMs-now,gh=Math.floor(gl/3600000),gm=Math.floor(gl%3600000/60000);
+      sub+=' · Welcome ignition: seed grows live for <b>'+gh+'h '+gm+'m</b> — do any task to keep it growing after';
+    }
+    document.getElementById('tick-sub').innerHTML=sub;
     var badge=document.getElementById('apr-badge');
     document.getElementById('apr-text').textContent=(boosted?'4,500% BOOSTED':'3,000% APR');
     badge.classList.toggle('boost',boosted);
@@ -211,6 +217,7 @@ import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveSta
     try{
       state=await getLiveState(uid);
       state.boostUntilMs=state.boostUntil||0;
+      state.graceUntilMs=Date.now()+(state.graceMsLeft||0);
       // getLiveState returns boostUntil; normalize key for paint math.
       investAnchor=Date.now();
       var u=await getUserDoc(uid);

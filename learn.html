@@ -4,12 +4,45 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Quiz & Earn · Favmoney</title>
+<meta name="description" content="Deposit 10 diamonds, solve 30 math sprints against a 10-second timer, earn $0.10 per correct answer." />
 <meta name="robots" content="noindex, nofollow" />
 <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="css/style.css" />
 <style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(20,21,35,.35);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#01D676;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#01D676;border:0;cursor:pointer;align-items:center;justify-content:center;color:#0d1a13;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
 <script src="js/loader.js"></script>
+<style>
+.quiz-ops{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.quiz-op{min-height:64px;border-radius:14px;border:1px solid var(--line);background:#141523;color:#fff;font-family:var(--font);font-size:28px;font-weight:800;cursor:pointer;transition:transform .12s ease,border-color .12s ease}
+.quiz-op:hover{border-color:var(--green);transform:translateY(-2px)}
+.quiz-arena{text-align:center}
+.quiz-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);font-weight:700;margin-bottom:6px}
+.quiz-q{font-size:clamp(40px,9vw,60px);font-weight:800;color:#fff;margin:8px 0 2px;font-variant-numeric:tabular-nums}
+.quiz-timer{display:flex;align-items:center;justify-content:center;gap:10px;margin:4px 0 12px}
+.quiz-ring{transform:rotate(-90deg)}
+.quiz-ring .bg{stroke:rgba(255,255,255,.12)}
+.quiz-ring .fg{stroke:#01D676;stroke-linecap:round;transition:stroke .2s}
+.quiz-ring.low .fg{stroke:#f43f5e}
+.quiz-count{font-size:15px;font-weight:800;color:#fff;min-width:44px;text-align:left;font-variant-numeric:tabular-nums}
+.quiz-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.quiz-opt{min-height:60px;border-radius:14px;border:1px solid var(--line);background:#141523;color:#fff;font-family:var(--font);font-size:22px;font-weight:800;cursor:pointer;font-variant-numeric:tabular-nums}
+.quiz-opt:not(:disabled):hover{border-color:var(--green)}
+.quiz-opt.right{border-color:#01D676;background:rgba(1,214,118,.14);color:#8ff0bd}
+.quiz-opt.wrong{border-color:#f43f5e;background:rgba(244,63,94,.12);color:#fda4af}
+.quiz-opt:disabled{cursor:default;opacity:.85}
+.quiz-life{display:inline-block;margin-top:10px;font-size:13px;font-weight:700;color:#7dd3fc}
+.quiz-life.used{color:var(--faint)}
+.quiz-veil{position:fixed;inset:0;z-index:90;background:rgba(10,11,22,.9);display:none;align-items:center;justify-content:center;padding:20px}
+.quiz-veil.open{display:flex}
+.quiz-box{width:min(420px,100%);background:linear-gradient(180deg,#232544,#181a30);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:var(--shadow-xl);text-align:center;padding:32px 24px 24px}
+.quiz-box h3{margin:0;font-size:20px;color:#fff}
+.quiz-box p{color:var(--muted);font-size:14px;margin:8px 0 0}
+.quiz-box .big{font-size:clamp(40px,9vw,56px);font-weight:800;line-height:1;margin:6px 0;color:var(--green)}
+.quiz-ad-veil{position:fixed;inset:0;z-index:95;background:rgba(10,11,22,.9);display:none;align-items:center;justify-content:center;padding:20px}
+.quiz-ad-veil.open{display:flex}
+@media(max-width:640px){.quiz-ops{grid-template-columns:repeat(2,1fr)}}
+@media(prefers-reduced-motion:reduce){.quiz-op:hover{transform:none}}
+</style>
 </head>
 <body>
 <div id="page-loader" role="status" aria-label="Loading Favmoney"><div class="spinner" id="loader-spin" aria-hidden="true"></div><button id="loader-retry" type="button" aria-label="Retry loading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button></div><script>window.__favLoaderT0=window.__favLoaderT0||Date.now();(function(){setTimeout(function(){var o=document.getElementById("page-loader");if(o)o.classList.add("slow");},8000);var r=document.getElementById("loader-retry");if(r)r.addEventListener("click",function(){location.reload();});})();</script>
@@ -27,37 +60,380 @@
 <main>
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
 <h1 class="dash-title">Quiz & Earn</h1>
-<p>Answer quick lessons for streak coins. This quest opens next. Your balance stays safe.</p>
-<div class="bonus-card" id="faucet-card">
-<h2 style="margin:0 0 6px;font-size:20px">Quiz & Earn opening soon</h2>
-<p style="color:var(--muted);font-size:14px;margin:0 0 16px">We are wiring start quizzes. Meanwhile, earn on live quests.</p>
-<p><span class="skeleton" style="width:70%"></span></p>
-<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-<a class="btn btn-green" href="earn.html" style="min-height:48px">Back to Earn</a>
-<a class="btn btn-ghost" href="surveys.html" style="min-height:48px">Try Surveys instead</a>
+<p>Deposit <b>10 diamonds</b>, pick an operator, solve <b>30 math sprints</b> against a 10-second timer — <b>$0.10</b> per correct answer. One rescue life per session.</p>
+<div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to play Quiz & Earn.</div>
+
+<div class="bonus-card" id="guest-card" style="display:none">
+<h2 style="margin:0 0 6px;font-size:20px">Your math sprint is waiting.</h2>
+<p style="color:var(--muted);font-size:14px;margin:0 0 16px">Sign in, grab diamonds from the chest, and turn correct answers into cash.</p>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<a class="btn btn-green" href="signup.html" style="min-height:48px">Create free account</a>
+<a class="btn btn-ghost" href="signin.html" style="min-height:48px">Sign in</a>
 </div>
 </div>
+
+<div id="member-zone" style="display:none">
+<div class="bonus-card" id="quiz-entry" style="display:none">
+<h2 style="margin:0 0 6px;font-size:20px">Start a session</h2>
+<p style="color:var(--muted);font-size:14px;margin:0 0 16px">10 diamonds buys 30 questions. Correct answers pay $0.10 each to your main balance — up to $3.00 a session. Wrong twice and the session ends.</p>
+<p style="font-size:14px;margin:0 0 14px">Your diamonds: <b id="quiz-diamonds" style="color:#7dd3fc">0</b></p>
+<button class="btn btn-green" id="deposit-btn" style="min-height:48px;min-width:220px">Deposit 10 diamonds</button>
+</div>
+
+<div class="bonus-card" id="quiz-ops" style="display:none">
+<h2 style="margin:0 0 6px;font-size:20px">Pick your operator</h2>
+<p style="color:var(--muted);font-size:14px;margin:0">Questions start easy and ramp up as you clear all 30.</p>
+<div class="quiz-ops" role="group" aria-label="Pick operator">
+<button class="quiz-op" data-op="+" aria-label="Addition">+</button>
+<button class="quiz-op" data-op="-" aria-label="Subtraction">−</button>
+<button class="quiz-op" data-op="x" aria-label="Multiplication">×</button>
+<button class="quiz-op" data-op="/" aria-label="Division">÷</button>
+</div>
+</div>
+
+<div class="bonus-card quiz-arena" id="quiz-arena" style="display:none">
+<div class="quiz-meta"><span id="quiz-progress">Q 1/30</span><span id="quiz-score">0 correct · +$0.00</span><button class="btn btn-ghost" id="mute-btn" style="min-height:32px;padding:4px 12px;font-size:12px" type="button">Sound: on</button></div>
+<div class="quiz-q" id="quiz-q" aria-live="polite">21 + 6</div>
+<div class="quiz-timer">
+<svg class="quiz-ring" id="quiz-ring" width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><circle class="bg" cx="22" cy="22" r="18" fill="none" stroke-width="5"/><circle class="fg" id="quiz-ring-fg" cx="22" cy="22" r="18" fill="none" stroke-width="5" stroke-dasharray="113.1" stroke-dashoffset="0"/></svg>
+<span class="quiz-count" id="quiz-count">10.0s</span>
+</div>
+<div class="quiz-grid" id="quiz-grid"></div>
+<div><span class="quiz-life" id="quiz-life">1 rescue life left</span></div>
+</div>
+
+<div class="bonus-card" id="quiz-over" style="display:none;text-align:center">
+<h2 style="margin:0 0 6px;font-size:20px" id="over-title">Session complete</h2>
+<div class="big" id="over-earned" style="font-size:clamp(36px,8vw,52px);font-weight:800;color:var(--green)">+$0.00</div>
+<p style="color:var(--muted);font-size:14px;margin:8px 0 16px" id="over-sub">0 correct out of 0.</p>
+<button class="btn btn-green" id="again-btn" style="min-height:48px;min-width:220px">Play again · 10 diamonds</button>
+</div>
+</div>
+
+<h2 style="font-size:20px;margin:26px 0 0">Recent correct answers</h2>
+<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Amount</th><th>Date</th></tr></thead><tbody id="q-rows"><tr><td colspan="2" style="color:var(--muted)">Sign in to see your answers.</td></tr></tbody></table></div>
 </div></section>
 </main>
 <footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="earn.html">Earn</a></span></div></div></footer>
+
+<div class="quiz-veil" id="quiz-life-veil" role="dialog" aria-label="Rescue life">
+<div class="quiz-box">
+<h3 id="life-title">Wrong answer</h3>
+<p>You have <b>1 rescue life</b>. Watch a 20-second view to keep this session alive — a second wrong ends it.</p>
+<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:18px">
+<button class="btn btn-green" id="life-ad-btn" style="min-height:48px">Watch & continue</button>
+<button class="btn btn-ghost" id="life-end-btn" style="min-height:48px">End session</button>
+</div>
+</div>
+</div>
+
+<div class="quiz-ad-veil" id="quiz-ad-modal" role="dialog" aria-label="Sponsored view for a rescue life">
+<div class="quiz-box" style="text-align:left">
+<div style="text-align:center"><h3 id="quiz-ad-title">Quiz break</h3><p id="quiz-ad-text"></p></div>
+<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--muted);margin:14px 0 8px"><span id="quiz-ad-msg">Keep this view visible…</span><b id="quiz-ad-count" style="color:#7dd3fc">20s</b></div>
+<div class="prog" style="margin:0 0 14px"><i id="quiz-ad-bar" style="width:0%"></i></div>
+<button class="btn btn-green btn-block" id="quiz-ad-go" style="display:none">Continue · rescue me</button>
+<button class="btn btn-ghost btn-block" id="quiz-ad-close" style="margin-top:8px">Close</button>
+</div>
+</div>
+
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet } from './js/firebase.js';
+import { auth, onAuthStateChanged, getWallet, fetchUserDocs, quizSession, genQuizQuestion, quizOptions, startQuizSession, answerQuiz, useQuizLife, getUnclaimedRewards, track, QUIZ_ENTRY_COST, QUIZ_SESSION_SIZE, QUIZ_PAY, QUIZ_TIME_MS } from './js/firebase.js';
+import { paintDualChip, startDiamondChest } from './js/diamonds.js';
+import { coinPour, softThud, isMuted, toggleMute } from './js/sfx.js';
 if (window.FavLoader) FavLoader.hold();
 (function () {
-  function ready() { if (window.FavLoader) FavLoader.pageReady(); }
-  try {
-    onAuthStateChanged(auth, async function (user) {
-      if (!user) { document.getElementById('chip-bal').textContent='\u2014'; document.getElementById('chip-name').textContent='Sign in'; ready(); return; }
-      try {
-        var w = await getWallet(user.uid);
-        document.getElementById('chip-bal').textContent = '$' + Number(w.pending).toFixed(2);
-        document.getElementById('chip-name').textContent = (user.email || 'Member').split('@')[0];
-      } catch (e) {}
+  var uid=null, stopChest=null, proofs=[], diamonds=0;
+  var curOp=null, cur=null, busy=false, qTimer=null, qLeft=QUIZ_TIME_MS;
+  var RING_C=113.1;
+  var toast=document.getElementById('toast'), tm=null;
+  function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
+  function money(n,d){return '$'+Number(n||0).toFixed(d==null?2:d);}
+  function relDate(ts){
+    if(!ts)return 'recently';
+    var ms=ts.seconds?ts.seconds*1000:new Date(ts).getTime();
+    if(!ms)return 'recently';
+    var d=Math.max(0,Math.round((Date.now()-ms)/864e5));
+    if(d===0)return 'today';if(d===1)return '1 day ago';if(d<30)return d+' days ago';
+    return Math.floor(d/30)+'mo ago';
+  }
+  function savedOp(){
+    try{
+      var raw=localStorage.getItem('fav_quiz_op');
+      if(!raw)return null;
+      var o=JSON.parse(raw);
+      if(o&&QUIZ_OPS_OK(o.op)&&o.entryMs>0)return o;
+    }catch(e){}
+    return null;
+  }
+  function QUIZ_OPS_OK(op){return op==='+'||op==='-'||op==='x'||op==='/';}
+  function storeOp(op,entryMs){try{localStorage.setItem('fav_quiz_op',JSON.stringify({op:op,entryMs:entryMs}));}catch(e){}}
+  function clearOp(){try{localStorage.removeItem('fav_quiz_op');}catch(e){}}
+
+  function showZone(name){
+    ['quiz-entry','quiz-ops','quiz-arena','quiz-over'].forEach(function(id){
+      document.getElementById(id).style.display=id===name?'':'none';
+    });
+  }
+  function paintMute(){document.getElementById('mute-btn').textContent=isMuted()?'Sound: off':'Sound: on';}
+  document.getElementById('mute-btn').addEventListener('click',function(){toggleMute();paintMute();});
+
+  function paintRows(){
+    var body=document.getElementById('q-rows');
+    var rows=(proofs||[]).filter(function(p){return String((p&&p.label)||'')==='play:quiz';}).slice(0,10);
+    if(!rows.length){body.innerHTML='<tr><td colspan="2" style="color:var(--muted)">No correct answers yet — your first $0.10 is one sprint away.</td></tr>';return;}
+    body.innerHTML=rows.map(function(p){
+      return '<tr><td>'+money(p.amount!=null?p.amount:QUIZ_PAY)+'</td><td>'+relDate(p.at)+'</td></tr>';
+    }).join('');
+  }
+
+  async function refresh(repaintChip){
+    if(!uid)return null;
+    try{proofs=await fetchUserDocs(uid,'proofs',100);}catch(e){return null;}
+    var st=quizSession(proofs,Date.now());
+    try{
+      var w=await getWallet(uid);
+      diamonds=w.diamonds;
+      document.getElementById('quiz-diamonds').textContent=String(diamonds);
+      if(repaintChip)paintDualChip(w.pending,w.diamonds);
+    }catch(e){}
+    paintRows();
+    return st;
+  }
+
+  function route(st){
+    if(!st)return;
+    if(!st.hasSession||!st.active){cur=null;curOp=null;clearOp();showZone('quiz-entry');return;}
+    var saved=savedOp();
+    if(saved&&saved.entryMs===st.lastEntryMs){curOp=saved.op;ask(st);}
+    else{showZone('quiz-ops');}
+  }
+
+  function paintRing(){
+    var fg=document.getElementById('quiz-ring-fg');
+    var frac=Math.max(0,qLeft/QUIZ_TIME_MS);
+    if(fg)fg.setAttribute('stroke-dashoffset',String(RING_C*(1-frac)));
+    document.getElementById('quiz-ring').classList.toggle('low',qLeft<=3000);
+    document.getElementById('quiz-count').textContent=(Math.max(0,qLeft)/1000).toFixed(1)+'s';
+  }
+  function stopTimer(){if(qTimer){clearInterval(qTimer);qTimer=null;}}
+  function startTimer(){
+    stopTimer();
+    qLeft=QUIZ_TIME_MS;paintRing();
+    qTimer=setInterval(function(){
+      if(document.hidden)return;
+      qLeft-=100;
+      if(qLeft<=0){stopTimer();onPick(-1);return;}
+      paintRing();
+    },100);
+  }
+
+  function ask(st){
+    var answered=st?st.answered:0;
+    cur=genQuizQuestion(curOp,answered);
+    cur.options=quizOptions(cur.answer);
+    showZone('quiz-arena');
+    document.getElementById('quiz-progress').textContent='Q '+(answered+1)+'/'+QUIZ_SESSION_SIZE;
+    document.getElementById('quiz-score').textContent=(st?st.correct:0)+' correct · +'+money(st?st.earned:0);
+    var life=document.getElementById('quiz-life');
+    if(st&&st.lifeUsed){life.textContent='Rescue life used';life.classList.add('used');}
+    else{life.textContent='1 rescue life left';life.classList.remove('used');}
+    document.getElementById('quiz-q').textContent=cur.text;
+    var grid=document.getElementById('quiz-grid');
+    grid.innerHTML='';
+    cur.options.forEach(function(v,i){
+      var b=document.createElement('button');
+      b.type='button';b.className='quiz-opt';b.textContent=String(v);
+      b.addEventListener('click',function(){onPick(i);});
+      grid.appendChild(b);
+    });
+    busy=false;
+    startTimer();
+  }
+
+  async function onPick(idx){
+    if(busy||!cur||!uid)return;
+    busy=true;stopTimer();
+    var btns=document.getElementById('quiz-grid').children;
+    for(var i=0;i<btns.length;i++)btns[i].disabled=true;
+    var r;
+    try{r=await answerQuiz(uid,cur,idx);}
+    catch(e){r={ok:false,reason:'write'};}
+    if(!r.ok){
+      show(r.reason==='session'?'Session ended — deposit again to play.':'Could not save — check connection and try again.');
+      busy=false;
+      await refresh(false).then(function(st){if(st&&!st.active)gameOver(st);else if(cur){for(var i=0;i<btns.length;i++)btns[i].disabled=false;startTimer();}});
+      return;
+    }
+    for(var j=0;j<btns.length;j++){
+      if(Number(cur.options[j])===Number(cur.answer))btns[j].classList.add('right');
+      else if(j===idx)btns[j].classList.add('wrong');
+    }
+    var st=await refresh(false);
+    if(r.correct){
+      try{var w=await getWallet(uid);paintDualChip(w.pending,w.diamonds,{flip:'usd',glow:true});}catch(e){}
+      coinPour();
+      try{track('quiz_correct',{amount:QUIZ_PAY});}catch(_){}
+      show('+$0.10 — nice.');
+    }else{
+      softThud();
+    }
+    setTimeout(function(){
+      busy=false;
+      st=st||quizSession(proofs,Date.now());
+      if(!st.active){gameOver(st);return;}
+      if(!r.correct){
+        if(!st.lifeUsed){showLife();}
+        else{gameOver(st);}
+        return;
+      }
+      ask(st);
+    },r.correct?650:900);
+  }
+
+  function gameOver(st){
+    stopTimer();cur=null;
+    var done=st&&st.remaining===0;
+    document.getElementById('over-title').textContent=done?'Session complete':'Game over';
+    document.getElementById('over-earned').textContent='+'+money(st?st.earned:0);
+    document.getElementById('over-sub').textContent=(st?st.correct:0)+' correct out of '+(st?st.answered:0)+'.'+(done?'':' Unanswered questions are lost — deposit to go again.');
+    clearOp();
+    showZone('quiz-over');
+  }
+
+  function showLife(){
+    document.getElementById('quiz-life-veil').classList.add('open');
+  }
+  function hideLife(){document.getElementById('quiz-life-veil').classList.remove('open');}
+  document.getElementById('life-end-btn').addEventListener('click',async function(){
+    hideLife();
+    var st=await refresh(false);
+    gameOver(st||quizSession(proofs,Date.now()));
+  });
+
+  // --- rescue ad: 20 visible seconds, house promos (third-party rewarded
+  // ads plug into the Continue callback later, same as chest/Grow) ---
+  var ADS=[
+    ['Invite pays both ways','Friends get $1.00 instantly, you get $0.50 instantly. Your link lives on the Invite page.'],
+    ['Cash out from $5','PayPal, Visa prepaid and crypto. Diamonds stay in games — cash stays withdrawable.'],
+    ['Grow your earnings','Stake task earnings on the Grow page and watch the ticker climb, boosted by ad views.']
+  ];
+  var adIdx=0, AD_MS=20000, adLeft=AD_MS, adTimer=null, adOpen=false, adBusy=false;
+  function paintAd(){
+    var s=Math.max(0,Math.ceil(adLeft/1000));
+    document.getElementById('quiz-ad-count').textContent=s+'s';
+    document.getElementById('quiz-ad-bar').style.width=Math.min(100,(AD_MS-adLeft)/AD_MS*100)+'%';
+    document.getElementById('quiz-ad-msg').textContent=document.hidden?'Paused — keep this view visible…':(adLeft>0?'Keep this view visible…':'View verified.');
+  }
+  function closeAd(){adOpen=false;if(adTimer){clearInterval(adTimer);adTimer=null;}document.getElementById('quiz-ad-modal').classList.remove('open');}
+  function openAd(){
+    adIdx=(adIdx+1)%ADS.length;
+    document.getElementById('quiz-ad-title').textContent=ADS[adIdx][0];
+    document.getElementById('quiz-ad-text').textContent=ADS[adIdx][1];
+    document.getElementById('quiz-ad-modal').classList.add('open');
+    document.getElementById('quiz-ad-go').style.display='none';
+    adLeft=AD_MS;adOpen=true;paintAd();
+    if(adTimer)clearInterval(adTimer);
+    adTimer=setInterval(function(){
+      if(!adOpen)return;
+      if(!document.hidden)adLeft-=250;
+      paintAd();
+      if(adLeft<=0){clearInterval(adTimer);adTimer=null;document.getElementById('quiz-ad-go').style.display='';}
+    },250);
+  }
+  document.getElementById('life-ad-btn').addEventListener('click',function(){hideLife();openAd();});
+  document.getElementById('quiz-ad-close').addEventListener('click',async function(){
+    closeAd();
+    var st=await refresh(false);
+    gameOver(st||quizSession(proofs,Date.now()));
+  });
+  document.getElementById('quiz-ad-go').addEventListener('click',async function(){
+    closeAd();
+    if(adBusy)return;adBusy=true;
+    var r;
+    try{r=await useQuizLife(uid);}catch(e){r={ok:false,reason:'write'};}
+    adBusy=false;
+    if(!r.ok){show('Life failed — session ended.');var st0=await refresh(false);gameOver(st0||quizSession(proofs,Date.now()));return;}
+    show('Rescued — keep going.');
+    var st=await refresh(false);
+    st=st||quizSession(proofs,Date.now());
+    if(!st.active){gameOver(st);return;}
+    ask(st);
+  });
+
+  document.getElementById('deposit-btn').addEventListener('click',function(){
+    var b=this;
+    if(window.FavLoader){return FavLoader.withButton(b,doDeposit);}
+    return doDeposit();
+    async function doDeposit(){
+      var r;
+      try{r=await startQuizSession(uid);}catch(e){r={ok:false,reason:'write'};}
+      if(!r.ok){
+        if(r.reason==='funds')show('Need 10 diamonds — tap the floating chest to earn them free.');
+        else if(r.reason==='active'){var st=await refresh(false);route(st);return;}
+        else show('Could not start — check connection and try again.');
+        return;
+      }
+      try{var w=await getWallet(uid);paintDualChip(w.pending,w.diamonds);}catch(e){}
+      document.getElementById('quiz-diamonds').textContent=String(diamonds-QUIZ_ENTRY_COST>=0?diamonds-QUIZ_ENTRY_COST:diamonds);
+      var st2=await refresh(false);
+      route(st2);
+    }
+  });
+  document.getElementById('again-btn').addEventListener('click',function(){
+    document.getElementById('deposit-btn').click();
+  });
+  var opBtns=document.querySelectorAll('.quiz-op');
+  for(var k=0;k<opBtns.length;k++){
+    opBtns[k].addEventListener('click',async function(){
+      var op=this.getAttribute('data-op');
+      if(!QUIZ_OPS_OK(op))return;
+      curOp=op;
+      var st=await refresh(false);
+      st=st||quizSession(proofs,Date.now());
+      if(!st||!st.active){route(st);return;}
+      storeOp(op,st.lastEntryMs);
+      try{track('quiz_start',{op:op});}catch(_){}
+      ask(st);
+    });
+  }
+
+  function ready(){if(window.FavLoader)FavLoader.pageReady();}
+  paintMute();
+  try{
+    onAuthStateChanged(auth,async function(user){
+      if(!user){
+        uid=null;proofs=[];cur=null;curOp=null;stopTimer();
+        if(stopChest){try{stopChest();}catch(_){}stopChest=null;}
+        document.getElementById('auth-wall').style.display='';
+        document.getElementById('guest-card').style.display='';
+        document.getElementById('member-zone').style.display='none';
+        document.getElementById('user-chip').setAttribute('href','signin.html');
+        document.getElementById('chip-bal').textContent='—';
+        document.getElementById('chip-name').textContent='Sign in';
+        document.getElementById('q-rows').innerHTML='<tr><td colspan="2" style="color:var(--muted)">Sign in to see your answers.</td></tr>';
+        ready();return;
+      }
+      uid=user.uid;
+      document.getElementById('auth-wall').style.display='none';
+      document.getElementById('guest-card').style.display='none';
+      document.getElementById('member-zone').style.display='';
+      document.getElementById('user-chip').setAttribute('href','profile.html');
+      document.getElementById('chip-name').textContent=(user.email||'Member').split('@')[0];
+      try{
+        var w=await getWallet(uid);
+        paintDualChip(w.pending,w.diamonds);
+        if(stopChest){try{stopChest();}catch(_){}}
+        stopChest=startDiamondChest(uid,{onBalance:function(w2){paintDualChip(w2.pending,w2.diamonds);}});
+        try{await getUnclaimedRewards(uid);}catch(_){}
+      }catch(e){}
+      var st=await refresh(false);
+      route(st);
       ready();
     });
-  } catch (e) { ready(); }
-  setTimeout(ready, 6000);
+  }catch(e){ready();}
+  setTimeout(ready,6000);
 })();
 </script>
 </body>

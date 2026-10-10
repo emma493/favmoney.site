@@ -23,8 +23,6 @@
     .ms-card{background:var(--card-2);border:1px solid var(--line-soft);border-radius:16px;padding:18px}
     .ms-card.ready{border-color:rgba(1,214,118,.5);box-shadow:0 0 0 3px rgba(1,214,118,.15)}
     .ms-head{display:flex;gap:12px;align-items:center}
-    .ms-ico{flex:none;width:48px;height:48px;border-radius:12px;background:rgba(1,214,118,.12);border:1px solid rgba(1,214,118,.3);display:flex;align-items:center;justify-content:center;color:#8ff0bd}
-    .ms-ico svg{width:24px;height:24px}
     .ms-head b{font-size:15px;display:block}
     .ms-head span{font-size:12px;color:var(--muted)}
     .ms-count{margin-left:auto;flex:none;font-size:12px;font-weight:800;color:#ffd75e;background:rgba(255,215,94,.1);border:1px solid rgba(255,215,94,.3);border-radius:999px;padding:3px 10px;white-space:nowrap}
@@ -36,6 +34,17 @@
     .tier .tbar i{display:block;height:100%;background:var(--green);border-radius:3px;transition:width .3s}
     .tier .btn{min-height:40px;padding:8px 14px;font-size:13px;flex:none}
     .tier.locked{opacity:.75}
+    .ms-badge{display:flex;gap:12px;align-items:center;min-width:0}
+    .bd-medal{position:relative;flex:none;width:64px;height:64px}
+    .bd-medal svg{width:64px;height:64px;display:block}
+    .bd-ring{fill:#141523;stroke:var(--bd,#8A8B91);stroke-width:4}
+    .bd-face{fill:rgba(255,255,255,.03)}
+    .bd-pip{fill:rgba(255,255,255,.14)}
+    .bd-pip.lit{fill:var(--bd,#8A8B91)}
+    .bd-ico{position:absolute;left:0;right:0;top:12px;display:flex;justify-content:center;color:var(--bd,#8A8B91)}
+    .bd-ico svg{width:22px;height:22px}
+    .rank-0{--bd:#8A8B91}.rank-1{--bd:#CD7F32}.rank-2{--bd:#C0C0C0}.rank-3{--bd:#FFD75E}.rank-4{--bd:#01D676}
+    .ms-head span.ms-rank{display:block;font-size:12px;font-weight:800;color:var(--bd)}
     @media(max-width:640px){.ready-banner{flex-wrap:wrap}.ready-banner .btn{flex:1 1 100%;min-height:48px}.tier .btn{min-height:44px}}
   </style>
 </head>
@@ -98,6 +107,7 @@
 <script>if(window.lucide){try{lucide.createIcons();}catch(e){}}</script>
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getRewardsProgress, claimMilestone, fetchUserDocs, track } from './js/firebase.js';
+import { coinPour } from './js/sfx.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
   setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
@@ -128,22 +138,57 @@ import { auth, onAuthStateChanged, getWallet, getRewardsProgress, claimMilestone
     if(t.id==='grow'&&tr.target===25)return money(Math.min(tr.progress,tr.target),0)+' / '+money(tr.target,0);
     return Math.min(tr.progress,tr.target)+' / '+tr.target;
   }
+  // Badge ranks: universal ladder from CLAIMED tiers (cash actually taken).
+  // Rookie 0 -> Bronze (any) -> Silver (>=1/2) -> Gold (>=3/4) -> Master (all).
+  // Single-tier Welcome goes Rookie -> Master on its one claim, no special case.
+  var RANKS=[{name:'Rookie'},{name:'Bronze'},{name:'Silver'},{name:'Gold'},{name:'Master'}];
+  function trackRank(t){
+    var total=t.tiers.length,claimed=0,i;
+    for(i=0;i<total;i++)if(t.tiers[i].claimed)claimed++;
+    if(total<1)return 0;
+    if(claimed>=total)return 4;
+    var f=claimed/total;
+    if(f>=0.75)return 3;
+    if(f>=0.5)return 2;
+    if(f>0)return 1;
+    return 0;
+  }
+  // SVG medal: rank-colored ring + lit pips for claimed tiers + track icon
+  // centered over it (lucide resolves it on refresh, like before).
+  function badgeSVG(t){
+    var total=t.tiers.length,claimed=0,i;
+    for(i=0;i<total;i++)if(t.tiers[i].claimed)claimed++;
+    var pips='';
+    for(i=0;i<total;i++){
+      var cx=total===1?48:(48-(total-1)*7+i*14);
+      pips+='<circle class="bd-pip'+(i<claimed?' lit':'')+'" cx="'+cx+'" cy="72" r="4.2"/>';
+    }
+    return '<svg viewBox="0 0 96 96" aria-hidden="true"><circle class="bd-ring" cx="48" cy="30" r="24"/><circle class="bd-face" cx="48" cy="30" r="19"/>'+pips+'</svg>';
+  }
   function cardHTML(t){
-    var ready=t.tiers.filter(function(x){return x.unlocked&&!x.claimed;}).length;
+    var rank=trackRank(t);
+    var claimable=t.tiers.filter(function(x){return x.unlocked&&!x.claimed;});
     var claimedN=t.tiers.filter(function(x){return x.claimed;}).length;
-    var badge=claimedN===4?'<span class="ms-count done">All claimed</span>':(ready>0?'<span class="ms-count">'+ready+' to claim</span>':'<span class="ms-count" style="color:var(--muted);background:rgba(255,255,255,.05);border-color:var(--line)">In progress</span>');
-    var tiers=t.tiers.map(function(tr,i){
-      var pct=Math.min(100,Math.round(tr.progress/tr.target*100));
-      var right;
-      if(tr.claimed)right='<span class="pill paid">Claimed</span>';
-      else if(tr.unlocked)right='<button class="btn btn-green" data-claim="'+t.id+':'+i+'">Claim '+money(tr.amount)+'</button>';
-      else right='<small style="color:var(--faint);flex:none">'+(tr.target-tr.progress)+' left</small>';
-      return '<div class="tier'+(tr.unlocked||tr.claimed?'':' locked')+'"><div class="tinfo"><b style="font-size:13px">'+tierLabel(t,i,tr)+'</b><div class="tbar"><i style="width:'+pct+'%"></i></div><small>'+tierProgress(t,tr)+' · pays '+money(tr.amount)+'</small></div>'+right+'</div>';
+    var allDone=t.tiers.length>0&&claimedN>=t.tiers.length;
+    var pill=allDone?'<span class="ms-count done">All claimed</span>':(claimable.length>0?'<span class="ms-count">'+claimable.length+' to claim</span>':'<span class="ms-count" style="color:var(--muted);background:rgba(255,255,255,.05);border-color:var(--line)">In progress</span>');
+    var body=claimable.map(function(tr){
+      var i=t.tiers.indexOf(tr);
+      return '<div class="tier"><div class="tinfo"><b style="font-size:13px">'+tierLabel(t,i,tr)+'</b><small>pays '+money(tr.amount)+'</small></div><button class="btn btn-green" data-claim="'+t.id+':'+i+'">Claim '+money(tr.amount)+'</button></div>';
     }).join('');
+    if(!claimable.length&&!allDone){
+      for(var i=0;i<t.tiers.length;i++){
+        if(!t.tiers[i].claimed){
+          var tr=t.tiers[i];
+          var pct=tr.target>0?Math.min(100,Math.round(tr.progress/tr.target*100)):0;
+          body='<div class="tier locked"><div class="tinfo"><b style="font-size:13px">Next up: '+tierLabel(t,i,tr)+'</b><div class="tbar"><i style="width:'+pct+'%"></i></div><small>'+tierProgress(t,tr)+' · pays '+money(tr.amount)+'</small></div></div>';
+          break;
+        }
+      }
+    }
     var foot='';
     if(LINKS[t.id])foot='<a class="link-more" href="'+LINKS[t.id][0]+'">'+LINKS[t.id][1]+' <span aria-hidden="true">→</span></a>';
     if(UNLAUNCHED.indexOf(t.id)>=0)foot+='<div style="font-size:12px;color:var(--faint);margin-top:6px">Game opening soon — your progress starts counting then.</div>';
-    return '<div class="ms-card'+(ready>0?' ready':'')+'"><div class="ms-head"><div class="ms-ico"><i data-lucide="'+t.icon+'" aria-hidden="true"></i></div><div><b>'+t.name+'</b><span>'+t.tag+'</span></div>'+badge+'</div>'+tiers+foot+'</div>';
+    return '<div class="ms-card'+(claimable.length>0?' ready':'')+'" data-track="'+t.id+'" data-rank="'+rank+'"><div class="ms-head"><div class="ms-badge rank-'+rank+'"><div class="bd-medal">'+badgeSVG(t)+'<div class="bd-ico"><i data-lucide="'+t.icon+'" aria-hidden="true"></i></div></div><div><b>'+t.name+'</b><span class="ms-rank">'+RANKS[rank].name+'</span><span>'+t.tag+'</span></div></div>'+pill+'</div>'+body+foot+'</div>';
   }
   function paintBadges(n){
     unclaimedN=n;
@@ -191,6 +236,11 @@ import { auth, onAuthStateChanged, getWallet, getRewardsProgress, claimMilestone
     if(window.FavLoader){return FavLoader.withButton(b,function(){return __claimWork(parts[0],parseInt(parts[1],10));});}
     return __claimWork(parts[0],parseInt(parts[1],10));
     async function __claimWork(trackId,tierIdx){
+      var prevRank=-1;
+      try{
+        var card=b?b.closest('.ms-card'):null;
+        if(card&&card.getAttribute('data-track')===trackId)prevRank=parseInt(card.getAttribute('data-rank'),10)||0;
+      }catch(_){}
       var r=await claimMilestone(uid,trackId,tierIdx);
       if(!r.ok){
         if(r.reason==='locked')show('Not unlocked yet — keep going.');
@@ -199,8 +249,14 @@ import { auth, onAuthStateChanged, getWallet, getRewardsProgress, claimMilestone
         return;
       }
       try{track('milestone_claim',{milestone:trackId+':'+tierIdx});}catch(_){}
+      try{coinPour();}catch(_){}
       show('Claimed '+money(r.amount)+' to available.');
       await refresh();
+      try{
+        var nc=document.querySelector('.ms-card[data-track="'+trackId+'"]');
+        var nr=nc?parseInt(nc.getAttribute('data-rank'),10):NaN;
+        if(!isNaN(nr)&&nr>prevRank&&RANKS[nr])show('Badge upgraded: '+RANKS[nr].name+'.');
+      }catch(_){}
     }
   });
   document.getElementById('ready-go').addEventListener('click',function(){

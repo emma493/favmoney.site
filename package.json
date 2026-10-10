@@ -1,0 +1,21 @@
+{
+  "name": "favmoney.site",
+  "version": "1.0.0",
+  "description": "Day-1 placeholder for the 7-day Favmoney project (task-to-earn site).",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emma493/favmoney.site.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/emma493/favmoney.site/issues"
+  },
+  "homepage": "https://github.com/emma493/favmoney.site#readme"
+}

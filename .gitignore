@@ -30,3 +30,7 @@ VAULT.local.md
 
 # Freecash inspo dump - reference only, never deploy
 inspo/
+
+# Agent tooling - local dev environment, not part of the site
+.agents/
+.claude/

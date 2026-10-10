@@ -37,6 +37,7 @@
 <div class="who"><div id="avatar" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#01D676,#0a5c3f);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#06240f">?</div><div><b id="p-name">Guest</b><span id="p-joined">Joined recently</span></div></div>
 <div class="stat-strip" style="margin:18px 0 0">
 <div class="stat-cell"><b id="p-earn">$0.00</b><span>Total earnings</span></div>
+<div class="stat-cell"><b id="p-dia">0</b><span>Diamonds</span></div>
 <div class="stat-cell"><b id="p-done">0</b><span>Offers completed</span></div>
 </div>
 <p style="margin:16px 0 4px;font-weight:700" id="p-level">Level 1</p>
@@ -66,10 +67,11 @@
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, fetchUserDocs, getUnclaimedRewards } from './js/firebase.js';
+import { paintDualChip, startDiamondChest } from './js/diamonds.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
   setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
-  var cat='all', proofs=[], earn=0, userEmail='', joinedLabel='—';
+  var cat='all', proofs=[], earn=0, diaBal=0, userEmail='', joinedLabel='—', stopChest=null;
   function relDate(ts){
     if(!ts)return 'recently';
     var ms=ts.seconds?ts.seconds*1000:new Date(ts).getTime();
@@ -82,6 +84,25 @@ import { auth, onAuthStateChanged, getWallet, fetchUserDocs, getUnclaimedRewards
     if(s==='paid'||s==='approved')return '<span class="pill paid">Paid</span>';
     if(s==='done')return '<span class="pill done">Done</span>';
     return '<span class="pill pending">Pending</span>';
+  }
+  function diaName(l){
+    var map={ 'diamond-ad':'Chest ad reward', 'diamond-passive':'Chest drip', 'diamond-win':'Game win' };
+    if(map[l])return map[l];
+    var m=/^diamond-spend:(.+)$/.exec(l||'');
+    if(m)return 'Play: '+m[1];
+    var m2=/^diamond-play:(.+)$/.exec(l||'');
+    if(m2)return 'Played: '+m2[1];
+    return 'Diamonds';
+  }
+  function rowAmt(p){
+    var l=(p.label||'');
+    if(l.indexOf('diamond-')===0){
+      var d=Number(p.diamonds||0);
+      if(d>0)return '+'+d+' DIA';
+      if(d<0)return d+' DIA';
+      return '—';
+    }
+    return '$'+Number(p.amount||0).toFixed(2);
   }
   function matchCat(p){
     if(cat==='all')return true;
@@ -97,7 +118,9 @@ import { auth, onAuthStateChanged, getWallet, fetchUserDocs, getUnclaimedRewards
     });
     if(cat==='referrals'){document.getElementById('rows').innerHTML='<tr><td colspan="5" style="color:var(--muted)">No referrals yet. <a href="invite.html" style="color:#8ff0bd">Invite friends</a>.</td></tr>';return;}
     document.getElementById('rows').innerHTML=rows.length?rows.map(function(p){
-      return '<tr><td>'+(p.label||p.title||'Quest')+'</td><td>$'+Number(p.amount||0).toFixed(2)+'</td><td>'+pill(p.status)+'</td><td>'+(p.partner||'Favmoney')+'</td><td>'+relDate(p.at||p.createdAt)+'</td></tr>';
+      var l=(p.label||'');
+      var nm=(l.indexOf('diamond-')===0)?diaName(l):(p.label||p.title||'Quest');
+      return '<tr><td>'+nm+'</td><td>'+rowAmt(p)+'</td><td>'+pill(p.status)+'</td><td>'+(p.partner||'Favmoney')+'</td><td>'+relDate(p.at||p.createdAt)+'</td></tr>';
     }).join(''):'<tr><td colspan="5" style="color:var(--muted)">No history yet. <a href="earn.html" style="color:#8ff0bd">Start your first offer</a>.</td></tr>';
   }
   function tsOf(p){
@@ -109,6 +132,7 @@ import { auth, onAuthStateChanged, getWallet, fetchUserDocs, getUnclaimedRewards
     var done=proofs.filter(function(p){return /paid|done|approved/i.test(p.status||'');}).length;
     var lvl=Math.floor(earn/10)+1,next=(lvl*10-earn);
     document.getElementById('p-earn').textContent='$'+earn.toFixed(2);
+    document.getElementById('p-dia').textContent=diaBal;
     document.getElementById('p-done').textContent=done;
     document.getElementById('p-done2').textContent=done;
     document.getElementById('p-started').textContent=proofs.length;
@@ -143,7 +167,8 @@ import { auth, onAuthStateChanged, getWallet, fetchUserDocs, getUnclaimedRewards
         document.getElementById('auth-wall').style.display='';
         document.getElementById('user-chip').setAttribute('href','signin.html');
         document.getElementById('chip-name').textContent='Sign in';
-        earn=0;proofs=[];userEmail='';joinedLabel='—';
+        earn=0;diaBal=0;proofs=[];userEmail='';joinedLabel='—';
+        if(stopChest){try{stopChest();}catch(_){}stopChest=null;}
         if(window.FavLoader)FavLoader.pageReady();
         paintStats();render();return;
       }
@@ -155,7 +180,10 @@ import { auth, onAuthStateChanged, getWallet, fetchUserDocs, getUnclaimedRewards
       try{
         var w=await getWallet(user.uid);
         earn=Number(w.lifetime);
-        document.getElementById('chip-bal').textContent='$'+Number(w.pending).toFixed(2);
+        diaBal=Math.max(0,Math.floor(Number(w.diamonds||0)));
+        paintDualChip(w.pending,w.diamonds);
+        if(stopChest){try{stopChest();}catch(_){}}
+        stopChest=startDiamondChest(user.uid,{onBalance:function(w2){diaBal=Math.max(0,Math.floor(Number(w2.diamonds||0)));paintDualChip(w2.pending,w2.diamonds);paintStats();}});
         proofs=await fetchUserDocs(user.uid,'proofs',50);
         try{
           var __n=await getUnclaimedRewards(user.uid);

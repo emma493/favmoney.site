@@ -157,10 +157,11 @@
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveState, settleInvest, stakeInvest, unstakeAll, activateBoost, fetchUserDocs, computeYield, utcDayStr, track, getUnclaimedRewards, INVEST_BASE_APR, INVEST_BOOST_APR, INVEST_BOOST_MS, INVEST_SEED } from './js/firebase.js';
+import { paintDualChip, startDiamondChest } from './js/diamonds.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
   setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
-  var uid=null, state=null, investAnchor=0, anchorAccrued=0, raf=null, lastPaint=0, lastBtnSec=-1, unclaimedN=0;
+  var uid=null, state=null, investAnchor=0, anchorAccrued=0, raf=null, lastPaint=0, lastBtnSec=-1, unclaimedN=0, stopChest=null;
   var reduced=false;
   try{reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}
   var toast=document.getElementById('toast'),tm=null;
@@ -261,7 +262,10 @@ import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveSta
       document.getElementById('cap-now').textContent=money(state.stakeable);
       document.getElementById('s-invested').textContent=money(state.invested);
       document.getElementById('s-days').textContent=(u.activeDays||[]).length;
-      document.getElementById('chip-bal').textContent=money(state.pending);
+      try{
+        var __w0=await getWallet(uid);
+        paintDualChip(__w0.pending,__w0.diamonds);
+      }catch(_){document.getElementById('chip-bal').textContent=money(state.pending);}
       try{paintBadges(await getUnclaimedRewards(uid));}catch(_){}
       paintLive();
     }catch(e){}
@@ -380,6 +384,7 @@ import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveSta
     onAuthStateChanged(auth,async function(user){
       if(!user){
         uid=null;state=null;
+        if(stopChest){try{stopChest();}catch(e){}stopChest=null;}
         if(raf)cancelAnimationFrame(raf);raf=null;
         document.getElementById('auth-wall').style.display='';
         document.getElementById('guest-card').style.display='';
@@ -398,7 +403,9 @@ import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveSta
       document.getElementById('chip-name').textContent=(user.email||'Member').split('@')[0];
       try{
         var w=await getWallet(uid);
-        document.getElementById('chip-bal').textContent=money(w.pending);
+        paintDualChip(w.pending,w.diamonds);
+        if(stopChest){try{stopChest();}catch(e){}}
+        stopChest=startDiamondChest(uid,{onBalance:function(w2){paintDualChip(w2.pending,w2.diamonds);}});
       }catch(e){}
       await refresh();
       if(window.FavLoader)FavLoader.pageReady();

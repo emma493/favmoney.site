@@ -51,10 +51,11 @@
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, migrateLocal, wasMigrated, track, getUnclaimedRewards } from './js/firebase.js';
+import { paintDualChip, startDiamondChest } from './js/diamonds.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
   setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
-  var uid=null,unclaimedN=0;
+  var uid=null,unclaimedN=0,stopChest=null;
   var toast=document.getElementById('toast'),tm=null;
   function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3000);}
   function paintBadges(n){
@@ -70,6 +71,7 @@ import { auth, onAuthStateChanged, getWallet, migrateLocal, wasMigrated, track, 
     onAuthStateChanged(auth,async function(user){
       if(!user){
         uid=null;
+        if(stopChest){try{stopChest();}catch(_){}stopChest=null;}
         if(window.FavLoader)FavLoader.pageReady();
         document.getElementById('auth-wall').style.display='';
         document.getElementById('user-chip').setAttribute('href','signin.html');
@@ -83,7 +85,9 @@ import { auth, onAuthStateChanged, getWallet, migrateLocal, wasMigrated, track, 
       try{
         if(!wasMigrated()){await migrateLocal(uid);show('Old browser balance moved to your account.');}
         var w=await getWallet(uid);
-        document.getElementById('chip-bal').textContent='$'+Number(w.pending).toFixed(2);
+        paintDualChip(w.pending,w.diamonds);
+        if(stopChest){try{stopChest();}catch(_){}}
+        stopChest=startDiamondChest(uid,{onBalance:function(w2){paintDualChip(w2.pending,w2.diamonds);}});
         try{paintBadges(await getUnclaimedRewards(uid));}catch(_){}
         if(window.FavLoader)FavLoader.pageReady();
       }catch(err){document.getElementById('chip-bal').textContent='$0.00';}

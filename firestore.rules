@@ -8,6 +8,10 @@
 // investedAt (ms epoch), boostUntil (ms epoch, 0 = inactive). users/{uid} holds
 // taskEarned (stakeable ceiling source), investedUser (user principal, excl. seed),
 // activeDays (UTC-day strings with rewarded activity, max 90 — yield gate).
+// Diamond model (play-only, never withdrawable): wallets/{uid} holds diamonds
+// (integer chips) + lastDiamondAdAt / lastDiamondPassiveAt (ms epoch cooldowns).
+// proofs rows with label diamond-* carry amount 0 (USD untouched) plus an
+// optional signed diamonds delta for history.
 // NOTE: client-side increments are validated for shape here; full authoritative
 // accounting (server-set amounts) needs a Cloud Function when backend lands.
 rules_version = '2';
@@ -115,13 +119,19 @@ service cloud.firestore {
         && request.resource.data.lifetime is number && request.resource.data.lifetime >= 0
         && (!('invested' in request.resource.data) || (request.resource.data.invested is number && request.resource.data.invested >= 0))
         && (!('investedAt' in request.resource.data) || (request.resource.data.investedAt is number && request.resource.data.investedAt >= 0))
-        && (!('boostUntil' in request.resource.data) || (request.resource.data.boostUntil is number && request.resource.data.boostUntil >= 0));
+        && (!('boostUntil' in request.resource.data) || (request.resource.data.boostUntil is number && request.resource.data.boostUntil >= 0))
+        && (!('diamonds' in request.resource.data) || (request.resource.data.diamonds is number && request.resource.data.diamonds >= 0))
+        && (!('lastDiamondAdAt' in request.resource.data) || (request.resource.data.lastDiamondAdAt is number && request.resource.data.lastDiamondAdAt >= 0))
+        && (!('lastDiamondPassiveAt' in request.resource.data) || (request.resource.data.lastDiamondPassiveAt is number && request.resource.data.lastDiamondPassiveAt >= 0));
       allow update: if self(userId)
         && request.resource.data.pending is number && request.resource.data.pending >= 0
         && request.resource.data.lifetime is number && request.resource.data.lifetime >= 0
         && (!('invested' in request.resource.data) || (request.resource.data.invested is number && request.resource.data.invested >= 0))
         && (!('investedAt' in request.resource.data) || (request.resource.data.investedAt is number && request.resource.data.investedAt >= 0))
-        && (!('boostUntil' in request.resource.data) || (request.resource.data.boostUntil is number && request.resource.data.boostUntil >= 0));
+        && (!('boostUntil' in request.resource.data) || (request.resource.data.boostUntil is number && request.resource.data.boostUntil >= 0))
+        && (!('diamonds' in request.resource.data) || (request.resource.data.diamonds is number && request.resource.data.diamonds >= 0))
+        && (!('lastDiamondAdAt' in request.resource.data) || (request.resource.data.lastDiamondAdAt is number && request.resource.data.lastDiamondAdAt >= 0))
+        && (!('lastDiamondPassiveAt' in request.resource.data) || (request.resource.data.lastDiamondPassiveAt is number && request.resource.data.lastDiamondPassiveAt >= 0));
       allow delete: if false;
     }
 
@@ -140,7 +150,10 @@ service cloud.firestore {
               || (request.resource.data.label == 'invest-stake' && request.resource.data.amount > 0 && request.resource.data.amount <= 100)
               || (request.resource.data.label == 'invest-unstake' && request.resource.data.amount > 0 && request.resource.data.amount <= 100)
               || (request.resource.data.label == 'invest-yield' && request.resource.data.amount > 0 && request.resource.data.amount <= 50)
-              || (request.resource.data.label == 'ad-view' && request.resource.data.amount == 0)
+               || (request.resource.data.label == 'ad-view' && request.resource.data.amount == 0)
+               // Diamonds are play-only chips: all diamond moves carry amount 0
+               // (USD untouched) with a signed diamonds delta for history.
+               || (request.resource.data.label.matches('diamond-.*') && request.resource.data.amount == 0)
             )
           )
         );

@@ -55,17 +55,31 @@ export async function ensureUserDoc(user, provider) {
   const w = await getDoc(wref);
   if (!w.exists()) {
     // Every account starts with a locked $1.00 grower seed (invest-only, never withdrawable).
-    await setDoc(wref, { pending: 0, lifetime: 0, invested: 1, investedAt: Date.now(), boostUntil: 0, updatedAt: serverTimestamp() });
+    // Diamonds start at 0; chest timestamps init so the ad is instantly ready
+    // but the first passive drip lands 3h after signup.
+    await setDoc(wref, { pending: 0, lifetime: 0, invested: 1, investedAt: Date.now(), boostUntil: 0, diamonds: 0, lastDiamondAdAt: 0, lastDiamondPassiveAt: Date.now(), updatedAt: serverTimestamp() });
+  } else {
+    // Heal pre-Diamond wallets: add missing diamond fields without touching balances.
+    try {
+      const d = w.data() || {};
+      const heal = {};
+      if (!('diamonds' in d)) heal.diamonds = 0;
+      if (!('lastDiamondAdAt' in d)) heal.lastDiamondAdAt = 0;
+      if (!('lastDiamondPassiveAt' in d)) heal.lastDiamondPassiveAt = Date.now();
+      if (Object.keys(heal).length) { heal.updatedAt = serverTimestamp(); await setDoc(wref, heal, { merge: true }); }
+    } catch (_) {}
   }
 }
 
 export async function getWallet(uid) {
   const snap = await getDoc(doc(db, 'wallets', uid));
-  if (!snap.exists()) return { pending: 0, lifetime: 0, invested: 0, investedAt: 0, boostUntil: 0 };
+  if (!snap.exists()) return { pending: 0, lifetime: 0, invested: 0, investedAt: 0, boostUntil: 0, diamonds: 0, lastDiamondAdAt: 0, lastDiamondPassiveAt: 0 };
   const d = snap.data();
   return {
     pending: Number(d.pending || 0), lifetime: Number(d.lifetime || 0),
-    invested: Number(d.invested || 0), investedAt: Number(d.investedAt || 0), boostUntil: Number(d.boostUntil || 0)
+    invested: Number(d.invested || 0), investedAt: Number(d.investedAt || 0), boostUntil: Number(d.boostUntil || 0),
+    diamonds: Math.max(0, Math.floor(Number(d.diamonds || 0))),
+    lastDiamondAdAt: Number(d.lastDiamondAdAt || 0), lastDiamondPassiveAt: Number(d.lastDiamondPassiveAt || 0)
   };
 }
 
@@ -270,7 +284,7 @@ export async function recordCommission(fromUid, baseAmount, label) {
   const base = Number(baseAmount || 0);
   if (!(base > 0)) return 0;
   const ll = (label || '').toLowerCase();
-  if (/^(referral-|invest-|ad-)/.test(ll)) return 0;
+  if (/^(referral-|invest-|ad-|diamond-)/.test(ll)) return 0;
   let ownerUid = null;
   try {
     const snap = await getDoc(doc(db, 'users', fromUid));
@@ -322,6 +336,120 @@ export async function fetchReferrals(ownerUid, n) {
   } catch (e) { return []; }
 }
 
+// ---- Diamond economy: play-only chips for Spin / Flip / Dice ----
+// Diamonds are NEVER withdrawable and NEVER convert back to USD. Earned free
+// via the floating chest (hourly rewarded ad + 3-hour claimable drip), spent
+// on extra game plays beyond the daily free play. Game USD-cent wins (when
+// they land) still flow through creditReward(); diamond wins use creditDiamonds().
+// USER TO CONFIRM: SPIN/FLIP/DICE extra-play costs when each game is built.
+export const DIAMOND_AD_MIN = 2;
+export const DIAMOND_AD_MAX = 10;
+export const DIAMOND_AD_COOLDOWN_MS = 3600000; // 1h between ad rewards
+export const DIAMOND_PASSIVE_AMOUNT = 2;
+export const DIAMOND_PASSIVE_INTERVAL_MS = 3 * 3600000; // 3h drip, claimable
+export const DIAMOND_COST_SPIN = 10; // USER TO CONFIRM
+export const DIAMOND_COST_FLIP = 15; // USER TO CONFIRM
+export const DIAMOND_COST_DICE = 5; // USER TO CONFIRM
+export const DIAMOND_GAME_COSTS = { spin: DIAMOND_COST_SPIN, flip: DIAMOND_COST_FLIP, dice: DIAMOND_COST_DICE };
+
+// Weighted 2-10 roll: 2 @30%, 3-5 @50%, 6-10 @20%. Pure, unit-testable.
+export function rollDiamondReward(rand) {
+  const r = typeof rand === 'function' ? rand() : Math.random();
+  if (r < 0.30) return 2;
+  if (r < 0.80) return 3 + Math.floor(((r - 0.30) / 0.50) * 3); // 3,4,5
+  return 6 + Math.floor(((r - 0.80) / 0.20) * 5); // 6..10
+}
+
+// Pure chest state from a wallet row — no Firestore. Returns countdowns in ms.
+export function getChestState(w, nowMs) {
+  const now = Number(nowMs || Date.now());
+  const lastAd = Number((w && w.lastDiamondAdAt) || 0);
+  const lastPassive = Number((w && w.lastDiamondPassiveAt) || 0);
+  const adWait = Math.max(0, lastAd + DIAMOND_AD_COOLDOWN_MS - now);
+  const passiveWait = Math.max(0, lastPassive + DIAMOND_PASSIVE_INTERVAL_MS - now);
+  return {
+    diamonds: Math.max(0, Math.floor(Number((w && w.diamonds) || 0))),
+    adReady: adWait <= 0, adWaitMs: adWait,
+    passiveReady: passiveWait <= 0, passiveWaitMs: passiveWait,
+    ready: adWait <= 0 || passiveWait <= 0
+  };
+}
+
+async function writeDiamondDelta(uid, delta, label, stampField) {
+  const wref = doc(db, 'wallets', uid);
+  const patch = { diamonds: increment(delta), updatedAt: serverTimestamp(), lastLabel: label };
+  if (stampField) patch[stampField] = Date.now();
+  try {
+    await updateDoc(wref, patch);
+  } catch (_) {
+    const base = { diamonds: Math.max(0, delta), updatedAt: serverTimestamp() };
+    if (stampField) base[stampField] = Date.now();
+    await setDoc(wref, base, { merge: true });
+  }
+  try {
+    await addDoc(collection(db, 'proofs'), {
+      uid, amount: 0, diamonds: delta, label, status: 'done', at: serverTimestamp()
+    });
+  } catch (_) {}
+}
+
+// Claim the hourly ad reward. UI must verify the ad view BEFORE calling.
+// Returns { ok, reward } or { ok:false, reason:'cooldown', waitMs }.
+export async function claimDiamondAd(uid, rand) {
+  const w = await getWallet(uid);
+  const st = getChestState(w, Date.now());
+  if (!st.adReady) return { ok: false, reason: 'cooldown', waitMs: st.adWaitMs };
+  const reward = rollDiamondReward(rand);
+  try {
+    await writeDiamondDelta(uid, reward, 'diamond-ad', 'lastDiamondAdAt');
+  } catch (_) { return { ok: false, reason: 'write' }; }
+  return { ok: true, reward };
+}
+
+// Claim the 3-hour passive drip (2 diamonds, no stacking — one batch max).
+export async function claimDiamondPassive(uid) {
+  const w = await getWallet(uid);
+  const st = getChestState(w, Date.now());
+  if (!st.passiveReady) return { ok: false, reason: 'cooldown', waitMs: st.passiveWaitMs };
+  try {
+    await writeDiamondDelta(uid, DIAMOND_PASSIVE_AMOUNT, 'diamond-passive', 'lastDiamondPassiveAt');
+  } catch (_) { return { ok: false, reason: 'write' }; }
+  return { ok: true, reward: DIAMOND_PASSIVE_AMOUNT };
+}
+
+// Spend diamonds on an extra game play. Never touches USD.
+// Returns { ok } or { ok:false, reason:'funds'|'write' }.
+export async function spendDiamonds(uid, cost, game) {
+  const c = Math.floor(Number(cost || 0));
+  if (!(c > 0)) return { ok: false, reason: 'cost' };
+  const w = await getWallet(uid);
+  if (w.diamonds < c) return { ok: false, reason: 'funds', balance: w.diamonds };
+  try {
+    await updateDoc(doc(db, 'wallets', uid), {
+      diamonds: increment(-c), updatedAt: serverTimestamp(), lastLabel: 'diamond-spend:' + (game || 'game')
+    });
+    await addDoc(collection(db, 'proofs'), {
+      uid, amount: 0, diamonds: -c, label: 'diamond-spend:' + (game || 'game'), status: 'done', at: serverTimestamp()
+    });
+  } catch (_) { return { ok: false, reason: 'write' }; }
+  try {
+    await addDoc(collection(db, 'proofs'), {
+      uid, amount: 0, label: 'diamond-play:' + (game || 'game'), status: 'done', at: serverTimestamp()
+    });
+  } catch (_) {}
+  return { ok: true, balance: w.diamonds - c };
+}
+
+// Credit diamond wins (prizes paid in chips, not cash). Never touches USD.
+export async function creditDiamonds(uid, n, label) {
+  const amt = Math.floor(Number(n || 0));
+  if (!(amt > 0)) return { ok: false, reason: 'amount' };
+  try {
+    await writeDiamondDelta(uid, amt, label || 'diamond-win', null);
+  } catch (_) { return { ok: false, reason: 'write' }; }
+  return { ok: true, reward: amt };
+}
+
 // ---- Rewards milestones: task-completion tracks claimed on rewards.html ----
 // Card tracks count proofs written by each game page via
 // creditReward(uid, amount, 'play:<card>') (status 'pending' passes rules with
@@ -358,7 +486,7 @@ export function foldRewardStats(proofs, userDoc, referrals) {
     if (lb === 'invest-stake') { s.stakes++; s.stakedTotal = Math.round((s.stakedTotal + Number(p.amount || 0)) * 100) / 100; continue; }
     if (lb === 'invest-yield') { s.yields++; continue; }
     if (lb === 'task-reward' && p.milestone) { s.claimed[String(p.milestone)] = true; continue; }
-    const m = /^play:([a-z]+)$/.exec(lb);
+    const m = /^(?:play|diamond-play):([a-z]+)$/.exec(lb);
     if (m && REWARD_COUNTERS.indexOf(m[1]) >= 0) s[m[1]]++;
   }
   s.invites = Array.isArray(referrals) ? referrals.length : 0;
@@ -645,7 +773,7 @@ export async function creditReward(uid, amount, label, extra) {
   // today active for yield accrual. Referral/invest labels are excluded.
   try {
     const ll = (label || '').toLowerCase();
-    if (!/^(referral-|invest-|ad-)/.test(ll) && Number(amount) > 0) {
+    if (!/^(referral-|invest-|ad-|diamond-)/.test(ll) && Number(amount) > 0) {
       const day = utcDayStr(Date.now());
       const ud = { taskEarned: increment(Number(amount)), updatedAt: serverTimestamp() };
       if (day) ud.activeDays = arrayUnion(day);

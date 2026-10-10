@@ -644,3 +644,31 @@ tr.skel td{padding:12px 10px}
 .spinner-btn{width:16px;height:16px;border-width:2px;flex:none}
 .is-loading{position:relative}
 @media(prefers-reduced-motion:reduce){.spinner,.skeleton{animation:none}}
+
+/* ===== Diamonds: dual-balance chip + floating chest ===== */
+.user-chip .dia{display:inline-flex;align-items:center;gap:4px;color:#7dd3fc;font-variant-numeric:tabular-nums}
+.user-chip .dia svg{width:14px;height:14px}
+.user-chip .dia-sep{color:rgba(255,255,255,.25);font-weight:400}
+#dia-chest{position:fixed;right:16px;bottom:84px;z-index:80;display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:0;padding:0;cursor:pointer;font-family:var(--font)}
+#dia-chest .chest-btn{position:relative;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#1c2a4a,#101a33);border:2px solid rgba(125,211,252,.45);display:flex;align-items:center;justify-content:center;color:#7dd3fc;box-shadow:0 6px 24px rgba(0,0,0,.5);transition:transform .15s ease,box-shadow .15s ease}
+#dia-chest:active .chest-btn{transform:scale(.94)}
+#dia-chest .chest-btn svg{width:28px;height:28px}
+#dia-chest .chest-count{position:absolute;top:-6px;right:-6px;min-width:24px;height:24px;border-radius:12px;background:#0ea5e9;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 6px;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+#dia-chest .chest-sub{font-size:11px;font-weight:800;color:#c9cce4;background:rgba(16,18,35,.92);border:1px solid var(--line-soft);border-radius:999px;padding:3px 10px;white-space:nowrap;font-variant-numeric:tabular-nums}
+#dia-chest.ready .chest-btn{border-color:#7dd3fc;box-shadow:0 0 0 4px rgba(125,211,252,.18),0 6px 28px rgba(14,165,233,.5);animation:dia-pulse 1.6s ease-in-out infinite}
+#dia-chest.ready .chest-sub{color:#7dd3fc;border-color:rgba(125,211,252,.5)}
+@keyframes dia-pulse{0%,100%{box-shadow:0 0 0 4px rgba(125,211,252,.18),0 6px 28px rgba(14,165,233,.5)}50%{box-shadow:0 0 0 8px rgba(125,211,252,.08),0 6px 28px rgba(14,165,233,.35)}}
+@media(prefers-reduced-motion:reduce){#dia-chest.ready .chest-btn{animation:none}}
+@media(max-width:640px){#dia-chest{right:12px;bottom:92px}}
+/* diamond ad viewer (namespaced so Grow's #ad-modal is untouched) */
+.dia-veil{position:fixed;inset:0;z-index:95;background:rgba(10,11,22,.9);display:none;align-items:center;justify-content:center;padding:20px}
+.dia-veil.open{display:flex}
+.dia-box{width:min(480px,100%);background:linear-gradient(180deg,#1b2a4a,#141a30);border:1px solid rgba(125,211,252,.3);border-radius:20px;overflow:hidden;box-shadow:var(--shadow-xl)}
+.dia-stage{aspect-ratio:16/9;background:radial-gradient(320px 200px at 50% 20%,rgba(125,211,252,.22),transparent 70%),#101223;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:24px;text-align:center}
+.dia-stage .mark{width:56px;height:56px;border-radius:16px;background:rgba(125,211,252,.12);border:1px solid rgba(125,211,252,.4);display:flex;align-items:center;justify-content:center;color:#7dd3fc}
+.dia-stage .mark svg{width:28px;height:28px}
+.dia-stage h3{margin:0;font-size:18px;color:#fff}
+.dia-stage p{margin:0;color:var(--muted);font-size:13px;max-width:22rem}
+.dia-foot{padding:16px 20px 20px}
+.dia-timer{display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px}
+.dia-timer b{color:#7dd3fc}

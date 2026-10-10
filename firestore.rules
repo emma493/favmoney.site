@@ -148,6 +148,23 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Single-seat admin: the first authed user to claim admin/owner owns it
+    // forever. Only the recorded owner uid can read it or set the TOTP secret.
+    match /admin/owner {
+      allow get: if authed() && resource.data.uid == request.auth.uid;
+      allow create: if authed()
+        && !exists(/databases/$(database)/documents/admin/owner)
+        && request.resource.data.keys().hasOnly(['uid', 'email', 'createdAt', 'totpSecret'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email is string
+        && (request.resource.data.totpSecret == null || request.resource.data.totpSecret is string);
+      allow update: if authed()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totpSecret']);
+      allow delete: if false;
+      allow list: if false;
+    }
+
     match /cashouts/{docId} {
       allow create: if authed()
         && request.resource.data.uid == request.auth.uid

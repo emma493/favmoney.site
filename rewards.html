@@ -59,7 +59,7 @@
 <div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to earn milestones.</div>
 
 <div class="bonus-card" id="guest-card" style="display:none">
-<h2 style="margin:0 0 6px;font-size:20px">32 milestones worth $28.80.</h2>
+<h2 style="margin:0 0 6px;font-size:20px">45 ways to earn · up to $39.70.</h2>
 <p style="color:var(--muted);font-size:14px;margin:0 0 16px">Watch ads, finish quests, invite friends, keep streaks, grow your balance — each track pays 4 tiers. Free account, no deposit.</p>
 <div style="display:flex;gap:10px;flex-wrap:wrap">
 <a class="btn btn-green" href="signup.html" style="min-height:48px">Create free account</a>
@@ -115,7 +115,10 @@ import { auth, onAuthStateChanged, getWallet, getRewardsProgress, claimMilestone
   }
   var UNITS={offers:['offer','offers'],surveys:['survey','surveys'],ads:['ad','ads'],quiz:['quiz','quizzes'],faucet:['claim','claims'],spin:['spin','spins'],flip:['game','games'],dice:['roll','rolls'],invite:['friend','friends'],streak:['day','days']};
   var GROW_TITLES=['First stake — invest anything','First boost — light one ad boost','First harvest — claim Grow yield','Big staker — $25 staked total'];
+  var LINKS={offers:['earn.html','View on Earn'],surveys:['earn.html','View on Earn'],ads:['grow.html','Boost on Grow'],quiz:['earn.html','View on Earn'],faucet:['earn.html','View on Earn'],spin:['earn.html','View on Earn'],flip:['earn.html','View on Earn'],dice:['earn.html','View on Earn'],invite:['invite.html','Invite friends'],streak:['earn.html','Earn today'],grow:['grow.html','Open Grow']};
+  var UNLAUNCHED=['offers','surveys','quiz','faucet','spin','flip','dice'];
   function tierLabel(t,i,tr){
+    if(t.id==='welcome')return 'New here — gift unlocked';
     if(t.id==='grow')return GROW_TITLES[i];
     var u=UNITS[t.id]||['task','tasks'];
     var n=tr.target+(tr.target===1?' '+u[0]:' '+u[1]);
@@ -137,7 +140,10 @@ import { auth, onAuthStateChanged, getWallet, getRewardsProgress, claimMilestone
       else right='<small style="color:var(--faint);flex:none">'+(tr.target-tr.progress)+' left</small>';
       return '<div class="tier'+(tr.unlocked||tr.claimed?'':' locked')+'"><div class="tinfo"><b style="font-size:13px">'+tierLabel(t,i,tr)+'</b><div class="tbar"><i style="width:'+pct+'%"></i></div><small>'+tierProgress(t,tr)+' · pays '+money(tr.amount)+'</small></div>'+right+'</div>';
     }).join('');
-    return '<div class="ms-card'+(ready>0?' ready':'')+'"><div class="ms-head"><div class="ms-ico"><i data-lucide="'+t.icon+'" aria-hidden="true"></i></div><div><b>'+t.name+'</b><span>'+t.tag+'</span></div>'+badge+'</div>'+tiers+'</div>';
+    var foot='';
+    if(LINKS[t.id])foot='<a class="link-more" href="'+LINKS[t.id][0]+'">'+LINKS[t.id][1]+' <span aria-hidden="true">→</span></a>';
+    if(UNLAUNCHED.indexOf(t.id)>=0)foot+='<div style="font-size:12px;color:var(--faint);margin-top:6px">Game opening soon — your progress starts counting then.</div>';
+    return '<div class="ms-card'+(ready>0?' ready':'')+'"><div class="ms-head"><div class="ms-ico"><i data-lucide="'+t.icon+'" aria-hidden="true"></i></div><div><b>'+t.name+'</b><span>'+t.tag+'</span></div>'+badge+'</div>'+tiers+foot+'</div>';
   }
   function paintBadges(n){
     unclaimedN=n;
@@ -152,7 +158,7 @@ import { auth, onAuthStateChanged, getWallet, getRewardsProgress, claimMilestone
     if(!uid)return;
     try{
       var p=await getRewardsProgress(uid);
-      var cards=p.tracks.filter(function(t){return ['offers','surveys','ads','quiz','faucet','spin','flip','dice'].indexOf(t.id)>=0;});
+      var cards=p.tracks.filter(function(t){return ['welcome','offers','surveys','ads','quiz','faucet','spin','flip','dice'].indexOf(t.id)>=0;});
       var bonus=p.tracks.filter(function(t){return ['invite','streak','grow'].indexOf(t.id)>=0;});
       document.getElementById('ms-cards').innerHTML=cards.map(cardHTML).join('');
       document.getElementById('ms-bonus').innerHTML=bonus.map(cardHTML).join('');

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fav-Admin · Sign in</title>
+  <meta name="description" content="Favmoney internal administration. Authorized access only." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="../images/apple-touch-icon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    :root{--ad-bg:#0F1014;--ad-side:#16171D;--ad-card:#1E1F27;--ad-accent:#01D676;--ad-mute:#A1A2A7}
+    body{background:var(--ad-bg)}
+    .ad-center{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .ad-card{width:100%;max-width:380px;background:var(--ad-side);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:28px}
+    .ad-badge{width:44px;height:44px;border-radius:12px;background:var(--ad-accent);display:flex;align-items:center;justify-content:center;color:#06240f;margin-bottom:20px}
+    .ad-badge svg{width:20px;height:20px}
+    .ad-card h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-.01em;color:#fff}
+    .ad-card .sub{margin:4px 0 24px;font-size:13px;color:#8A8B91}
+    .ad-card label{display:grid;gap:6px;margin-bottom:14px}
+    .ad-card label span{font-size:13px;font-weight:700;color:#E1E2E6}
+    .ad-card input{height:48px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:#0F1014;color:#fff;padding:0 14px;font-family:var(--font);font-size:16px;outline:none;width:100%;box-sizing:border-box}
+    .ad-card input:focus{border-color:var(--ad-accent);box-shadow:0 0 0 3px rgba(1,214,118,.22)}
+    .ad-err{display:none;font-size:13px;color:#ff9a9a;margin:2px 0 12px}
+    .ad-err.show{display:block}
+    .ad-code{font-size:26px;font-weight:800;letter-spacing:.3em;text-align:center;color:var(--ad-accent);margin:6px 0 0}
+    .ad-secret{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;word-break:break-all;background:#0F1014;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 14px;color:#fff;margin:12px 0 0}
+    .ad-note{font-size:12px;color:var(--ad-mute);margin:10px 0 0;line-height:1.5}
+    .ad-link{background:none;border:0;color:#8ff0bd;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-top:14px}
+    .ad-link:hover{color:#fff}
+    /* shell */
+    .ad-shell{display:none;min-height:100vh}
+    body.authed .ad-shell{display:flex}
+    body.authed .ad-center{display:none}
+    .ad-side{width:248px;flex:none;min-height:100vh;display:flex;flex-direction:column;padding:20px 16px;background:var(--ad-side);border-right:1px solid rgba(255,255,255,.08)}
+    .ad-brand{font-size:19px;font-weight:800;color:#fff;padding:0 8px;margin-bottom:32px}
+    .ad-brand em{font-style:normal;color:var(--ad-accent)}
+    .ad-nav{display:flex;flex-direction:column;gap:4px}
+    .ad-nav a,.ad-nav button{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;font-size:14px;font-weight:600;color:var(--ad-mute);text-decoration:none;background:none;border:0;font-family:var(--font);cursor:pointer;text-align:left}
+    .ad-nav a.on{background:rgba(1,214,118,.12);color:#fff}
+    .ad-nav [disabled]{opacity:.45;cursor:not-allowed}
+    .ad-nav svg{width:18px;height:18px;flex:none}
+    .ad-side .ad-out{margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,.08)}
+    .ad-main{flex:1;min-width:0;padding:24px;max-width:960px;width:100%;margin:0 auto;box-sizing:border-box}
+    .ad-tabs{display:none}
+    .ad-empty{background:var(--ad-card);border:1px dashed rgba(255,255,255,.14);border-radius:18px;padding:56px 24px;text-align:center;margin-top:16px}
+    .ad-empty h2{margin:0 0 8px;font-size:22px;color:#fff}
+    .ad-empty p{margin:0;color:var(--ad-mute);font-size:14px}
+    .ad-top{font-size:22px;font-weight:800;color:#fff;margin:0}
+    @media(max-width:900px){
+      .ad-side{display:none}
+      .ad-tabs{display:flex;align-items:center;gap:6px;padding:12px 16px;background:var(--ad-side);border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto}
+      .ad-tabs span{color:#fff;font-weight:800;margin-right:8px;flex:none}
+      .ad-tabs a{flex:none;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:700;color:var(--ad-mute);text-decoration:none}
+      .ad-tabs a.on{background:rgba(1,214,118,.14);color:#fff}
+      .ad-main{padding:16px}
+    }
+  </style>
+  <script src="../js/loader.js"></script>
+</head>
+<body>
+<div id="page-loader" role="status" aria-label="Loading"><div class="spinner" id="loader-spin" aria-hidden="true"></div><button id="loader-retry" type="button" aria-label="Retry loading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button></div><script>window.__favLoaderT0=window.__favLoaderT0||Date.now();(function(){setTimeout(function(){var o=document.getElementById("page-loader");if(o)o.classList.add("slow");},8000);var r=document.getElementById("loader-retry");if(r)r.addEventListener("click",function(){location.reload();});})();</script>
+
+<!-- auth -->
+<div class="ad-center" id="ad-center">
+  <div class="ad-card" id="view-signup" style="display:none">
+    <div class="ad-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+    <h1>Create admin seat</h1>
+    <p class="sub">One seat exists. First signup claims it forever.</p>
+    <label><span>Email</span><input id="su-email" type="email" autocomplete="username" placeholder="you@example.com" /></label>
+    <label><span>Password (min 8 characters)</span><input id="su-pass" type="password" autocomplete="new-password" placeholder="••••••••" /></label>
+    <div class="ad-err" id="su-err" role="alert"></div>
+    <button class="btn btn-green btn-block" id="su-go" style="min-height:48px">Claim admin seat</button>
+    <button class="ad-link" id="to-signin" type="button">Seat taken? Sign in instead</button>
+  </div>
+  <div class="ad-card" id="view-setup" style="display:none">
+    <div class="ad-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><rect x="8" y="8" width="8" height="8" rx="2"/></svg></div>
+    <h1>Set up authenticator</h1>
+    <p class="sub">Open Google Authenticator → + → Enter a setup key → paste this key. Then enter the 6-digit code below. Shown once, never again.</p>
+    <div class="ad-secret" id="setup-key">…</div>
+    <button class="btn btn-ghost btn-block" id="copy-key" style="min-height:44px;margin-top:10px">Copy key</button>
+    <label style="margin-top:14px"><span>6-digit code</span><input id="setup-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" class="ad-code" style="font-size:24px" /></label>
+    <div class="ad-err" id="setup-err" role="alert"></div>
+    <button class="btn btn-green btn-block" id="setup-go" style="min-height:48px">Enable and enter</button>
+  </div>
+  <div class="ad-card" id="view-signin" style="display:none">
+    <div class="ad-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+    <h1>Fav-Admin</h1>
+    <p class="sub">Sign in to continue</p>
+    <label><span>Email</span><input id="si-email" type="email" autocomplete="username" placeholder="you@example.com" /></label>
+    <label><span>Password</span><input id="si-pass" type="password" autocomplete="current-password" placeholder="••••••••" /></label>
+    <div class="ad-err" id="si-err" role="alert"></div>
+    <button class="btn btn-green btn-block" id="si-go" style="min-height:48px">Sign in</button>
+  </div>
+  <div class="ad-card" id="view-verify" style="display:none">
+    <div class="ad-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+    <h1>Two-factor check</h1>
+    <p class="sub">Enter the 6-digit code from your authenticator app.</p>
+    <label><span>6-digit code</span><input id="vf-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" class="ad-code" style="font-size:24px" /></label>
+    <div class="ad-err" id="vf-err" role="alert"></div>
+    <button class="btn btn-green btn-block" id="vf-go" style="min-height:48px">Verify and enter</button>
+    <button class="ad-link" id="vf-out" type="button">Use a different account</button>
+  </div>
+</div>
+
+<!-- shell -->
+<div class="ad-shell">
+  <aside class="ad-side">
+    <div class="ad-brand">FAV<em>ADMIN</em></div>
+    <nav class="ad-nav" aria-label="Admin">
+      <a href="#" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Overview</a>
+      <button type="button" disabled title="Coming soon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M18 8v6M15 11h6"/></svg>Users</button>
+      <button type="button" disabled title="Coming soon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Payouts</button>
+      <button type="button" disabled title="Coming soon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</button>
+    </nav>
+    <div class="ad-out"><nav class="ad-nav"><button type="button" id="ad-logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></svg>Sign out</button></nav></div>
+  </aside>
+  <div style="flex:1;min-width:0">
+    <div class="ad-tabs"><span>FAVADMIN</span><a href="#" class="on">Overview</a></div>
+    <main class="ad-main">
+      <h1 class="ad-top">Overview</h1>
+      <div class="ad-empty"><h2>Nothing here yet</h2><p>Admin modules land here next. The seat is claimed and guarded.</p></div>
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+<script type="module" src="admin.js"></script>
+</body>
+</html>

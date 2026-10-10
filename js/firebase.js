@@ -322,6 +322,98 @@ export async function fetchReferrals(ownerUid, n) {
   } catch (e) { return []; }
 }
 
+// ---- Rewards milestones: task-completion tracks claimed on rewards.html ----
+// Card tracks count proofs written by each game page via
+// creditReward(uid, amount, 'play:<card>') (status 'pending' passes rules with
+// any label). Wiring checklist: each game page must emit its play:<card>
+// event when it goes live; until then that track reads 0/N.
+// Claim proofs use label 'task-reward' + milestone '<track>:<tier>' field,
+// also status 'pending', so no rules change is needed. Amounts are bounded
+// client-side to REWARD_TIERS (full authority needs the Cloud Function).
+// The 'welcome' track is synthetic: every signed-in user reads 1/1 until
+// its once-ever $0.10 chest is claimed.
+export const REWARD_TIERS = [0.10, 0.50, 1.00, 2.00];
+export const REWARD_TRACKS = [
+  { id: 'welcome', name: 'Welcome Chest', tag: 'Your first reward — on the house', icon: 'gift', counter: 'welcome', targets: [1] },
+  { id: 'offers', name: 'Offers & Apps', tag: 'Complete app offers', icon: 'layers', counter: 'offers', targets: [1, 3, 10, 25] },
+  { id: 'surveys', name: 'Paid Surveys', tag: 'Finish surveys', icon: 'clipboard-list', counter: 'surveys', targets: [1, 5, 20, 50] },
+  { id: 'ads', name: 'Watch Ads', tag: 'Watch ad views', icon: 'play', counter: 'ads', targets: [5, 20, 50, 100] },
+  { id: 'quiz', name: 'Quiz & Earn', tag: 'Pass quizzes', icon: 'graduation-cap', counter: 'quiz', targets: [1, 5, 20, 50] },
+  { id: 'faucet', name: 'Free Faucet', tag: 'Collect claims', icon: 'droplets', counter: 'faucet', targets: [5, 25, 100, 250] },
+  { id: 'spin', name: 'Spin the Wheel', tag: 'Use daily spins', icon: 'rotate-cw', counter: 'spin', targets: [3, 7, 14, 30] },
+  { id: 'flip', name: 'Flip to Win', tag: 'Clear card games', icon: 'layout-grid', counter: 'flip', targets: [1, 10, 30, 100] },
+  { id: 'dice', name: 'Dice Roll', tag: 'Play dice rolls', icon: 'dices', counter: 'dice', targets: [10, 50, 200, 500] },
+  { id: 'invite', name: 'Inviter', tag: 'Friends joined', icon: 'users', counter: 'invites', targets: [1, 3, 10, 25] },
+  { id: 'streak', name: 'Streak Keeper', tag: 'Active days in a row', icon: 'flame', counter: 'streak', targets: [3, 7, 14, 30] },
+  { id: 'grow', name: 'Grower', tag: 'Grow milestones', icon: 'trending-up', counter: null, targets: [1, 1, 1, 25], counters: ['stakes', 'boosts', 'yields', 'stakedTotal'] },
+];
+const REWARD_COUNTERS = ['offers', 'surveys', 'ads', 'quiz', 'faucet', 'spin', 'flip', 'dice'];
+
+// Pure stats fold over a proofs array + user doc + referrals — no Firestore.
+export function foldRewardStats(proofs, userDoc, referrals) {
+  const s = { welcome: 1, offers: 0, surveys: 0, ads: 0, quiz: 0, faucet: 0, spin: 0, flip: 0, dice: 0, invites: 0, streak: 0, stakes: 0, boosts: 0, yields: 0, stakedTotal: 0, claimed: {} };
+  for (const p of (Array.isArray(proofs) ? proofs : [])) {
+    const lb = String((p && p.label) || '');
+    if (lb === 'ad-view') { s.ads++; s.boosts++; continue; }
+    if (lb === 'invest-stake') { s.stakes++; s.stakedTotal = Math.round((s.stakedTotal + Number(p.amount || 0)) * 100) / 100; continue; }
+    if (lb === 'invest-yield') { s.yields++; continue; }
+    if (lb === 'task-reward' && p.milestone) { s.claimed[String(p.milestone)] = true; continue; }
+    const m = /^play:([a-z]+)$/.exec(lb);
+    if (m && REWARD_COUNTERS.indexOf(m[1]) >= 0) s[m[1]]++;
+  }
+  s.invites = Array.isArray(referrals) ? referrals.length : 0;
+  try { s.streak = Number((userDoc && userDoc.streak && userDoc.streak.days) || 0); } catch (_) { s.streak = 0; }
+  return s;
+}
+
+// Full progress snapshot: per-track per-tier { target, amount, progress,
+// unlocked, claimed }. Reads: proofs(200) + user doc + referrals(100).
+export async function getRewardsProgress(uid) {
+  const [proofs, userDoc, referrals] = await Promise.all([
+    fetchUserDocs(uid, 'proofs', 200).catch(() => []),
+    getUserDoc(uid).catch(() => ({})),
+    fetchReferrals(uid, 100).catch(() => []),
+  ]);
+  const stats = foldRewardStats(proofs, userDoc, referrals);
+  const tracks = REWARD_TRACKS.map(function (t) {
+    const tiers = t.targets.map(function (target, i) {
+      const key = t.counter || (t.counters && t.counters[i]);
+      const progress = key === 'stakedTotal' ? Math.floor(Number(stats[key] || 0)) : Number(stats[key] || 0);
+      const id = t.id + ':' + i;
+      return { id, target, amount: REWARD_TIERS[i], progress, unlocked: progress >= target, claimed: !!stats.claimed[id] };
+    });
+    return { ...t, tiers };
+  });
+  let unclaimed = 0, unclaimedTotal = 0;
+  tracks.forEach(function (t) {
+    t.tiers.forEach(function (tr) { if (tr.unlocked && !tr.claimed) { unclaimed++; unclaimedTotal = Math.round((unclaimedTotal + tr.amount) * 100) / 100; } });
+  });
+  return { tracks, stats, unclaimed, unclaimedTotal };
+}
+
+export async function getUnclaimedRewards(uid) {
+  try {
+    const p = await getRewardsProgress(uid);
+    return p.unclaimed;
+  } catch (_) { return 0; }
+}
+
+// Claim one milestone tier. Re-verifies unlocked + unclaimed server-side-read
+// before writing, so double-clicks and stale tabs cannot double-pay.
+export async function claimMilestone(uid, trackId, tierIdx) {
+  const t = REWARD_TRACKS.filter(function (x) { return x.id === trackId; })[0];
+  if (!t || !(tierIdx >= 0) || tierIdx > 3) return { ok: false, reason: 'unknown' };
+  const amount = REWARD_TIERS[tierIdx];
+  const p = await getRewardsProgress(uid);
+  const tr = p.tracks.filter(function (x) { return x.id === trackId; })[0].tiers[tierIdx];
+  if (!tr.unlocked) return { ok: false, reason: 'locked' };
+  if (tr.claimed) return { ok: false, reason: 'claimed' };
+  try {
+    await creditReward(uid, amount, 'task-reward', { milestone: tr.id });
+  } catch (_) { return { ok: false, reason: 'write' }; }
+  return { ok: true, amount };
+}
+
 // ---- Grow engine: invest task earnings, live ticker, hourly ad booster ----
 // Base 3000% APR always on. Watching an ad sets boostUntil = now + 1h, during
 // which 4500% APR applies. Yield accrues only on UTC days with rewarded activity
@@ -536,7 +628,7 @@ export async function activateBoost(uid) {
 
 // Single reward write path (replaces FavStore.addReward): wallet + proof row.
 // Also files the referrer's lifetime % debt (25% task / 10% offer) — fire-and-forget.
-export async function creditReward(uid, amount, label) {
+export async function creditReward(uid, amount, label, extra) {
   const wref = doc(db, 'wallets', uid);
   await updateDoc(wref, {
     pending: increment(amount), lifetime: increment(amount),
@@ -546,7 +638,7 @@ export async function creditReward(uid, amount, label) {
   });
   await addDoc(collection(db, 'proofs'), {
     uid, amount, label: label || 'quest',
-    status: 'pending', at: serverTimestamp()
+    status: 'pending', at: serverTimestamp(), ...(extra || {})
   });
   try { recordCommission(uid, amount, label); } catch (_) {}
   // Grow gate bookkeeping: task earnings raise the stakeable ceiling and mark

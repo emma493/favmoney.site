@@ -63,7 +63,7 @@
 <a href="rewards.html">Rewards<span class="dot"></span></a>
 <a href="withdraw.html">Cashout<span class="dot"></span></a>
 </nav>
-<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal"><span class="skeleton" style="width:52px"></span></span><span id="chip-name"><span class="skeleton" style="width:64px"></span></span></a><button class="icon-btn" id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="ping"></span></button></div>
+<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal"><span class="skeleton" style="width:52px"></span></span><span id="chip-name"><span class="skeleton" style="width:64px"></span></span></a><button class="icon-btn" id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="ping"></span><span class="nbadge" id="bell-badge" style="display:none"></span></button></div>
 </div></header>
 <main>
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
@@ -153,14 +153,14 @@
 </div>
 
 <footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="earn.html">Earn</a> · <a href="withdraw.html">Cashout</a></span></div></div></footer>
-<nav class="mobilenav" aria-label="Mobile"><a href="earn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="grow.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Grow</a><a href="invite.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M18 8v6M15 11h6"/></svg>Invite</a><a href="rewards.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="12" rx="1.5"/><path d="M4 13h16M12 9v12M12 9S7.5 9 6 7.5 5.5 4.8 7 4.5 12 9 12 9Zm0 0s4.5 0 6-1.5S18.5 4.8 17 4.5 12 9 12 9Z"/></svg>Rewards</a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
+<nav class="mobilenav" aria-label="Mobile"><a href="earn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="grow.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Grow</a><a href="invite.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M18 8v6M15 11h6"/></svg>Invite</a><a href="rewards.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="12" rx="1.5"/><path d="M4 13h16M12 9v12M12 9S7.5 9 6 7.5 5.5 4.8 7 4.5 12 9 12 9Zm0 0s4.5 0 6-1.5S18.5 4.8 17 4.5 12 9 12 9Z"/></svg>Rewards<span class="navdot" id="navdot-rewards" style="display:none"></span></a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveState, settleInvest, stakeInvest, unstakeAll, activateBoost, fetchUserDocs, computeYield, utcDayStr, track, INVEST_BASE_APR, INVEST_BOOST_APR, INVEST_BOOST_MS, INVEST_SEED } from './js/firebase.js';
+import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveState, settleInvest, stakeInvest, unstakeAll, activateBoost, fetchUserDocs, computeYield, utcDayStr, track, getUnclaimedRewards, INVEST_BASE_APR, INVEST_BOOST_APR, INVEST_BOOST_MS, INVEST_SEED } from './js/firebase.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
   setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
-  var uid=null, state=null, investAnchor=0, anchorAccrued=0, raf=null, lastPaint=0, lastBtnSec=-1;
+  var uid=null, state=null, investAnchor=0, anchorAccrued=0, raf=null, lastPaint=0, lastBtnSec=-1, unclaimedN=0;
   var reduced=false;
   try{reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}
   var toast=document.getElementById('toast'),tm=null;
@@ -228,6 +228,15 @@ import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveSta
     var hint=document.getElementById('boost-hint');
     if(hint)hint.textContent=boosted?'Boost draining — claim unlocks when the timer ends.':'One ad lights a full hour at 4,500%.';
   }
+  function paintBadges(n){
+    unclaimedN=n;
+    var bb=document.getElementById('bell-badge');
+    if(bb){if(n>0){bb.textContent=n>9?'9+':n;bb.style.display='flex';}else{bb.style.display='none';}}
+    var bell=document.getElementById('bell');
+    if(bell){var ping=bell.querySelector('.ping');if(ping)ping.style.display=n>0?'':'none';}
+    var nd=document.getElementById('navdot-rewards');
+    if(nd){if(n>0){nd.textContent=n>9?'9+':n;nd.style.display='flex';}else{nd.style.display='none';}}
+  }
   function tickLoop(){
     var now=Date.now();
     if(now-lastPaint>(reduced?5000:250)){lastPaint=now;try{paintLive();}catch(e){}}
@@ -253,6 +262,7 @@ import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveSta
       document.getElementById('s-invested').textContent=money(state.invested);
       document.getElementById('s-days').textContent=(u.activeDays||[]).length;
       document.getElementById('chip-bal').textContent=money(state.pending);
+      try{paintBadges(await getUnclaimedRewards(uid));}catch(_){}
       paintLive();
     }catch(e){}
     try{
@@ -365,7 +375,7 @@ import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveSta
   document.querySelectorAll('.faq-item button').forEach(function(b){
     b.addEventListener('click',function(){b.closest('.faq-item').classList.toggle('open');});
   });
-  document.getElementById('bell').addEventListener('click',function(){show('No new notifications.');});
+  document.getElementById('bell').addEventListener('click',function(){show(unclaimedN>0?(unclaimedN+(unclaimedN===1?' reward':' rewards')+' ready — open Rewards to claim.'):('No new notifications.'));});
   try{
     onAuthStateChanged(auth,async function(user){
       if(!user){

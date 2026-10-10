@@ -130,6 +130,10 @@ export async function getUserDoc(uid) {
     taskEarned: Number(d.taskEarned || 0),
     investedUser: Number(d.investedUser || 0),
     activeDays: Array.isArray(d.activeDays) ? d.activeDays : [],
+    lastSpinDay: d.lastSpinDay || '',
+    spinTickets: Math.max(0, Math.floor(Number(d.spinTickets || 0))),
+    spinCount: Math.max(0, Math.floor(Number(d.spinCount || 0))),
+    spinWon: Number(d.spinWon || 0),
     createdAtMs: (d.createdAt && typeof d.createdAt.toMillis === 'function') ? d.createdAt.toMillis() : (Number(d.createdAt) || 0)
   };
 }
@@ -347,7 +351,7 @@ export const DIAMOND_AD_MAX = 10;
 export const DIAMOND_AD_COOLDOWN_MS = 3600000; // 1h between ad rewards
 export const DIAMOND_PASSIVE_AMOUNT = 2;
 export const DIAMOND_PASSIVE_INTERVAL_MS = 3 * 3600000; // 3h drip, claimable
-export const DIAMOND_COST_SPIN = 10; // USER TO CONFIRM
+export const DIAMOND_COST_SPIN = 10; // locked 2026-10-10: 1 free/day + extras @10
 export const DIAMOND_COST_FLIP = 15; // USER TO CONFIRM
 export const DIAMOND_COST_DICE = 5; // USER TO CONFIRM
 export const DIAMOND_GAME_COSTS = { spin: DIAMOND_COST_SPIN, flip: DIAMOND_COST_FLIP, dice: DIAMOND_COST_DICE };
@@ -450,6 +454,97 @@ export async function creditDiamonds(uid, n, label) {
   return { ok: true, reward: amt };
 }
 
+// ---- Spin the Wheel: 1 free UTC-day spin, extras @10 diamonds, every spin wins ----
+// Locked 2026-10-10: mixed prizes, cash EV ~$0.069/spin, jackpot $1.00 @2%.
+// Cash wins flow through creditReward (instant-available + activeDay gate +
+// tiny referrer commission, like all quests). Diamond wins use creditDiamonds.
+// Ticket wins bump users.spinTickets for an instant re-spin (no diamond cost).
+// Each spin writes exactly one win row (spin-win/diamond/ticket) so the
+// Rewards spin track counts spins without double-counting cost/entry rows.
+export const SPIN_PRIZES = [
+  { id: 'cash02', kind: 'cash', amount: 0.02, weight: 30 },
+  { id: 'cash05', kind: 'cash', amount: 0.05, weight: 25 },
+  { id: 'cash10', kind: 'cash', amount: 0.10, weight: 18 },
+  { id: 'dia5', kind: 'diamonds', diamonds: 5, weight: 12 },
+  { id: 'ticket', kind: 'ticket', weight: 8 },
+  { id: 'cash25', kind: 'cash', amount: 0.25, weight: 5 },
+  { id: 'cash100', kind: 'cash', amount: 1.00, weight: 2 }
+];
+export function rollSpinPrize(rand) {
+  const r = typeof rand === 'function' ? rand() : Math.random();
+  let acc = 0;
+  for (const p of SPIN_PRIZES) {
+    acc += p.weight / 100;
+    if (r < acc) return { ...p };
+  }
+  return { ...SPIN_PRIZES[0] };
+}
+export function spinResetMs(nowMs) {
+  const now = Number(nowMs || Date.now());
+  const day = Math.floor(now / 86400000) * 86400000;
+  return day + 86400000 - now;
+}
+export async function getSpinState(uid, nowMs) {
+  const now = Number(nowMs || Date.now());
+  const [w, u] = await Promise.all([getWallet(uid), getUserDoc(uid)]);
+  const today = utcDayStr(now);
+  return {
+    today, pending: Number(w.pending || 0), diamonds: w.diamonds,
+    tickets: u.spinTickets, spinCount: u.spinCount, spinWon: u.spinWon,
+    freeLeft: u.lastSpinDay === today ? 0 : 1,
+    resetMs: spinResetMs(now)
+  };
+}
+async function writeSpinWin(uid, prize) {
+  if (prize.kind === 'cash') {
+    await creditReward(uid, prize.amount, 'spin-win');
+    await setDoc(doc(db, 'users', uid), {
+      spinCount: increment(1), spinWon: increment(prize.amount), updatedAt: serverTimestamp()
+    }, { merge: true });
+  } else if (prize.kind === 'diamonds') {
+    await creditDiamonds(uid, prize.diamonds, 'diamond-win:spin');
+    await addDoc(collection(db, 'proofs'), { uid, amount: 0, diamonds: prize.diamonds, label: 'spin-diamond', status: 'done', at: serverTimestamp() });
+    await setDoc(doc(db, 'users', uid), { spinCount: increment(1), updatedAt: serverTimestamp() }, { merge: true });
+  } else {
+    await setDoc(doc(db, 'users', uid), { spinTickets: increment(1), spinCount: increment(1), updatedAt: serverTimestamp() }, { merge: true });
+    await addDoc(collection(db, 'proofs'), { uid, amount: 0, label: 'spin-ticket', status: 'done', at: serverTimestamp() });
+  }
+}
+// mode: 'free' | 'ticket' | 'extra'. Returns { ok, prize } or { ok:false, reason }.
+export async function playSpin(uid, mode, rand) {
+  const now = Date.now();
+  const today = utcDayStr(now);
+  if (mode === 'free') {
+    const u = await getUserDoc(uid);
+    if (u.lastSpinDay === today && !(u.spinTickets > 0)) return { ok: false, reason: 'nofree' };
+    // A banked ticket takes precedence: free day stays intact.
+    if (u.spinTickets > 0) return playSpin(uid, 'ticket', rand);
+    try {
+      await setDoc(doc(db, 'users', uid), { lastSpinDay: today, updatedAt: serverTimestamp() }, { merge: true });
+      await addDoc(collection(db, 'proofs'), { uid, amount: 0, label: 'spin-free', status: 'done', at: serverTimestamp() });
+    } catch (_) { return { ok: false, reason: 'write' }; }
+  } else if (mode === 'ticket') {
+    const u = await getUserDoc(uid);
+    if (!(u.spinTickets > 0)) return { ok: false, reason: 'tickets' };
+    try {
+      await setDoc(doc(db, 'users', uid), { spinTickets: increment(-1), updatedAt: serverTimestamp() }, { merge: true });
+    } catch (_) { return { ok: false, reason: 'write' }; }
+  } else if (mode === 'extra') {
+    const sp = await spendDiamonds(uid, DIAMOND_COST_SPIN, 'spin');
+    if (!sp.ok) return { ok: false, reason: 'funds', balance: sp.balance };
+    try {
+      await addDoc(collection(db, 'proofs'), { uid, amount: 0, diamonds: -DIAMOND_COST_SPIN, label: 'spin-extra', status: 'done', at: serverTimestamp() });
+    } catch (_) {}
+  } else {
+    return { ok: false, reason: 'mode' };
+  }
+  const prize = rollSpinPrize(rand);
+  try {
+    await writeSpinWin(uid, prize);
+  } catch (_) { return { ok: false, reason: 'write' }; }
+  return { ok: true, prize };
+}
+
 // ---- Rewards milestones: task-completion tracks claimed on rewards.html ----
 // Card tracks count proofs written by each game page via
 // creditReward(uid, amount, 'play:<card>') (status 'pending' passes rules with
@@ -483,6 +578,12 @@ export function foldRewardStats(proofs, userDoc, referrals) {
   for (const p of (Array.isArray(proofs) ? proofs : [])) {
     const lb = String((p && p.label) || '');
     if (lb === 'ad-view') { s.ads++; s.boosts++; continue; }
+    if (/^spin-(win|diamond|ticket|free|extra)$/.test(lb)) {
+      // One spin = exactly one win row (win/diamond/ticket). Cost/entry rows
+      // (free/extra) are bookkeeping and must not double-count the track.
+      if (/^spin-(win|diamond|ticket)$/.test(lb)) s.spin++;
+      continue;
+    }
     if (lb === 'invest-stake') { s.stakes++; s.stakedTotal = Math.round((s.stakedTotal + Number(p.amount || 0)) * 100) / 100; continue; }
     if (lb === 'invest-yield') { s.yields++; continue; }
     if (lb === 'task-reward' && p.milestone) { s.claimed[String(p.milestone)] = true; continue; }

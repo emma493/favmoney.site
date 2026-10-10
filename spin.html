@@ -1,15 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Spin the Wheel · Favmoney</title>
-<meta name="robots" content="noindex, nofollow" />
-<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="css/style.css" />
-<style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(20,21,35,.35);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#01D676;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#01D676;border:0;cursor:pointer;align-items:center;justify-content:center;color:#0d1a13;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
-<script src="js/loader.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spin the Wheel · Favmoney</title>
+  <meta name="description" content="Spin the daily prize wheel: one free spin a day, extra spins for diamonds, instant cash and diamond prizes." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(20,21,35,.35);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#01D676;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#01D676;border:0;cursor:pointer;align-items:center;justify-content:center;color:#0d1a13;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
+  <script src="js/loader.js"></script>
+  <style>
+    .spin-stage{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0 4px}
+    .spin-wheel-wrap{position:relative;width:min(340px,86vw);aspect-ratio:1;flex:none}
+    #spin-canvas{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 18px 50px -12px rgba(0,0,0,.65),0 0 0 6px rgba(255,255,255,.04),0 0 44px rgba(1,214,118,.12)}
+    .spin-pointer{position:absolute;left:50%;top:-8px;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:24px solid #01D676;filter:drop-shadow(0 4px 8px rgba(0,0,0,.5));z-index:2}
+    .spin-status{font-size:14px;font-weight:700;color:#8ff0bd;min-height:22px;text-align:center;font-variant-numeric:tabular-nums}
+    .spin-status.cool{color:#ffd75e}
+    .spin-result{min-height:26px;font-size:16px;font-weight:800;text-align:center}
+    .spin-result.win{color:#8ff0bd}
+    .spin-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px;width:100%}
+    .spin-btns .btn{min-height:48px;flex:1 1 auto;min-width:200px;max-width:320px}
+    .spin-odds{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+    .spin-odds td{padding:9px 12px;border-bottom:1px solid var(--line-soft);color:rgba(255,255,255,.85)}
+    .spin-odds tr:last-child td{border-bottom:0}
+    .spin-odds .pr{font-weight:800;color:#fff;white-space:nowrap}
+    .spin-odds .wt{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+    .spin-odds tr.jack td{background:rgba(255,215,94,.06)}
+    .spin-odds tr.jack .pr{color:#ffd75e}
+    .spin-veil{position:fixed;inset:0;z-index:90;background:rgba(10,11,22,.9);display:none;align-items:center;justify-content:center;padding:20px}
+    .spin-veil.open{display:flex}
+    .spin-box{width:min(420px,100%);background:linear-gradient(180deg,#232544,#181a30);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:var(--shadow-xl);text-align:center;padding:32px 24px 24px}
+    .spin-box .big{font-size:clamp(40px,9vw,56px);font-weight:800;line-height:1;margin:6px 0}
+    .spin-box .big.cash{color:var(--green)}
+    .spin-box .big.dia{color:#7dd3fc}
+    .spin-box .big.ticket{color:#ffd75e}
+    .spin-box h3{margin:0;font-size:20px}
+    .spin-box p{color:var(--muted);font-size:14px;margin:8px 0 0}
+    @media(max-width:640px){.spin-btns .btn{flex:1 1 100%;max-width:none}}
+  </style>
 </head>
 <body>
 <div id="page-loader" role="status" aria-label="Loading Favmoney"><div class="spinner" id="loader-spin" aria-hidden="true"></div><button id="loader-retry" type="button" aria-label="Retry loading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button></div><script>window.__favLoaderT0=window.__favLoaderT0||Date.now();(function(){setTimeout(function(){var o=document.getElementById("page-loader");if(o)o.classList.add("slow");},8000);var r=document.getElementById("loader-retry");if(r)r.addEventListener("click",function(){location.reload();});})();</script>
@@ -22,46 +53,314 @@
 <a href="rewards.html">Rewards<span class="dot"></span></a>
 <a href="withdraw.html">Cashout<span class="dot"></span></a>
 </nav>
-<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal"><span class="skeleton" style="width:52px"></span></span><span id="chip-name"><span class="skeleton" style="width:64px"></span></span></a></div>
+<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal"><span class="skeleton" style="width:52px"></span></span><span id="chip-name"><span class="skeleton" style="width:64px"></span></span></a><button class="icon-btn" id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="ping"></span><span class="nbadge" id="bell-badge" style="display:none"></span></button></div>
 </div></header>
 <main>
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
 <h1 class="dash-title">Spin the Wheel</h1>
-<p>Spin the daily prize wheel to win multipliers. This quest opens next. Your balance stays safe.</p>
-<div class="bonus-card" id="faucet-card">
-<h2 style="margin:0 0 6px;font-size:20px">Spin the Wheel opening soon</h2>
-<p style="color:var(--muted);font-size:14px;margin:0 0 16px">We are wiring spin the wheel. Meanwhile, earn on live quests.</p>
-<p><span class="skeleton" style="width:70%"></span></p>
-<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-<a class="btn btn-green" href="earn.html" style="min-height:48px">Back to Earn</a>
-<a class="btn btn-ghost" href="dice.html" style="min-height:48px">Try Dice instead</a>
+<p>One free spin every day. Extra spins cost 10 diamonds. Every spin wins — cash, diamonds, or another spin.</p>
+<div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to use your free spin.</div>
+
+<div class="bonus-card" id="guest-card" style="display:none">
+<h2 style="margin:0 0 6px;font-size:20px">Your free spin is waiting.</h2>
+<p style="color:var(--muted);font-size:14px;margin:0 0 16px">Sign in to spin daily. Extra spins cost diamonds from the floating chest — prizes land as cash and bonus chips.</p>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<a class="btn btn-green" href="signup.html" style="min-height:48px">Create free account</a>
+<a class="btn btn-ghost" href="signin.html" style="min-height:48px">Sign in</a>
+</div>
+</div>
+
+<div id="member-zone" style="display:none">
+<div class="bonus-card">
+<div class="spin-stage">
+<div class="spin-wheel-wrap">
+<div class="spin-pointer" aria-hidden="true"></div>
+<canvas id="spin-canvas" width="680" height="680" role="img" aria-label="Prize wheel: cash from 2 cents to 1 dollar, 5 diamonds, or a free spin"></canvas>
+</div>
+<div class="spin-status" id="spin-status" aria-live="polite">Checking spins…</div>
+<div class="spin-result" id="spin-result" aria-live="polite"></div>
+<div class="spin-btns">
+<button class="btn btn-green" id="spin-btn" type="button">Spin free</button>
+<button class="btn btn-ghost" id="extra-btn" type="button">Extra spin · 10 diamonds</button>
+</div>
+<p class="hint" id="spin-hint" style="text-align:center">Free spin resets at midnight UTC. Diamonds come from the floating chest.</p>
+</div>
+</div>
+
+<div class="stat-strip">
+<div class="stat-cell"><b id="s-used">0</b><span>Spins used</span></div>
+<div class="stat-cell"><b id="s-won">$0.00</b><span>Total won</span></div>
+<div class="stat-cell"><b id="s-free">0</b><span>Free spins left</span></div>
+<div class="stat-cell"><b id="s-tickets">0</b><span>Spin tickets</span></div>
+</div>
+
+<div class="bonus-card" style="margin-top:20px">
+<h2 style="margin:0 0 4px;font-size:20px">What can drop</h2>
+<p style="color:var(--muted);font-size:14px;margin:0">Equal slices, weighted odds. Jackpot is rare by design.</p>
+<table class="spin-odds" aria-label="Wheel odds">
+<tbody>
+<tr><td class="pr">$0.02</td><td>Base cash</td><td class="wt">30%</td></tr>
+<tr><td class="pr">$0.05</td><td>Base cash</td><td class="wt">25%</td></tr>
+<tr><td class="pr">$0.10</td><td>Mid cash</td><td class="wt">18%</td></tr>
+<tr><td class="pr">+5 diamonds</td><td>Play chips for extra spins</td><td class="wt">12%</td></tr>
+<tr><td class="pr">Free Spin</td><td>Instant re-spin, no diamonds</td><td class="wt">8%</td></tr>
+<tr><td class="pr">$0.25</td><td>Big cash</td><td class="wt">5%</td></tr>
+<tr class="jack"><td class="pr">$1.00 jackpot</td><td>Rare headline prize</td><td class="wt">2%</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 style="font-size:20px;margin:30px 0 0">How it works</h2>
+<div class="quest-row"><div class="qico">1</div><div class="qmid"><b>Take your free spin</b><div style="font-size:13px;color:var(--muted)">One free spin per UTC day. The button counts down to midnight when used.</div></div></div>
+<div class="quest-row"><div class="qico">2</div><div class="qmid"><b>Want more? Spend diamonds</b><div style="font-size:13px;color:var(--muted)">Extra spins cost 10 diamonds from the floating chest. Free-spin prizes re-spin instantly.</div></div></div>
+<div class="quest-row"><div class="qico">3</div><div class="qmid"><b>Prizes credit instantly</b><div style="font-size:13px;color:var(--muted)">Cash lands in available, diamonds in your chip balance. Every spin counts toward Rewards milestones.</div></div></div>
+
+<h2 style="font-size:20px;margin:30px 0 0">Spin history</h2>
+<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Prize</th><th>Type</th><th>Status</th><th>Date</th></tr></thead><tbody id="spin-rows"><tr class="skel"><td colspan="4"><span class="skeleton" style="width:90%"></span></td></tr><tr class="skel"><td colspan="4"><span class="skeleton" style="width:75%"></span></td></tr></tbody></table></div>
+
+<h2 style="font-size:20px;margin:30px 0 0">Good to know</h2>
+<div class="faq" style="margin-top:14px">
+<div class="faq-item"><button>When does my free spin reset?<span class="plus">+</span></button><div class="a"><div><p>At midnight UTC. The countdown under the wheel shows exactly how long until the next free spin.</p></div></div></div>
+<div class="faq-item"><button>Do spins count toward Rewards?<span class="plus">+</span></button><div class="a"><div><p>Yes. Every spin counts on the Spin the Wheel track (3 / 7 / 14 / 30) on the Rewards page, where milestone chests pay bonus cash.</p></div></div></div>
+<div class="faq-item"><button>Can I lose diamonds or cash spinning?<span class="plus">+</span></button><div class="a"><div><p>No blanks — every spin wins something. The only cost is the 10-diamond extra-spin fee; free and ticket spins cost nothing.</p></div></div></div>
+<div class="faq-item"><button>Why did my diamond balance drop?<span class="plus">+</span></button><div class="a"><div><p>Extra spins spend 10 diamonds each. Free spins and free-spin tickets never touch your diamonds. History below shows every spend and win.</p></div></div></div>
 </div>
 </div>
 </div></section>
 </main>
-<footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="earn.html">Earn</a></span></div></div></footer>
+
+<div class="spin-veil" id="spin-veil" role="dialog" aria-label="Spin result">
+<div class="spin-box">
+<h3 id="veil-kicker">You won</h3>
+<div class="big cash" id="veil-amount">$0.00</div>
+<p id="veil-sub">Added to available.</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px">
+<button class="btn btn-green" id="veil-again" type="button" style="flex:1;min-height:48px">Spin again</button>
+<button class="btn btn-ghost" id="veil-close" type="button" style="flex:1;min-height:48px">Close</button>
+</div>
+</div>
+</div>
+
+<footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="earn.html">Earn</a> · <a href="withdraw.html">Cashout</a></span></div></div></footer>
+<nav class="mobilenav" aria-label="Mobile"><a href="earn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="grow.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Grow</a><a href="invite.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M18 8v6M15 11h6"/></svg>Invite</a><a href="rewards.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="12" rx="1.5"/><path d="M4 13h16M12 9v12M12 9S7.5 9 6 7.5 5.5 4.8 7 4.5 12 9 12 9Zm0 0s4.5 0 6-1.5S18.5 4.8 17 4.5 12 9 12 9Z"/></svg>Rewards<span class="navdot" id="navdot-rewards" style="display:none"></span></a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet } from './js/firebase.js';
+import { auth, onAuthStateChanged, getWallet, getUserDoc, fetchUserDocs, getUnclaimedRewards, getSpinState, playSpin, track, DIAMOND_COST_SPIN } from './js/firebase.js';
 import { paintDualChip, startDiamondChest } from './js/diamonds.js';
-if (window.FavLoader) FavLoader.hold();
-(function () {
-  var stopChest = null;
-  function ready() { if (window.FavLoader) FavLoader.pageReady(); }
-  try {
-    onAuthStateChanged(auth, async function (user) {
-      if (!user) { document.getElementById('chip-bal').textContent='\u2014'; document.getElementById('chip-name').textContent='Sign in'; ready(); return; }
-      try {
-        var w = await getWallet(user.uid);
-        paintDualChip(w.pending, w.diamonds);
-        document.getElementById('chip-name').textContent = (user.email || 'Member').split('@')[0];
-        if (stopChest) { try { stopChest(); } catch (e) {} }
-        stopChest = startDiamondChest(user.uid, { onBalance: function (w2) { paintDualChip(w2.pending, w2.diamonds); } });
-      } catch (e) {}
-      ready();
+(function(){
+  if(window.FavLoader)FavLoader.hold();
+  setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
+  var uid=null, spinning=false, stopChest=null, unclaimedN=0, spinState=null, reduced=false;
+  try{reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}
+  var canvas=document.getElementById('spin-canvas'), ctx=canvas.getContext('2d');
+  var SEGS=[
+    {id:'cash02', short:'$0.02', color:'#22c55e'},
+    {id:'dia5', short:'+5', color:'#0ea5e9'},
+    {id:'cash05', short:'$0.05', color:'#14b8a6'},
+    {id:'ticket', short:'FREE', color:'#a855f7'},
+    {id:'cash10', short:'$0.10', color:'#f59e0b'},
+    {id:'cash25', short:'$0.25', color:'#3b82f6'},
+    {id:'cash100', short:'$1', color:'#eab308'}
+  ];
+  var rot=0;
+  function drawWheel(){
+    var W=canvas.width, cx=W/2, cy=W/2, R=W/2-14, n=SEGS.length;
+    ctx.clearRect(0,0,W,W);
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(rot);
+    for(var i=0;i<n;i++){
+      var a0=(i/n)*Math.PI*2, a1=((i+1)/n)*Math.PI*2;
+      ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,R,a0,a1);ctx.closePath();
+      ctx.fillStyle=SEGS[i].color;ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=3;ctx.stroke();
+      ctx.save();ctx.rotate((a0+a1)/2);ctx.textAlign='right';ctx.fillStyle='#fff';
+      ctx.font='800 44px Poppins, sans-serif';ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=8;
+      ctx.fillText(SEGS[i].short, R-26, 15);ctx.restore();
+    }
+    var g=ctx.createRadialGradient(0,0,10,0,0,120);
+    g.addColorStop(0,'#232544');g.addColorStop(1,'#101223');
+    ctx.beginPath();ctx.arc(0,0,104,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+    ctx.lineWidth=6;ctx.strokeStyle='rgba(1,214,118,.6)';ctx.stroke();
+    ctx.fillStyle='#01D676';ctx.font='800 64px Poppins, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('$',0,4);
+    ctx.restore();
+    ctx.beginPath();ctx.arc(cx,cy,R+8,0,Math.PI*2);
+    ctx.lineWidth=12;ctx.strokeStyle='#8b8fa8';ctx.stroke();
+  }
+  function segIndexFor(id){for(var i=0;i<SEGS.length;i++)if(SEGS[i].id===id)return i;return 0;}
+  function animateTo(prizeId, done){
+    var n=SEGS.length, idx=segIndexFor(prizeId);
+    var segArc=Math.PI*2/n;
+    var jitter=(0.15+Math.random()*0.7)*segArc;
+    var segCenter=idx*segArc+segArc/2;
+    var targetAngle=(-Math.PI/2)-segCenter+jitter;
+    var cur=((rot%(Math.PI*2))+Math.PI*2)%(Math.PI*2);
+    var delta=((targetAngle-cur)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);
+    var turns=Math.PI*2*5;
+    var total=turns+delta, start=rot, t0=null, DUR=reduced?350:4200;
+    if(reduced){rot=start+total;drawWheel();if(done)done();return;}
+    function frame(t){
+      if(!t0)t0=t;
+      var p=Math.min(1,(t-t0)/DUR), e=1-Math.pow(1-p,4);
+      rot=start+total*e;drawWheel();
+      if(p<1)requestAnimationFrame(frame);else if(done)done();
+    }
+    requestAnimationFrame(frame);
+  }
+  drawWheel();
+  var toast=document.getElementById('toast'), tm=null;
+  function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
+  function money(n,d){return '$'+Number(n||0).toFixed(d==null?2:d);}
+  function relDate(ts){
+    if(!ts)return 'recently';
+    var ms=ts.seconds?ts.seconds*1000:new Date(ts).getTime();
+    if(!ms)return 'recently';
+    var d=Math.max(0,Math.round((Date.now()-ms)/864e5));
+    if(d===0)return 'today';if(d===1)return '1 day ago';if(d<30)return d+' days ago';
+    return Math.floor(d/30)+'mo ago';
+  }
+  function msToClock(ms){
+    ms=Math.max(0,ms);var s=Math.ceil(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),ss=s%60;
+    function p(x){return (x<10?'0':'')+x;}
+    return p(h)+':'+p(m)+':'+p(ss);
+  }
+  function paintBadges(n){
+    unclaimedN=n;
+    var bb=document.getElementById('bell-badge');
+    if(bb){if(n>0){bb.textContent=n>9?'9+':n;bb.style.display='flex';}else{bb.style.display='none';}}
+    var bell=document.getElementById('bell');
+    if(bell){var ping=bell.querySelector('.ping');if(ping)ping.style.display=n>0?'':'none';}
+    var nd=document.getElementById('navdot-rewards');
+    if(nd){if(n>0){nd.textContent=n>9?'9+':n;nd.style.display='flex';}else{nd.style.display='none';}}
+  }
+  function paintState(){
+    if(!spinState)return;
+    var st=document.getElementById('spin-status'), sb=document.getElementById('spin-btn'), eb=document.getElementById('extra-btn');
+    document.getElementById('s-tickets').textContent=spinState.tickets;
+    document.getElementById('s-free').textContent=spinState.freeLeft;
+    if(spinState.tickets>0){st.textContent=spinState.freeLeft>0?(spinState.freeLeft+' free + '+spinState.tickets+' ticket ready'):(spinState.tickets+' ticket spin ready');st.classList.remove('cool');}
+    else if(spinState.freeLeft>0){st.textContent='1 free spin ready — good luck';st.classList.remove('cool');}
+    else{st.textContent='Next free in '+msToClock(spinState.resetMs);st.classList.add('cool');}
+    sb.textContent=spinState.tickets>0?'Spin (ticket)':(spinState.freeLeft>0?'Spin free':'Spin free (used)');
+    sb.disabled=spinning||(spinState.freeLeft<=0&&spinState.tickets<=0);
+    eb.textContent='Extra spin · '+DIAMOND_COST_SPIN+' diamonds ('+spinState.diamonds+')';
+    eb.disabled=spinning||spinState.diamonds<DIAMOND_COST_SPIN;
+    document.getElementById('spin-hint').textContent=spinState.freeLeft>0?'Free spin resets at midnight UTC. Diamonds come from the floating chest.':('Free spin back in '+msToClock(spinState.resetMs)+' · extra spins always available for diamonds.');
+  }
+  setInterval(function(){if(spinState&&spinState.freeLeft<=0&&spinState.tickets<=0){spinState.resetMs=Math.max(0,spinState.resetMs-1000);paintState();}},1000);
+  async function refresh(){
+    if(!uid)return;
+    try{
+      spinState=await getSpinState(uid);
+      paintDualChip(spinState.pending, spinState.diamonds);
+      paintState();
+      try{paintBadges(await getUnclaimedRewards(uid));}catch(_){}
+    }catch(e){}
+    try{
+      var proofs=await fetchUserDocs(uid,'proofs',100);
+      var spins=proofs.filter(function(p){return /^spin-/.test(p.label||'');});
+      var used=spins.filter(function(p){return /^(spin-win|spin-diamond|spin-ticket)$/.test(p.label);}).length;
+      var won=spins.filter(function(p){return p.label==='spin-win';}).reduce(function(s,p){return s+Number(p.amount||0);},0);
+      document.getElementById('s-used').textContent=used;
+      document.getElementById('s-won').textContent=money(won);
+      var body=document.getElementById('spin-rows');
+      var rows=spins.slice(0,20);
+      if(!rows.length){body.innerHTML='<tr><td colspan="4" style="color:var(--muted)">No spins yet. Take your free spin above.</td></tr>';}
+      else{
+        body.innerHTML=rows.map(function(p){
+          var nm='Spin', tp='—';
+          if(p.label==='spin-win'){nm=money(p.amount);tp='Cash';}
+          else if(p.label==='spin-diamond'){nm='+'+(p.diamonds||5)+' diamonds';tp='Chips';}
+          else if(p.label==='spin-ticket'){nm='Free spin';tp='Ticket';}
+          else if(p.label==='spin-extra'){nm='−'+DIAMOND_COST_SPIN+' diamonds';tp='Cost';}
+          else if(p.label==='spin-free'){nm='Free used';tp='Entry';}
+          return '<tr><td>'+nm+'</td><td>'+tp+'</td><td><span class="pill paid">Done</span></td><td>'+relDate(p.at)+'</td></tr>';
+        }).join('');
+      }
+    }catch(e){}
+  }
+  function openVeil(prize){
+    var k=document.getElementById('veil-kicker'), a=document.getElementById('veil-amount'), s=document.getElementById('veil-sub');
+    a.className='big '+(prize.kind==='cash'?'cash':(prize.kind==='diamonds'?'dia':'ticket'));
+    if(prize.kind==='cash'){k.textContent=prize.amount>=1?'Jackpot!':'You won';a.textContent=money(prize.amount);s.textContent='Added to available.';}
+    else if(prize.kind==='diamonds'){k.textContent='You won';a.textContent='+'+prize.diamonds+' diamonds';s.textContent='Chips for extra spins — cash untouched.';}
+    else{k.textContent='You won';a.textContent='Free Spin';s.textContent='A ticket was added — spin again, on the house.';}
+    document.getElementById('spin-veil').classList.add('open');
+  }
+  function closeVeil(){document.getElementById('spin-veil').classList.remove('open');}
+  document.getElementById('veil-close').addEventListener('click',closeVeil);
+  document.getElementById('veil-again').addEventListener('click',function(){closeVeil();var b=document.getElementById('spin-btn');if(b&&!b.disabled)b.click();});
+  async function doSpin(mode){
+    if(spinning||!uid)return;
+    spinning=true;paintState();
+    document.getElementById('spin-result').textContent='';
+    document.getElementById('spin-result').className='spin-result';
+    var r=await playSpin(uid, mode);
+    if(!r.ok){
+      spinning=false;
+      if(r.reason==='nofree')show('Free spin used — next one at midnight UTC.');
+      else if(r.reason==='funds')show('Need '+DIAMOND_COST_SPIN+' diamonds — tap the chest.');
+      else if(r.reason==='tickets')show('No ticket spins left.');
+      else show('Spin failed — check connection and rules.');
+      await refresh();return;
+    }
+    try{track('spin_play',{mode:mode,prize:r.prize.id});}catch(_){}
+    animateTo(r.prize.id, async function(){
+      var res=document.getElementById('spin-result');
+      if(r.prize.kind==='cash'){res.textContent='Won '+money(r.prize.amount)+' — added to available.';}
+      else if(r.prize.kind==='diamonds'){res.textContent='Won +'+r.prize.diamonds+' diamonds.';}
+      else{res.textContent='Won a free re-spin.';}
+      res.classList.add('win');
+      spinning=false;
+      await refresh();
+      openVeil(r.prize);
     });
-  } catch (e) { ready(); }
-  setTimeout(ready, 6000);
+  }
+  document.getElementById('spin-btn').addEventListener('click',function(){
+    var __b=this;if(!spinState)return;
+    var mode=spinState.tickets>0?'ticket':(spinState.freeLeft>0?'free':'free');
+    if(window.FavLoader){return FavLoader.withButton(__b,function(){return doSpin(mode);});}
+    return doSpin(mode);
+  });
+  document.getElementById('extra-btn').addEventListener('click',function(){
+    var __b=this;
+    if(window.FavLoader){return FavLoader.withButton(__b,function(){return doSpin('extra');});}
+    return doSpin('extra');
+  });
+  document.querySelectorAll('.faq-item button').forEach(function(b){
+    b.addEventListener('click',function(){b.closest('.faq-item').classList.toggle('open');});
+  });
+  document.getElementById('bell').addEventListener('click',function(){show(unclaimedN>0?(unclaimedN+(unclaimedN===1?' reward':' rewards')+' ready — open Rewards to claim.'):('No new notifications.'));});
+  try{
+    onAuthStateChanged(auth,async function(user){
+      if(!user){
+        uid=null;spinState=null;
+        document.getElementById('auth-wall').style.display='';
+        document.getElementById('guest-card').style.display='';
+        document.getElementById('member-zone').style.display='none';
+        document.getElementById('user-chip').setAttribute('href','signin.html');
+        document.getElementById('chip-name').textContent='Sign in';
+        document.getElementById('chip-bal').textContent='—';
+        if(window.FavLoader)FavLoader.pageReady();
+        return;
+      }
+      uid=user.uid;
+      document.getElementById('auth-wall').style.display='none';
+      document.getElementById('guest-card').style.display='none';
+      document.getElementById('member-zone').style.display='';
+      document.getElementById('user-chip').setAttribute('href','profile.html');
+      document.getElementById('chip-name').textContent=(user.email||'Member').split('@')[0];
+      try{
+        if(stopChest){try{stopChest();}catch(_){}}
+        stopChest=startDiamondChest(uid,{onBalance:function(){refresh();}});
+      }catch(e){}
+      await refresh();
+      if(window.FavLoader)FavLoader.pageReady();
+    });
+  }catch(e){
+    document.getElementById('auth-wall').style.display='';
+    document.getElementById('guest-card').style.display='';
+  }
+  var root=document.documentElement;function onS(){if(scrollY>0)root.setAttribute('data-top-nav-scrolled','true');else root.removeAttribute('data-top-nav-scrolled');}addEventListener('scroll',onS,{passive:true});onS();
 })();
 </script>
 </body>

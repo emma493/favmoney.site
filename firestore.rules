@@ -10,6 +10,9 @@
 // activeDays (UTC-day strings with rewarded activity, max 90 — yield gate).
 // Diamond model (play-only, never withdrawable): wallets/{uid} holds diamonds
 // (integer chips) + lastDiamondAdAt / lastDiamondPassiveAt (ms epoch cooldowns).
+// Spin model: users/{uid} holds lastSpinDay (UTC YYYY-MM-DD), spinTickets,
+// spinCount, spinWon. proofs rows spin-win (cash 0.02-1.00) + spin-diamond /
+// spin-ticket / spin-free / spin-extra (amount 0 bookkeeping).
 // proofs rows with label diamond-* carry amount 0 (USD untouched) plus an
 // optional signed diamonds delta for history.
 // NOTE: client-side increments are validated for shape here; full authoritative
@@ -30,16 +33,20 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if self(userId);
       allow create: if self(userId)
-        && request.resource.data.keys().hasOnly(['email', 'provider', 'createdAt', 'updatedAt', 'streak', 'started', 'claimedQuests', 'refcode', 'referredBy', 'myCode', 'taskEarned', 'investedUser', 'activeDays'])
+        && request.resource.data.keys().hasOnly(['email', 'provider', 'createdAt', 'updatedAt', 'streak', 'started', 'claimedQuests', 'refcode', 'referredBy', 'myCode', 'taskEarned', 'investedUser', 'activeDays', 'lastSpinDay', 'spinTickets', 'spinCount', 'spinWon'])
         && (request.resource.data.email is string || request.resource.data.email == null)
         && (!('refcode' in request.resource.data) || request.resource.data.refcode == null || isCode(request.resource.data.refcode))
         && (!('myCode' in request.resource.data) || request.resource.data.myCode == null || isCode(request.resource.data.myCode))
         && (!('referredBy' in request.resource.data) || request.resource.data.referredBy == null || request.resource.data.referredBy is string)
         && (!('taskEarned' in request.resource.data) || (request.resource.data.taskEarned is number && request.resource.data.taskEarned >= 0))
         && (!('investedUser' in request.resource.data) || (request.resource.data.investedUser is number && request.resource.data.investedUser >= 0))
+        && (!('lastSpinDay' in request.resource.data) || (request.resource.data.lastSpinDay is string))
+        && (!('spinTickets' in request.resource.data) || (request.resource.data.spinTickets is number && request.resource.data.spinTickets >= 0))
+        && (!('spinCount' in request.resource.data) || (request.resource.data.spinCount is number && request.resource.data.spinCount >= 0))
+        && (!('spinWon' in request.resource.data) || (request.resource.data.spinWon is number && request.resource.data.spinWon >= 0))
         && (!('activeDays' in request.resource.data) || (request.resource.data.activeDays is list && request.resource.data.activeDays.size() <= 90));
       allow update: if self(userId)
-        && request.resource.data.keys().hasOnly(['email', 'provider', 'createdAt', 'updatedAt', 'streak', 'started', 'claimedQuests', 'refcode', 'referredBy', 'myCode', 'taskEarned', 'investedUser', 'activeDays'])
+        && request.resource.data.keys().hasOnly(['email', 'provider', 'createdAt', 'updatedAt', 'streak', 'started', 'claimedQuests', 'refcode', 'referredBy', 'myCode', 'taskEarned', 'investedUser', 'activeDays', 'lastSpinDay', 'spinTickets', 'spinCount', 'spinWon'])
         && (!('streak' in request.resource.data) || (request.resource.data.streak is map
           && request.resource.data.streak.days is number
           && request.resource.data.streak.last is string))
@@ -149,8 +156,14 @@ service cloud.firestore {
               || (request.resource.data.label.matches('referral-commission.*') && request.resource.data.amount > 0 && request.resource.data.amount <= 25)
               || (request.resource.data.label == 'invest-stake' && request.resource.data.amount > 0 && request.resource.data.amount <= 100)
               || (request.resource.data.label == 'invest-unstake' && request.resource.data.amount > 0 && request.resource.data.amount <= 100)
-              || (request.resource.data.label == 'invest-yield' && request.resource.data.amount > 0 && request.resource.data.amount <= 50)
+               || (request.resource.data.label == 'invest-yield' && request.resource.data.amount > 0 && request.resource.data.amount <= 50)
                || (request.resource.data.label == 'ad-view' && request.resource.data.amount == 0)
+                // Spin the Wheel: cash wins 0.02-1.00, diamond/ticket/cost rows carry amount 0.
+                || (request.resource.data.label == 'spin-win' && request.resource.data.amount >= 0.02 && request.resource.data.amount <= 1)
+                || (request.resource.data.label == 'spin-diamond' && request.resource.data.amount == 0)
+                || (request.resource.data.label == 'spin-ticket' && request.resource.data.amount == 0)
+                || (request.resource.data.label == 'spin-free' && request.resource.data.amount == 0)
+                || (request.resource.data.label == 'spin-extra' && request.resource.data.amount == 0)
                // Diamonds are play-only chips: all diamond moves carry amount 0
                // (USD untouched) with a signed diamonds delta for history.
                || (request.resource.data.label.matches('diamond-.*') && request.resource.data.amount == 0)

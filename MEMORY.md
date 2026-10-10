@@ -1,7 +1,7 @@
 # Favmoney — Memory
 
 > Persistent memory for the Favmoney project. Refer to this file every session.
-> Last updated: 2026-10-09 (Grow engine built: 3000/4500 APR invest + hourly ad booster)
+> Last updated: 2026-10-09 (Earn cards: real photo thumbs, flat real-UI styling, compact rows)
 
 ## 0. Permanent User Preferences (NEVER violate)
 - **NO EMOJIS EVER.** User hates emojis. Use real icons, real SVG, real images only. No emoji in UI, code comments, or docs. This is permanent.

@@ -10,8 +10,11 @@
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(20,21,35,.35);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#01D676;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#01D676;border:0;cursor:pointer;align-items:center;justify-content:center;color:#0d1a13;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
+  <script src="js/loader.js"></script>
 </head>
 <body>
+<div id="page-loader" role="status" aria-label="Loading Favmoney"><div class="spinner" id="loader-spin" aria-hidden="true"></div><button id="loader-retry" type="button" aria-label="Retry loading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button></div><script>window.__favLoaderT0=window.__favLoaderT0||Date.now();(function(){setTimeout(function(){var o=document.getElementById("page-loader");if(o)o.classList.add("slow");},8000);var r=document.getElementById("loader-retry");if(r)r.addEventListener("click",function(){location.reload();});})();</script>
 <header class="topnav" id="topnav"><div class="topnav-inner">
 <a class="brand" href="index.html"><span class="brand-word"><span class="g">FAV</span><span class="w">MONEY</span></span></a>
 <nav class="nav-links" aria-label="Primary">
@@ -21,7 +24,7 @@
 <a href="rewards.html">Rewards<span class="dot"></span></a>
 <a href="withdraw.html">Cashout<span class="dot"></span></a>
 </nav>
-<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal">—</span><span id="chip-name">Sign in</span></a></div>
+<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal"><span class="skeleton" style="width:52px"></span></span><span id="chip-name"><span class="skeleton" style="width:64px"></span></span></a></div>
 </div></header>
 <main>
 <section class="page-hero"><div class="dash-shell">
@@ -55,7 +58,7 @@
 <select class="sel" id="partner" aria-label="Offer partner"><option value="all">All offer partners</option><option value="adgate">AdGate</option><option value="timewall">TimeWall</option></select>
 <label class="checkline"><input type="checkbox" id="pending-only" /> Show pending offers only</label>
 </div>
-<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Offer name</th><th>Reward</th><th>Reward status</th><th>Offer partner</th><th>Date</th></tr></thead><tbody id="rows"></tbody></table></div>
+<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Offer name</th><th>Reward</th><th>Reward status</th><th>Offer partner</th><th>Date</th></tr></thead><tbody id="rows"><tr class="skel"><td colspan="5"><span class="skeleton" style="width:90%"></span></td></tr><tr class="skel"><td colspan="5"><span class="skeleton" style="width:75%"></span></td></tr><tr class="skel"><td colspan="5"><span class="skeleton" style="width:82%"></span></td></tr></tbody></table></div>
 </div></section>
 </main>
 <footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="earn.html">Earn</a> · <a href="withdraw.html">Cashout</a></span></div></div></footer>
@@ -64,6 +67,8 @@
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, fetchUserDocs } from './js/firebase.js';
 (function(){
+  if(window.FavLoader)FavLoader.hold();
+  setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
   var cat='all', proofs=[], earn=0, userEmail='', joinedLabel='—';
   function relDate(ts){
     if(!ts)return 'recently';
@@ -137,7 +142,9 @@ import { auth, onAuthStateChanged, getWallet, fetchUserDocs } from './js/firebas
       if(!user){
         document.getElementById('auth-wall').style.display='';
         document.getElementById('user-chip').setAttribute('href','signin.html');
+        document.getElementById('chip-name').textContent='Sign in';
         earn=0;proofs=[];userEmail='';joinedLabel='—';
+        if(window.FavLoader)FavLoader.pageReady();
         paintStats();render();return;
       }
       userEmail=user.email||'';
@@ -151,10 +158,12 @@ import { auth, onAuthStateChanged, getWallet, fetchUserDocs } from './js/firebas
         document.getElementById('chip-bal').textContent='$'+Number(w.pending).toFixed(2);
         proofs=await fetchUserDocs(user.uid,'proofs',50);
       }catch(e){earn=0;proofs=[];}
+      if(window.FavLoader)FavLoader.pageReady();
       paintStats();render();
     });
   }catch(e){
     document.getElementById('auth-wall').style.display='';
+    if(window.FavLoader)FavLoader.pageReady();
     paintStats();render();
   }
   var root=document.documentElement;function onS(){if(scrollY>0)root.setAttribute('data-top-nav-scrolled','true');else root.removeAttribute('data-top-nav-scrolled');}addEventListener('scroll',onS,{passive:true});onS();

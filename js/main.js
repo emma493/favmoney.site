@@ -1,5 +1,7 @@
 // Favmoney landing interactions (vanilla, no deps)
 (function () {
+  try{if(window.FavLoader)FavLoader.pageReady();}catch(e){}
+  window.addEventListener('load',function(){try{if(window.FavLoader)FavLoader.pageReady();}catch(e){}});
   var root = document.documentElement;
 
   // 1. Header blur on scroll

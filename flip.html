@@ -5,8 +5,60 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Flip to Win · Favmoney</title>
 <meta name="robots" content="noindex, nofollow" />
-<style>html,body{margin:0;padding:0;min-height:100%;background:#1D1E30}</style>
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/style.css" />
+<style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(20,21,35,.35);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#01D676;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#01D676;border:0;cursor:pointer;align-items:center;justify-content:center;color:#0d1a13;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
+<script src="js/loader.js"></script>
 </head>
 <body>
+<div id="page-loader" role="status" aria-label="Loading Favmoney"><div class="spinner" id="loader-spin" aria-hidden="true"></div><button id="loader-retry" type="button" aria-label="Retry loading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button></div><script>window.__favLoaderT0=window.__favLoaderT0||Date.now();(function(){setTimeout(function(){var o=document.getElementById("page-loader");if(o)o.classList.add("slow");},8000);var r=document.getElementById("loader-retry");if(r)r.addEventListener("click",function(){location.reload();});})();</script>
+<header class="topnav" id="topnav"><div class="topnav-inner">
+<a class="brand" href="index.html"><span class="brand-word"><span class="g">FAV</span><span class="w">MONEY</span></span></a>
+<nav class="nav-links" aria-label="Primary">
+<a href="earn.html">Earn<span class="dot"></span></a>
+<a href="grow.html">Grow<span class="dot"></span></a>
+<a href="invite.html">Invite<span class="dot"></span></a>
+<a href="rewards.html">Rewards<span class="dot"></span></a>
+<a href="withdraw.html">Cashout<span class="dot"></span></a>
+</nav>
+<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal"><span class="skeleton" style="width:52px"></span></span><span id="chip-name"><span class="skeleton" style="width:64px"></span></span></a></div>
+</div></header>
+<main>
+<section class="page-hero"><div class="dash-shell" style="max-width:1000px">
+<h1 class="dash-title">Flip to Win</h1>
+<p>Match card pairs against the clock. This quest opens next. Your balance stays safe.</p>
+<div class="bonus-card" id="faucet-card">
+<h2 style="margin:0 0 6px;font-size:20px">Flip to Win opening soon</h2>
+<p style="color:var(--muted);font-size:14px;margin:0 0 16px">We are wiring flip cards. Meanwhile, earn on live quests.</p>
+<p><span class="skeleton" style="width:70%"></span></p>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+<a class="btn btn-green" href="earn.html" style="min-height:48px">Back to Earn</a>
+<a class="btn btn-ghost" href="spin.html" style="min-height:48px">Try Spin instead</a>
+</div>
+</div>
+</div></section>
+</main>
+<footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="earn.html">Earn</a></span></div></div></footer>
+<div class="toast" id="toast" role="status"></div>
+<script type="module">
+import { auth, onAuthStateChanged, getWallet } from './js/firebase.js';
+if (window.FavLoader) FavLoader.hold();
+(function () {
+  function ready() { if (window.FavLoader) FavLoader.pageReady(); }
+  try {
+    onAuthStateChanged(auth, async function (user) {
+      if (!user) { document.getElementById('chip-bal').textContent='\u2014'; document.getElementById('chip-name').textContent='Sign in'; ready(); return; }
+      try {
+        var w = await getWallet(user.uid);
+        document.getElementById('chip-bal').textContent = '$' + Number(w.pending).toFixed(2);
+        document.getElementById('chip-name').textContent = (user.email || 'Member').split('@')[0];
+      } catch (e) {}
+      ready();
+    });
+  } catch (e) { ready(); }
+  setTimeout(ready, 6000);
+})();
+</script>
 </body>
 </html>

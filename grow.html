@@ -4,12 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Grow · Favmoney</title>
-  <meta name="description" content="Grow your Favmoney earnings: invest task rewards at 3,000% APR, boost to 4,500% by watching ads, claim anytime." />
+  <meta name="description" content="Grow your Favmoney earnings: invest task rewards at 3,000% APR, boost to 4,500% by watching ads, claim when the boost ends." />
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(20,21,35,.35);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#01D676;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#01D676;border:0;cursor:pointer;align-items:center;justify-content:center;color:#0d1a13;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
+  <script src="js/loader.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     .tick{font-size:clamp(34px,6vw,52px);font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.1;margin:6px 0 2px}
@@ -19,9 +21,14 @@
     .apr-badge svg{width:14px;height:14px}
     .tick-sub{font-size:13px;color:var(--muted);margin:8px 0 0}
     .tick-sub b{color:var(--green)}
-    .fuel{margin-top:16px}
-    .fuel-top{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px}
-    .fuel-top b{color:#ffd75e}
+    .boost-wrap{display:flex;justify-content:center;margin-top:16px}
+    .boost-pill{position:relative;overflow:hidden;width:min(340px,100%);min-height:52px;border-radius:999px;isolation:isolate;padding:0 20px;flex:none}
+    .boost-pill .fill{position:absolute;top:0;left:0;bottom:0;width:0%;background:linear-gradient(135deg,#ffd75e,#ff9d3c);z-index:0;transition:width .3s linear}
+    .boost-pill .label{position:relative;z-index:1;display:inline-flex;align-items:center;gap:8px;font-variant-numeric:tabular-nums;white-space:nowrap;max-width:100%}
+    .boost-pill .label svg{width:16px;height:16px;flex:none}
+    .boost-pill:disabled{opacity:1;cursor:not-allowed;background:#2a2d52;color:#fff;box-shadow:none;border:1px solid rgba(255,215,94,.45)}
+    .boost-pill:not(:disabled) .fill{width:0%!important}
+    #claim-btn:disabled{opacity:.55;cursor:not-allowed}
     .amt-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
     .amt-row input{flex:1;min-width:140px;height:48px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:#101223;color:#fff;padding:0 14px;font-family:var(--font);font-size:15px;font-weight:700;outline:none}
     .amt-row input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(1,214,118,.22)}
@@ -47,6 +54,7 @@
   </style>
 </head>
 <body>
+<div id="page-loader" role="status" aria-label="Loading Favmoney"><div class="spinner" id="loader-spin" aria-hidden="true"></div><button id="loader-retry" type="button" aria-label="Retry loading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button></div><script>window.__favLoaderT0=window.__favLoaderT0||Date.now();(function(){setTimeout(function(){var o=document.getElementById("page-loader");if(o)o.classList.add("slow");},8000);var r=document.getElementById("loader-retry");if(r)r.addEventListener("click",function(){location.reload();});})();</script>
 <header class="topnav" id="topnav"><div class="topnav-inner">
 <a class="brand" href="index.html"><span class="brand-word"><span class="g">FAV</span><span class="w">MONEY</span></span></a>
 <nav class="nav-links" aria-label="Primary">
@@ -56,12 +64,12 @@
 <a href="rewards.html">Rewards<span class="dot"></span></a>
 <a href="withdraw.html">Cashout<span class="dot"></span></a>
 </nav>
-<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal">—</span><span id="chip-name">Sign in</span></a><button class="icon-btn" id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="ping"></span></button></div>
+<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal"><span class="skeleton" style="width:52px"></span></span><span id="chip-name"><span class="skeleton" style="width:64px"></span></span></a><button class="icon-btn" id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="ping"></span></button></div>
 </div></header>
 <main>
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
 <h1 class="dash-title">Grow</h1>
-<p>Invest what you earn. Base 3,000% APR around the clock — watch an ad to boost to 4,500% for an hour. Claim anytime.</p>
+<p>Invest what you earn. Base 3,000% APR around the clock — watch an ad to boost to 4,500% for an hour. Claim unlocks when the boost ends.</p>
 <div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to start your $1.00 grower.</div>
 
 <div class="bonus-card" id="guest-card" style="display:none">
@@ -81,14 +89,10 @@
 </div>
 <div class="tick" id="tick">0.0000000 <small>USD</small></div>
 <p class="tick-sub" id="tick-sub">Warming up…</p>
-<div class="fuel">
-<div class="fuel-top"><span>BOOST FUEL · +1,500% APR while lit</span><b id="boost-label">Unboosted</b></div>
-<div class="prog" style="margin:0"><i id="boost-bar" style="width:0%"></i></div>
+<div class="boost-wrap">
+<button class="btn btn-green boost-pill" id="boost-btn" type="button"><span class="fill" id="boost-fill" aria-hidden="true"></span><span class="label"><i data-lucide="play" aria-hidden="true"></i><span id="boost-text">Watch ad · boost 1 hour</span></span></button>
 </div>
-<div class="btn-row">
-<button class="btn btn-green" id="boost-btn"><i data-lucide="play" aria-hidden="true"></i>Watch ad · boost 1 hour</button>
-</div>
-<p class="hint" id="boost-hint">One ad lights a full hour at 4,500%. Rewatch anytime to refill to 60:00.</p>
+<p class="hint" id="boost-hint" style="text-align:center">One ad lights a full hour at 4,500%.</p>
 </div>
 
 <div class="bonus-card">
@@ -117,10 +121,10 @@
 <h2 style="font-size:20px;margin:30px 0 0">How it works</h2>
 <div class="quest-row"><div class="qico">1</div><div class="qmid"><b>Earn, then invest it</b><div style="font-size:13px;color:var(--muted)">Do tasks on Earn. Move up to $100 of those earnings into Grow. Yield accrues on days you earn.</div></div></div>
 <div class="quest-row"><div class="qico">2</div><div class="qmid"><b>Watch it tick at 3,000% APR</b><div style="font-size:13px;color:var(--muted)">Base rate runs around the clock on active days. Close the app — the math waits for you and settles on return.</div></div></div>
-<div class="quest-row"><div class="qico">3</div><div class="qmid"><b>Boost to 4,500% with an ad</b><div style="font-size:13px;color:var(--muted)">One verified view lights a full hour. Rewatch to refill. Claim yield or unstake anytime — no lockups.</div></div></div>
+<div class="quest-row"><div class="qico">3</div><div class="qmid"><b>Boost to 4,500% with an ad</b><div style="font-size:13px;color:var(--muted)">One verified view lights a full hour. The boost button drains as fuel burns, then claim and rewatch. Unstake anytime — no lockups.</div></div></div>
 
 <h2 style="font-size:20px;margin:30px 0 0">Grow history</h2>
-<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Action</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody id="inv-rows"><tr><td colspan="4" style="color:var(--muted)">Loading…</td></tr></tbody></table></div>
+<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Action</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody id="inv-rows"><tr class="skel"><td colspan="4"><span class="skeleton" style="width:90%"></span></td></tr><tr class="skel"><td colspan="4"><span class="skeleton" style="width:75%"></span></td></tr><tr class="skel"><td colspan="4"><span class="skeleton" style="width:82%"></span></td></tr></tbody></table></div>
 
 <h2 style="font-size:20px;margin:30px 0 0">Good to know</h2>
 <div class="faq" style="margin-top:14px">
@@ -156,7 +160,9 @@
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveState, settleInvest, stakeInvest, unstakeAll, activateBoost, fetchUserDocs, computeYield, utcDayStr, track, INVEST_BASE_APR, INVEST_BOOST_APR, INVEST_BOOST_MS, INVEST_SEED } from './js/firebase.js';
 (function(){
-  var uid=null, state=null, investAnchor=0, raf=null, lastPaint=0;
+  if(window.FavLoader)FavLoader.hold();
+  setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
+  var uid=null, state=null, investAnchor=0, anchorAccrued=0, raf=null, lastPaint=0, lastBtnSec=-1;
   var reduced=false;
   try{reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}
   var toast=document.getElementById('toast'),tm=null;
@@ -178,16 +184,21 @@ import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveSta
   }
   function dayYield(principal,apr){return principal*(apr/100)/365;}
   // Live display: settled snapshot + locally interpolated accrual since fetch.
+  // anchorAccrued = yield already earned between investedAt and fetch (from
+  // getLiveState). Without it a reload would drop all unsettled yield and the
+  // ticker would snap back to principal (e.g. 1.000000). Yield stays virtual
+  // until Claim persists it via settleInvest.
   function paintLive(){
     if(!state)return;
     var now=Date.now();
     var grace=state.graceUntilMs>now?{seed:INVEST_SEED,graceUntilMs:state.graceUntilMs}:null;
     var r=computeYield(state.invested, investAnchor, now, state.boostUntilMs, state.activeDays, grace);
-    var shown=state.invested+r.yield;
+    var totalYield=anchorAccrued+r.yield;
+    var shown=state.invested+totalYield;
     document.getElementById('tick').innerHTML=shown.toFixed(7)+' <small>USD</small>';
     var boosted=state.boostUntilMs>now;
     var perDay=dayYield(state.invested,boosted?INVEST_BOOST_APR:INVEST_BASE_APR);
-    var sub='Growing <b>'+money(perDay,4)+'/day</b> at current rate · unclaimed <b>'+money(r.yield,6)+'</b>';
+    var sub='Growing <b>'+money(perDay,4)+'/day</b> at current rate · unclaimed <b>'+money(totalYield,6)+'</b>';
     if(grace){
       var gl=grace.graceUntilMs-now,gh=Math.floor(gl/3600000),gm=Math.floor(gl%3600000/60000);
       sub+=' · Welcome ignition: seed grows live for <b>'+gh+'h '+gm+'m</b> — do any task to keep it growing after';
@@ -196,15 +207,28 @@ import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveSta
     var badge=document.getElementById('apr-badge');
     document.getElementById('apr-text').textContent=(boosted?'4,500% BOOSTED':'3,000% APR');
     badge.classList.toggle('boost',boosted);
+    var boostBtn=document.getElementById('boost-btn');
+    var claimBtn=document.getElementById('claim-btn');
+    var fill=document.getElementById('boost-fill');
+    var txt=document.getElementById('boost-text');
     if(boosted){
       var left=state.boostUntilMs-now;
-      document.getElementById('boost-label').textContent='Boosted · '+fmtClock(left)+' left';
-      document.getElementById('boost-bar').style.width=Math.min(100,left/INVEST_BOOST_MS*100)+'%';
+      var pct=Math.min(100,Math.max(0,left/INVEST_BOOST_MS*100));
+      var sec=Math.ceil(left/1000);
+      // Update label at most once per second to avoid screen-reader spam.
+      if(sec!==lastBtnSec){lastBtnSec=sec;txt.textContent='Boosted · '+fmtClock(left)+' left';boostBtn.setAttribute('aria-label','Boost active, '+fmtClock(left)+' remaining');}
+      fill.style.width=pct+'%';
+      boostBtn.disabled=true;boostBtn.setAttribute('aria-disabled','true');
+      if(claimBtn){claimBtn.disabled=true;claimBtn.setAttribute('aria-disabled','true');claimBtn.title='Claim unlocks when the boost ends';}
     }else{
-      document.getElementById('boost-label').textContent='Unboosted';
-      document.getElementById('boost-bar').style.width='0%';
+      if(lastBtnSec!==-2){lastBtnSec=-2;txt.textContent='Watch ad · boost 1 hour';}
+      fill.style.width='0%';
+      boostBtn.disabled=false;boostBtn.removeAttribute('aria-disabled');boostBtn.removeAttribute('aria-label');
+      if(claimBtn){claimBtn.disabled=false;claimBtn.removeAttribute('aria-disabled');claimBtn.removeAttribute('title');}
     }
     document.getElementById('s-apr').textContent=(boosted?'4,500%':'3,000%');
+    var hint=document.getElementById('boost-hint');
+    if(hint)hint.textContent=boosted?'Boost draining — claim unlocks when the timer ends.':'One ad lights a full hour at 4,500%.';
   }
   function tickLoop(){
     var now=Date.now();
@@ -219,7 +243,10 @@ import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveSta
       state.boostUntilMs=state.boostUntil||0;
       state.graceUntilMs=Date.now()+(state.graceMsLeft||0);
       // getLiveState returns boostUntil; normalize key for paint math.
+      // accrued = yield since investedAt: keep it as the anchor so reloads
+      // show invested + accrued instead of snapping back to principal.
       investAnchor=Date.now();
+      anchorAccrued=Number(state.accrued||0);
       var u=await getUserDoc(uid);
       state.activeDays=u.activeDays||[];
       document.getElementById('av-now').textContent=money(state.pending);
@@ -248,7 +275,7 @@ import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveSta
     }catch(e){}
   }
   function flash(msg){var n=document.getElementById('grow-note');n.textContent=msg;n.style.display='';}
-  document.getElementById('invest-btn').addEventListener('click',async function(){
+  document.getElementById('invest-btn').addEventListener('click',function(){var __b=this;if(window.FavLoader){return FavLoader.withButton(__b,function(){return __investWork();});}return __investWork();async function __investWork(){
     var v=parseFloat(document.getElementById('amt').value);
     if(!(v>0)){show('Enter an amount (min $0.10).');return;}
     var r=await stakeInvest(uid,v);
@@ -264,19 +291,19 @@ import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveSta
     show('Staked '+money(v)+' — ticker updated.');
     document.getElementById('amt').value='';
     await refresh();
-  });
+  }});
   document.getElementById('max-btn').addEventListener('click',function(){
     if(!state)return;
     var m=Math.min(state.pending,state.stakeable);
     document.getElementById('amt').value=(Math.floor(m*100)/100).toFixed(2);
   });
-  document.getElementById('claim-btn').addEventListener('click',async function(){
+  document.getElementById('claim-btn').addEventListener('click',function(){var __b=this;if(window.FavLoader){return FavLoader.withButton(__b,function(){return __claimWork();});}return __claimWork();async function __claimWork(){
     var r=await settleInvest(uid);
     if(r.yield>0){show('Claimed '+money(r.yield,6)+' to available.');try{track('invest_claim',{amount:r.yield});}catch(_){}}
     else show('Nothing to claim yet — earn a task today to ignite growth.');
     await refresh();
-  });
-  document.getElementById('unstake-btn').addEventListener('click',async function(){
+  }});
+  document.getElementById('unstake-btn').addEventListener('click',function(){var __b=this;if(window.FavLoader){return FavLoader.withButton(__b,function(){return __unstakeWork();});}return __unstakeWork();async function __unstakeWork(){
     var r=await unstakeAll(uid);
     if(!r.ok){
       if(r.reason==='seed-only')show('Only your $1 seed is invested — it stays growing.');
@@ -285,7 +312,7 @@ import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveSta
     }
     show('Unstaked '+money(r.amount)+' to available. Seed keeps growing.');
     await refresh();
-  });
+  }});
   /* ---- ad viewer: 20 visible seconds, focus-enforced, then boost ---- */
   var AD_MS=20000, adLeft=AD_MS, adTimer=null, adOpen=false;
   var ADS=[
@@ -325,7 +352,7 @@ import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveSta
   }
   document.getElementById('boost-btn').addEventListener('click',openAd);
   document.getElementById('ad-close').addEventListener('click',closeAd);
-  document.getElementById('ad-go').addEventListener('click',async function(){
+  document.getElementById('ad-go').addEventListener('click',function(){var __b=this;if(window.FavLoader){return FavLoader.withButton(__b,function(){return __boostWork();});}return __boostWork();async function __boostWork(){
     closeAd();
     var r=await activateBoost(uid);
     if(!r.ok){
@@ -336,7 +363,7 @@ import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveSta
     try{track('invest_boost');}catch(_){}
     show('Boost lit — 4,500% APR for 1 hour.');
     await refresh();
-  });
+  }});
   document.querySelectorAll('.faq-item button').forEach(function(b){
     b.addEventListener('click',function(){b.closest('.faq-item').classList.toggle('open');});
   });
@@ -352,6 +379,7 @@ import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveSta
         document.getElementById('user-chip').setAttribute('href','signin.html');
         document.getElementById('chip-name').textContent='Sign in';
         document.getElementById('chip-bal').textContent='—';
+        if(window.FavLoader)FavLoader.pageReady();
         return;
       }
       uid=user.uid;
@@ -365,6 +393,7 @@ import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveSta
         document.getElementById('chip-bal').textContent=money(w.pending);
       }catch(e){}
       await refresh();
+      if(window.FavLoader)FavLoader.pageReady();
       if(raf)cancelAnimationFrame(raf);
       lastPaint=0;raf=requestAnimationFrame(tickLoop);
     });

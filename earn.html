@@ -10,18 +10,11 @@
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(20,21,35,.35);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#01D676;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#01D676;border:0;cursor:pointer;align-items:center;justify-content:center;color:#0d1a13;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
+  <script src="js/loader.js"></script>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-<symbol id="earn-wheel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17M3.5 12h17M6 6l12 12M18 6 6 18"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></symbol>
-<symbol id="earn-drop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11Z"/><path d="M9.5 14a2.5 2.5 0 0 0 2.5 2.5" stroke-linecap="round"/></symbol>
-<symbol id="earn-store" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5 5.2 5h13.6L20 9.5"/><path d="M4 9.5V19h16V9.5"/><path d="M4 9.5a2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0"/><path d="M9.5 19v-4.5h5V19"/></symbol>
-<symbol id="earn-clip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4a3 3 0 0 1 6 0"/><path d="m10 13.5 2 2 4-4.5"/></symbol>
-<symbol id="earn-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l6-3.5Z" fill="currentColor" stroke="none"/></symbol>
-<symbol id="earn-cap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 4 10 4-10 4L2 8l10-4Z"/><path d="M6 10.5V15c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5"/><path d="M22 8v6"/></symbol>
-<symbol id="earn-dice" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1" fill="currentColor"/></symbol>
-<symbol id="earn-cards" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="15" rx="2" transform="rotate(8 12 12)"/><rect x="5" y="4" width="12" height="15" rx="2" transform="rotate(-6 11 11)"/></symbol>
-</defs></svg>
+<div id="page-loader" role="status" aria-label="Loading Favmoney"><div class="spinner" id="loader-spin" aria-hidden="true"></div><button id="loader-retry" type="button" aria-label="Retry loading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button></div><script>window.__favLoaderT0=window.__favLoaderT0||Date.now();(function(){setTimeout(function(){var o=document.getElementById("page-loader");if(o)o.classList.add("slow");},8000);var r=document.getElementById("loader-retry");if(r)r.addEventListener("click",function(){location.reload();});})();</script>
 <header class="topnav" id="topnav"><div class="topnav-inner">
 <a class="brand" href="index.html"><span class="brand-word"><span class="g">FAV</span><span class="w">MONEY</span></span></a>
 <nav class="nav-links" aria-label="Primary">
@@ -31,7 +24,7 @@
 <a href="rewards.html">Rewards<span class="dot"></span></a>
 <a href="withdraw.html">Cashout<span class="dot"></span></a>
 </nav>
-<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal">—</span><span id="chip-name">Sign in</span></a><button class="icon-btn" id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="ping"></span></button></div>
+<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal"><span class="skeleton" style="width:52px"></span></span><span id="chip-name"><span class="skeleton" style="width:64px"></span></span></a><button class="icon-btn" id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="ping"></span></button></div>
 </div></header>
 <main>
 <section class="page-hero"><div class="dash-shell">
@@ -41,15 +34,15 @@
 </div></section>
 <section class="section" style="padding-top:8px"><div class="dash-shell">
 <div class="sec-head"><h2>Choose how you earn</h2></div>
-<div class="task-grid">
-<a class="task" href="offerwalls.html" style="text-decoration:none;color:inherit"><div class="task-top"><div class="task-ico"><svg aria-hidden="true"><use href="#earn-store"/></svg></div><div><h3>Offers &amp; Apps</h3><div class="meta">Apps, games &amp; trials — biggest payouts</div></div></div></a>
-<a class="task" href="surveys.html" style="text-decoration:none;color:inherit"><div class="task-top"><div class="task-ico"><svg aria-hidden="true"><use href="#earn-clip"/></svg></div><div><h3>Paid Surveys</h3><div class="meta">Quick opinion polls — fast cash</div></div></div></a>
-<a class="task" href="ptc.html" style="text-decoration:none;color:inherit"><div class="task-top"><div class="task-ico"><svg aria-hidden="true"><use href="#earn-play"/></svg></div><div><h3>Watch Ads</h3><div class="meta">Short views, instant coins</div></div></div></a>
-<a class="task" href="learn.html" style="text-decoration:none;color:inherit"><div class="task-top"><div class="task-ico"><svg aria-hidden="true"><use href="#earn-cap"/></svg></div><div><h3>Quiz &amp; Earn</h3><div class="meta">Answer questions, get paid</div></div></div></a>
-<a class="task" href="faucet.html" style="text-decoration:none;color:inherit"><div class="task-top"><div class="task-ico"><svg aria-hidden="true"><use href="#earn-drop"/></svg></div><div><h3>Free Faucet</h3><div class="meta">Free claims every few minutes</div></div></div></a>
-<a class="task" href="spin.html" style="text-decoration:none;color:inherit"><div class="task-top"><div class="task-ico"><svg aria-hidden="true"><use href="#earn-wheel"/></svg></div><div><h3>Spin the Wheel</h3><div class="meta">Every spin wins</div></div></div></a>
-<a class="task" href="flip.html" style="text-decoration:none;color:inherit"><div class="task-top"><div class="task-ico"><svg aria-hidden="true"><use href="#earn-cards"/></svg></div><div><h3>Flip to Win</h3><div class="meta">Match pairs, win coins</div></div></div></a>
-<a class="task" href="dice.html" style="text-decoration:none;color:inherit"><div class="task-top"><div class="task-ico"><svg aria-hidden="true"><use href="#earn-dice"/></svg></div><div><h3>Dice Roll</h3><div class="meta">Roll the dice, win crypto</div></div></div></a>
+<div class="task-grid oc-list">
+<a class="oc-card oc-card--wide" href="offerwalls.html"><div class="oc-asset"><img src="images/offers-and-apps.png" alt="Gold dollar coin with app icons and stacked coins" loading="lazy" decoding="async" width="664" height="376"></div><div class="oc-body"><div class="oc-head"><div class="oc-title"><h2>Offers &amp; Apps</h2><span class="oc-hot oc-hot--red">Hot</span></div><div class="oc-pay">Up to <b>$150.00</b></div></div><p class="oc-desc">Download mobile games, test new applications, and reach milestones to earn big rewards.</p><div class="oc-base"><div class="oc-time"><small>Avg. Time</small><b>35 mins per offer</b></div><span class="oc-cta">Earn Now <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5l6 6m0 0l-6 6m6-6H3"/></svg></span></div></div></a>
+<a class="oc-card" href="surveys.html"><div class="oc-asset"><img src="images/paid-surveys.png" alt="Clipboard checklist with pencil and growth chart" loading="lazy" decoding="async" width="484" height="515"></div><div class="oc-body"><div class="oc-head"><div class="oc-title"><h2>Paid Surveys</h2><span class="oc-hot">Fast</span></div><div class="oc-pay">$1.50 - $5.00</div></div><p class="oc-desc">Share market research opinions and complete brand feedback questionnaires for instant cash.</p><div class="oc-base"><div class="oc-time"><small>Avg. Time</small><b>3 - 10 mins</b></div><span class="oc-cta">Start Survey <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5l6 6m0 0l-6 6m6-6H3"/></svg></span></div></div></a>
+<a class="oc-card" href="ptc.html"><div class="oc-asset"><img src="images/watch-ads.png" alt="Film reel and clapperboard" loading="lazy" decoding="async" width="484" height="515"></div><div class="oc-body"><div class="oc-head"><div class="oc-title"><h2>Watch Ads</h2><span class="oc-hot">PTC</span></div><div class="oc-pay">Instant Coins</div></div><p class="oc-desc">Watch short video advertisements and promotional clips to accumulate balance continuously.</p><div class="oc-base"><div class="oc-time"><small>Avg. Time</small><b>30 sec - 2 mins</b></div><span class="oc-cta">Watch Now <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5l6 6m0 0l-6 6m6-6H3"/></svg></span></div></div></a>
+<a class="oc-card" href="learn.html"><div class="oc-asset"><img src="images/quiz-and-earn.png" alt="Graduation cap on books with glowing brain and coins" loading="lazy" decoding="async" width="484" height="515"></div><div class="oc-body"><div class="oc-head"><div class="oc-title"><h2>Quiz &amp; Earn</h2><span class="oc-hot">Study</span></div><div class="oc-pay">Learn &amp; Earn</div></div><p class="oc-desc">Answer quick questions and complete mini-lessons to earn coins for every correct streak.</p><div class="oc-base"><div class="oc-time"><small>Avg. Time</small><b>2 - 5 mins</b></div><span class="oc-cta">Start Quiz <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5l6 6m0 0l-6 6m6-6H3"/></svg></span></div></div></a>
+<a class="oc-card" href="faucet.html"><div class="oc-asset"><img src="images/free-faucet.png" alt="Water tap dripping into a bowl of gold coins" loading="lazy" decoding="async" width="484" height="515"></div><div class="oc-body"><div class="oc-head"><div class="oc-title"><h2>Free Faucet</h2><span class="oc-hot">Every 5 min</span></div><div class="oc-pay">Free Claims</div></div><p class="oc-desc">Claim free coin rewards on a recurring automated timer without deposits or tasks.</p><div class="oc-base"><div class="oc-time"><small>Status</small><b>Ready to claim</b></div><span class="oc-cta">Claim Now <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5l6 6m0 0l-6 6m6-6H3"/></svg></span></div></div></a>
+<a class="oc-card" href="spin.html"><div class="oc-asset"><img src="images/spin-the-wheel.png" alt="Colorful prize wheel with cash multipliers" loading="lazy" decoding="async" width="484" height="515"></div><div class="oc-body"><div class="oc-head"><div class="oc-title"><h2>Spin the Wheel</h2><span class="oc-hot">Bonus</span></div><div class="oc-pay">Win Up to <b>10x</b></div></div><p class="oc-desc">Spin the daily prize wheel to win random balance multipliers and jackpot bonus points.</p><div class="oc-base"><div class="oc-time"><small>Limit</small><b>1 spin daily</b></div><span class="oc-cta">Spin Wheel <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5l6 6m0 0l-6 6m6-6H3"/></svg></span></div></div></a>
+<a class="oc-card" href="flip.html"><div class="oc-asset"><img src="images/flip-to-win.png" alt="Stacks of playing cards with gold edges" loading="lazy" decoding="async" width="484" height="515"></div><div class="oc-body"><div class="oc-head"><div class="oc-title"><h2>Flip to Win</h2><span class="oc-hot">Memory</span></div><div class="oc-pay">Match &amp; Win</div></div><p class="oc-desc">Flip cards and match identical pairs against the clock to win coins for every clear.</p><div class="oc-base"><div class="oc-time"><small>Avg. Time</small><b>2 - 4 mins</b></div><span class="oc-cta">Play Now <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5l6 6m0 0l-6 6m6-6H3"/></svg></span></div></div></a>
+<a class="oc-card" href="dice.html"><div class="oc-asset"><img src="images/dice-roll.png" alt="Two white dice with gold pips" loading="lazy" decoding="async" width="484" height="515"></div><div class="oc-body"><div class="oc-head"><div class="oc-title"><h2>Dice Roll</h2><span class="oc-hot">Provably Fair</span></div><div class="oc-pay">Instant Win</div></div><p class="oc-desc">Predict dice roll outcomes and claim instant crypto payouts powered by transparent fair logic.</p><div class="oc-base"><div class="oc-time"><small>Speed</small><b>Instant payout</b></div><span class="oc-cta">Roll Dice <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5l6 6m0 0l-6 6m6-6H3"/></svg></span></div></div></a>
 </div>
 </div></section>
 </main>
@@ -59,6 +52,8 @@
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, migrateLocal, wasMigrated, track } from './js/firebase.js';
 (function(){
+  if(window.FavLoader)FavLoader.hold();
+  setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
   var uid=null;
   var toast=document.getElementById('toast'),tm=null;
   function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3000);}
@@ -66,8 +61,10 @@ import { auth, onAuthStateChanged, getWallet, migrateLocal, wasMigrated, track }
     onAuthStateChanged(auth,async function(user){
       if(!user){
         uid=null;
+        if(window.FavLoader)FavLoader.pageReady();
         document.getElementById('auth-wall').style.display='';
         document.getElementById('user-chip').setAttribute('href','signin.html');
+        document.getElementById('chip-name').textContent='Sign in';
         return;
       }
       uid=user.uid;
@@ -78,9 +75,11 @@ import { auth, onAuthStateChanged, getWallet, migrateLocal, wasMigrated, track }
         if(!wasMigrated()){await migrateLocal(uid);show('Old browser balance moved to your account.');}
         var w=await getWallet(uid);
         document.getElementById('chip-bal').textContent='$'+Number(w.pending).toFixed(2);
+        if(window.FavLoader)FavLoader.pageReady();
       }catch(err){document.getElementById('chip-bal').textContent='$0.00';}
+      if(window.FavLoader)FavLoader.pageReady();
     });
-  }catch(e){document.getElementById('auth-wall').style.display='';}
+  }catch(e){document.getElementById('auth-wall').style.display='';if(window.FavLoader)FavLoader.pageReady();}
   document.getElementById('bell').addEventListener('click',function(){
     show('No new notifications.');
   });

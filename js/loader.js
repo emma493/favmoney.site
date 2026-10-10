@@ -76,9 +76,11 @@
       bindRetry();
     },
     hold: function () {
-      // Data page takes control: cancel auto-hide, wait for explicit pageReady().
-      readyCalled = true;
-      autoScheduled = true;
+      // Data pages used to wait for explicit pageReady() (auth + wallet fetch),
+      // which tied first paint to backend latency. hold() no longer blocks the
+      // load+600ms auto-release in scheduleAuto(); skeletons already cover slow
+      // data. pageReady() stays valid and idempotent for early release.
+      bindRetry();
     },
     pageReady: function () {
       readyCalled = true;

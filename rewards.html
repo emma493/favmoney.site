@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rewards · Favmoney</title>
+  <meta name="description" content="Claim task-completion milestones on Favmoney: ads, quests, invites, streaks and Grow actions pay $0.10 to $2.00 each." />
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
@@ -11,6 +12,32 @@
   <link rel="stylesheet" href="css/style.css" />
   <style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(20,21,35,.35);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#01D676;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#01D676;border:0;cursor:pointer;align-items:center;justify-content:center;color:#0d1a13;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
   <script src="js/loader.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .ready-banner{display:flex;gap:14px;align-items:center;background:radial-gradient(400px 160px at 50% 0%,rgba(255,215,94,.14),transparent 70%),linear-gradient(180deg,#232544,#181a30);border:1px solid rgba(255,215,94,.4);border-radius:16px;padding:18px;margin-top:16px}
+    .ready-banner .big{font-size:28px;font-weight:800;color:#ffd75e;font-variant-numeric:tabular-nums}
+    .ready-banner p{margin:2px 0 0;font-size:13px;color:var(--muted)}
+    .ready-banner .btn{margin-left:auto;flex:none}
+    .ms-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+    @media(max-width:860px){.ms-grid{grid-template-columns:1fr}}
+    .ms-card{background:var(--card-2);border:1px solid var(--line-soft);border-radius:16px;padding:18px}
+    .ms-card.ready{border-color:rgba(1,214,118,.5);box-shadow:0 0 0 3px rgba(1,214,118,.15)}
+    .ms-head{display:flex;gap:12px;align-items:center}
+    .ms-ico{flex:none;width:48px;height:48px;border-radius:12px;background:rgba(1,214,118,.12);border:1px solid rgba(1,214,118,.3);display:flex;align-items:center;justify-content:center;color:#8ff0bd}
+    .ms-ico svg{width:24px;height:24px}
+    .ms-head b{font-size:15px;display:block}
+    .ms-head span{font-size:12px;color:var(--muted)}
+    .ms-count{margin-left:auto;flex:none;font-size:12px;font-weight:800;color:#ffd75e;background:rgba(255,215,94,.1);border:1px solid rgba(255,215,94,.3);border-radius:999px;padding:3px 10px;white-space:nowrap}
+    .ms-count.done{color:#8ff0bd;background:rgba(1,214,118,.12);border-color:rgba(1,214,118,.35)}
+    .tier{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:13px}
+    .tier .tinfo{flex:1;min-width:0}
+    .tier .tinfo small{color:var(--faint)}
+    .tier .tbar{height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:5px}
+    .tier .tbar i{display:block;height:100%;background:var(--green);border-radius:3px;transition:width .3s}
+    .tier .btn{min-height:40px;padding:8px 14px;font-size:13px;flex:none}
+    .tier.locked{opacity:.75}
+    @media(max-width:640px){.ready-banner{flex-wrap:wrap}.ready-banner .btn{flex:1 1 100%;min-height:48px}.tier .btn{min-height:44px}}
+  </style>
 </head>
 <body>
 <div id="page-loader" role="status" aria-label="Loading Favmoney"><div class="spinner" id="loader-spin" aria-hidden="true"></div><button id="loader-retry" type="button" aria-label="Retry loading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button></div><script>window.__favLoaderT0=window.__favLoaderT0||Date.now();(function(){setTimeout(function(){var o=document.getElementById("page-loader");if(o)o.classList.add("slow");},8000);var r=document.getElementById("loader-retry");if(r)r.addEventListener("click",function(){location.reload();});})();</script>
@@ -23,27 +50,191 @@
 <a href="rewards.html" class="active">Rewards<span class="dot"></span></a>
 <a href="withdraw.html">Cashout<span class="dot"></span></a>
 </nav>
-<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal"><span class="skeleton" style="width:52px"></span></span><span id="chip-name"><span class="skeleton" style="width:64px"></span></span></a></div>
+<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal"><span class="skeleton" style="width:52px"></span></span><span id="chip-name"><span class="skeleton" style="width:64px"></span></span></a><button class="icon-btn" id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="ping"></span><span class="nbadge" id="bell-badge" style="display:none"></span></button></div>
 </div></header>
-<main style="min-height:70vh"></main>
-<nav class="mobilenav" aria-label="Mobile"><a href="earn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="grow.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Grow</a><a href="invite.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M18 8v6M15 11h6"/></svg>Invite</a><a href="rewards.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="12" rx="1.5"/><path d="M4 13h16M12 9v12M12 9S7.5 9 6 7.5 5.5 4.8 7 4.5 12 9 12 9Zm0 0s4.5 0 6-1.5S18.5 4.8 17 4.5 12 9 12 9Z"/></svg>Rewards</a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
+<main>
+<section class="page-hero"><div class="dash-shell" style="max-width:1000px">
+<h1 class="dash-title">Rewards</h1>
+<p>Every task has a milestone. Hit the target, claim the cash — $0.10 to $2.00 per tier, straight to your balance.</p>
+<div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to earn milestones.</div>
+
+<div class="bonus-card" id="guest-card" style="display:none">
+<h2 style="margin:0 0 6px;font-size:20px">32 milestones worth $28.80.</h2>
+<p style="color:var(--muted);font-size:14px;margin:0 0 16px">Watch ads, finish quests, invite friends, keep streaks, grow your balance — each track pays 4 tiers. Free account, no deposit.</p>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<a class="btn btn-green" href="signup.html" style="min-height:48px">Create free account</a>
+<a class="btn btn-ghost" href="signin.html" style="min-height:48px">Sign in</a>
+</div>
+</div>
+
+<div id="member-zone" style="display:none">
+<div class="ready-banner" id="ready-banner" style="display:none">
+<div><div class="big" id="ready-total">$0.00</div><p id="ready-sub">ready to claim</p></div>
+<button class="btn btn-green" id="ready-go">Claim below</button>
+</div>
+
+<h2 style="font-size:20px;margin:26px 0 0">Task milestones</h2>
+<div class="ms-grid" id="ms-cards"><div class="ms-card"><span class="skeleton" style="width:70%"></span></div><div class="ms-card"><span class="skeleton" style="width:60%"></span></div></div>
+
+<h2 style="font-size:20px;margin:26px 0 0">Bonus tracks</h2>
+<div class="ms-grid" id="ms-bonus"></div>
+
+<h2 style="font-size:20px;margin:30px 0 0">Claim history</h2>
+<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Milestone</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody id="rw-rows"><tr class="skel"><td colspan="4"><span class="skeleton" style="width:80%"></span></td></tr></tbody></table></div>
+
+<h2 style="font-size:20px;margin:30px 0 0">Good to know</h2>
+<div class="faq" style="margin-top:14px">
+<div class="faq-item"><button>What counts toward each card?<span class="plus">+</span></button><div class="a"><div><p>Verified completions: finished offers, surveys, quizzes, ad views, faucet claims, spins, cleared flip games, dice rolls, joined friends, active-day streaks and Grow actions. Counters never decrease.</p></div></div></div>
+<div class="faq-item"><button>Why is a card sitting at 0?<span class="plus">+</span></button><div class="a"><div><p>Some games are still opening. A card starts counting the moment its game goes live — nothing is lost, and milestones never expire.</p></div></div></div>
+<div class="faq-item"><button>Where does claimed cash go?<span class="plus">+</span></button><div class="a"><div><p>Straight to available balance, counting toward the $5 cashout like any task earning — and it can be staked in Grow.</p></div></div></div>
+<div class="faq-item"><button>Can I claim a tier twice?<span class="plus">+</span></button><div class="a"><div><p>No. Each tier pays once ever. The claim is re-checked before paying, so double-taps and stale tabs can't double-pay.</p></div></div></div>
+</div>
+</div>
+</div></section>
+</main>
+<footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="earn.html">Earn</a> · <a href="withdraw.html">Cashout</a></span></div></div></footer>
+<nav class="mobilenav" aria-label="Mobile"><a href="earn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="grow.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Grow</a><a href="invite.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M18 8v6M15 11h6"/></svg>Invite</a><a href="rewards.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="12" rx="1.5"/><path d="M4 13h16M12 9v12M12 9S7.5 9 6 7.5 5.5 4.8 7 4.5 12 9 12 9Zm0 0s4.5 0 6-1.5S18.5 4.8 17 4.5 12 9 12 9Z"/></svg>Rewards<span class="navdot" id="navdot-rewards" style="display:none"></span></a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
+<div class="toast" id="toast" role="status"></div>
+<script>if(window.lucide){try{lucide.createIcons();}catch(e){}}</script>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet } from './js/firebase.js';
-if (window.FavLoader) FavLoader.hold();
-(function () {
-  function ready() { if (window.FavLoader) FavLoader.pageReady(); }
-  try {
-    onAuthStateChanged(auth, async function (user) {
-      if (!user) { document.getElementById('chip-bal').textContent='—'; document.getElementById('chip-name').textContent='Sign in'; document.getElementById('user-chip').setAttribute('href','signin.html'); ready(); return; }
-      try {
-        var w = await getWallet(user.uid);
-        document.getElementById('chip-bal').textContent = '$' + Number(w.pending).toFixed(2);
-        document.getElementById('chip-name').textContent = (user.email || 'Member').split('@')[0];
-      } catch (e) {}
-      ready();
+import { auth, onAuthStateChanged, getWallet, getRewardsProgress, claimMilestone, fetchUserDocs, track } from './js/firebase.js';
+(function(){
+  if(window.FavLoader)FavLoader.hold();
+  setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
+  var uid=null, unclaimedN=0;
+  var toast=document.getElementById('toast'),tm=null;
+  function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
+  function money(n,d){return '$'+Number(n||0).toFixed(d==null?2:d);}
+  function relDate(ts){
+    if(!ts)return 'recently';
+    var ms=ts.seconds?ts.seconds*1000:new Date(ts).getTime();
+    if(!ms)return 'recently';
+    var d=Math.max(0,Math.round((Date.now()-ms)/864e5));
+    if(d===0)return 'today';if(d===1)return '1 day ago';if(d<30)return d+' days ago';
+    return Math.floor(d/30)+'mo ago';
+  }
+  var UNITS={offers:['offer','offers'],surveys:['survey','surveys'],ads:['ad','ads'],quiz:['quiz','quizzes'],faucet:['claim','claims'],spin:['spin','spins'],flip:['game','games'],dice:['roll','rolls'],invite:['friend','friends'],streak:['day','days']};
+  var GROW_TITLES=['First stake — invest anything','First boost — light one ad boost','First harvest — claim Grow yield','Big staker — $25 staked total'];
+  function tierLabel(t,i,tr){
+    if(t.id==='grow')return GROW_TITLES[i];
+    var u=UNITS[t.id]||['task','tasks'];
+    var n=tr.target+(tr.target===1?' '+u[0]:' '+u[1]);
+    return 'Tier '+(i+1)+' · '+n;
+  }
+  function tierProgress(t,tr){
+    if(t.id==='grow'&&tr.target===25)return money(Math.min(tr.progress,tr.target),0)+' / '+money(tr.target,0);
+    return Math.min(tr.progress,tr.target)+' / '+tr.target;
+  }
+  function cardHTML(t){
+    var ready=t.tiers.filter(function(x){return x.unlocked&&!x.claimed;}).length;
+    var claimedN=t.tiers.filter(function(x){return x.claimed;}).length;
+    var badge=claimedN===4?'<span class="ms-count done">All claimed</span>':(ready>0?'<span class="ms-count">'+ready+' to claim</span>':'<span class="ms-count" style="color:var(--muted);background:rgba(255,255,255,.05);border-color:var(--line)">In progress</span>');
+    var tiers=t.tiers.map(function(tr,i){
+      var pct=Math.min(100,Math.round(tr.progress/tr.target*100));
+      var right;
+      if(tr.claimed)right='<span class="pill paid">Claimed</span>';
+      else if(tr.unlocked)right='<button class="btn btn-green" data-claim="'+t.id+':'+i+'">Claim '+money(tr.amount)+'</button>';
+      else right='<small style="color:var(--faint);flex:none">'+(tr.target-tr.progress)+' left</small>';
+      return '<div class="tier'+(tr.unlocked||tr.claimed?'':' locked')+'"><div class="tinfo"><b style="font-size:13px">'+tierLabel(t,i,tr)+'</b><div class="tbar"><i style="width:'+pct+'%"></i></div><small>'+tierProgress(t,tr)+' · pays '+money(tr.amount)+'</small></div>'+right+'</div>';
+    }).join('');
+    return '<div class="ms-card'+(ready>0?' ready':'')+'"><div class="ms-head"><div class="ms-ico"><i data-lucide="'+t.icon+'" aria-hidden="true"></i></div><div><b>'+t.name+'</b><span>'+t.tag+'</span></div>'+badge+'</div>'+tiers+'</div>';
+  }
+  function paintBadges(n){
+    unclaimedN=n;
+    var bb=document.getElementById('bell-badge');
+    if(bb){if(n>0){bb.textContent=n>9?'9+':n;bb.style.display='flex';}else{bb.style.display='none';}}
+    var bell=document.getElementById('bell');
+    if(bell){var ping=bell.querySelector('.ping');if(ping)ping.style.display=n>0?'':'none';}
+    var nd=document.getElementById('navdot-rewards');
+    if(nd){if(n>0){nd.textContent=n>9?'9+':n;nd.style.display='flex';}else{nd.style.display='none';}}
+  }
+  async function refresh(){
+    if(!uid)return;
+    try{
+      var p=await getRewardsProgress(uid);
+      var cards=p.tracks.filter(function(t){return ['offers','surveys','ads','quiz','faucet','spin','flip','dice'].indexOf(t.id)>=0;});
+      var bonus=p.tracks.filter(function(t){return ['invite','streak','grow'].indexOf(t.id)>=0;});
+      document.getElementById('ms-cards').innerHTML=cards.map(cardHTML).join('');
+      document.getElementById('ms-bonus').innerHTML=bonus.map(cardHTML).join('');
+      if(window.lucide){try{lucide.createIcons();}catch(e){}}
+      paintBadges(p.unclaimed);
+      var rb=document.getElementById('ready-banner');
+      if(p.unclaimed>0){rb.style.display='';document.getElementById('ready-total').textContent=money(p.unclaimedTotal);document.getElementById('ready-sub').textContent=p.unclaimed+(p.unclaimed===1?' reward':' rewards')+' ready to claim';}
+      else{rb.style.display='none';}
+      try{
+        var w=await getWallet(uid);
+        document.getElementById('chip-bal').textContent=money(w.pending);
+      }catch(e){}
+    }catch(e){}
+    try{
+      var proofs=await fetchUserDocs(uid,'proofs',100);
+      var rows=proofs.filter(function(x){return x.label==='task-reward';});
+      var body=document.getElementById('rw-rows');
+      if(!rows.length){body.innerHTML='<tr><td colspan="4" style="color:var(--muted)">Nothing claimed yet. Hit a tier above to start the list.</td></tr>';}
+      else{
+        body.innerHTML=rows.slice(0,20).map(function(x){
+          return '<tr><td>'+String(x.milestone||'milestone')+'</td><td>'+money(x.amount)+'</td><td><span class="pill paid">Paid</span></td><td>'+relDate(x.at)+'</td></tr>';
+        }).join('');
+      }
+    }catch(e){}
+  }
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('[data-claim]');
+    if(!b||b.disabled)return;
+    var parts=b.getAttribute('data-claim').split(':');
+    if(window.FavLoader){return FavLoader.withButton(b,function(){return __claimWork(parts[0],parseInt(parts[1],10));});}
+    return __claimWork(parts[0],parseInt(parts[1],10));
+    async function __claimWork(trackId,tierIdx){
+      var r=await claimMilestone(uid,trackId,tierIdx);
+      if(!r.ok){
+        if(r.reason==='locked')show('Not unlocked yet — keep going.');
+        else if(r.reason==='claimed')show('Already claimed.');
+        else show('Claim failed — check connection and rules.');
+        return;
+      }
+      try{track('milestone_claim',{milestone:trackId+':'+tierIdx});}catch(_){}
+      show('Claimed '+money(r.amount)+' to available.');
+      await refresh();
+    }
+  });
+  document.getElementById('ready-go').addEventListener('click',function(){
+    var first=document.querySelector('[data-claim]');
+    if(first){first.scrollIntoView({block:'center'});}
+  });
+  document.getElementById('bell').addEventListener('click',function(){
+    show(unclaimedN>0?(unclaimedN+(unclaimedN===1?' reward':' rewards')+' ready — claim below.'):('No new notifications.'));
+  });
+  document.querySelectorAll('.faq-item button').forEach(function(b){
+    b.addEventListener('click',function(){b.closest('.faq-item').classList.toggle('open');});
+  });
+  try{
+    onAuthStateChanged(auth,async function(user){
+      if(!user){
+        uid=null;
+        document.getElementById('auth-wall').style.display='';
+        document.getElementById('guest-card').style.display='';
+        document.getElementById('member-zone').style.display='none';
+        document.getElementById('user-chip').setAttribute('href','signin.html');
+        document.getElementById('chip-name').textContent='Sign in';
+        document.getElementById('chip-bal').textContent='—';
+        paintBadges(0);
+        if(window.FavLoader)FavLoader.pageReady();
+        return;
+      }
+      uid=user.uid;
+      document.getElementById('auth-wall').style.display='none';
+      document.getElementById('guest-card').style.display='none';
+      document.getElementById('member-zone').style.display='';
+      document.getElementById('user-chip').setAttribute('href','profile.html');
+      document.getElementById('chip-name').textContent=(user.email||'Member').split('@')[0];
+      await refresh();
+      if(window.FavLoader)FavLoader.pageReady();
     });
-  } catch (e) { ready(); }
-  setTimeout(ready, 6000);
+  }catch(e){
+    document.getElementById('auth-wall').style.display='';
+    document.getElementById('guest-card').style.display='';
+  }
+  var root=document.documentElement;function onS(){if(scrollY>0)root.setAttribute('data-top-nav-scrolled','true');else root.removeAttribute('data-top-nav-scrolled');}addEventListener('scroll',onS,{passive:true});onS();
 })();
 </script>
 </body>

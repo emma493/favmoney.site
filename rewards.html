@@ -116,7 +116,7 @@ import { auth, onAuthStateChanged, getWallet, getRewardsProgress, claimMilestone
   var UNITS={offers:['offer','offers'],surveys:['survey','surveys'],ads:['ad','ads'],quiz:['quiz','quizzes'],faucet:['claim','claims'],spin:['spin','spins'],invite:['friend','friends'],streak:['day','days']};
   var GROW_TITLES=['First stake — invest anything','First boost — light one ad boost','First harvest — claim Grow yield','Big staker — $25 staked total'];
   var LINKS={offers:['earn.html','View on Earn'],surveys:['earn.html','View on Earn'],ads:['grow.html','Boost on Grow'],quiz:['earn.html','View on Earn'],faucet:['earn.html','View on Earn'],spin:['earn.html','View on Earn'],invite:['invite.html','Invite friends'],streak:['earn.html','Earn today'],grow:['grow.html','Open Grow']};
-  var UNLAUNCHED=['offers','surveys','quiz','faucet','spin'];
+  var UNLAUNCHED=['offers','surveys','quiz','spin'];
   function tierLabel(t,i,tr){
     if(t.id==='welcome')return 'New here — gift unlocked';
     if(t.id==='grow')return GROW_TITLES[i];

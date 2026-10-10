@@ -542,6 +542,70 @@ export async function playSpin(uid, mode, rand) {
   return { ok: true, prize };
 }
 
+// ---- Free Faucet: $0.15 drip per 5-min claim, 10 paid claims per UTC day ----
+// Timer-only anti-bot at launch: visible countdown + cooldown enforced on a
+// re-read of the user's own proofs before every pay (same pattern as
+// claimMilestone), so double-taps and stale tabs cannot double-pay. Claims
+// flow through creditReward(uid, 0.15, 'play:faucet') so the Rewards faucet
+// track, Grow taskEarned/activeDays gate, and referral commission all pick
+// them up with no rules change (status 'pending' passes with any label).
+// Max exposure is bounded: 10 x $0.15 = $1.50/user/day.
+export const FAUCET_AMOUNT = 0.15;
+export const FAUCET_INTERVAL_MS = 5 * 60000;
+export const FAUCET_DAILY_CAP = 10;
+
+// Pure: ms timestamp of a proof row. Server Timestamps expose .seconds;
+// a just-written local estimate may carry null — treat as just-now (which
+// keeps the cooldown active, the safe direction).
+export function proofMs(p, nowMs) {
+  try {
+    const now = Number(nowMs || Date.now());
+    if (!p) return 0;
+    const at = p.at;
+    if (at == null) return now;
+    if (typeof at === 'number') return at > 1e12 ? at : (at > 1e9 ? at * 1000 : now);
+    if (typeof at.seconds === 'number') return at.seconds * 1000;
+    const t = new Date(at).getTime();
+    return isNaN(t) ? 0 : t;
+  } catch (_) { return 0; }
+}
+
+// Pure faucet state from an array of proof rows — no Firestore.
+// Returns { ready, waitMs, claimedToday, remainingToday, lastClaimMs, resetMs }.
+export function faucetState(proofs, nowMs) {
+  const now = Number(nowMs || Date.now());
+  const today = utcDayStr(now);
+  let last = 0, todayN = 0;
+  for (const p of (Array.isArray(proofs) ? proofs : [])) {
+    if (String((p && p.label) || '') !== 'play:faucet') continue;
+    const ms = proofMs(p, now);
+    if (ms > last) last = ms;
+    if (utcDayStr(ms) === today) todayN++;
+  }
+  const waitMs = Math.max(0, last + FAUCET_INTERVAL_MS - now);
+  const remainingToday = Math.max(0, FAUCET_DAILY_CAP - todayN);
+  return {
+    ready: waitMs <= 0 && remainingToday > 0,
+    waitMs, claimedToday: todayN, remainingToday, lastClaimMs: last,
+    capped: remainingToday <= 0,
+    resetMs: spinResetMs(now)
+  };
+}
+
+// Claim one paid drip. Returns { ok:true, amount } or
+// { ok:false, reason:'cooldown'|'capped'|'write', waitMs?, remainingToday? }.
+export async function claimFaucet(uid) {
+  let proofs = [];
+  try { proofs = await fetchUserDocs(uid, 'proofs', 100); } catch (_) { return { ok: false, reason: 'write' }; }
+  const st = faucetState(proofs, Date.now());
+  if (st.capped) return { ok: false, reason: 'capped', remainingToday: 0, resetMs: st.resetMs };
+  if (!st.ready) return { ok: false, reason: 'cooldown', waitMs: st.waitMs, remainingToday: st.remainingToday };
+  try {
+    await creditReward(uid, FAUCET_AMOUNT, 'play:faucet');
+  } catch (_) { return { ok: false, reason: 'write' }; }
+  return { ok: true, amount: FAUCET_AMOUNT, remainingToday: st.remainingToday - 1 };
+}
+
 // ---- Rewards milestones: task-completion tracks claimed on rewards.html ----
 // Card tracks count proofs written by each game page via
 // creditReward(uid, amount, 'play:<card>') (status 'pending' passes rules with

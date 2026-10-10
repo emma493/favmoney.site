@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Free Faucet · Favmoney</title>
+<meta name="description" content="Claim a free $0.15 drip every 5 minutes on Favmoney, up to 10 times a day. No deposit." />
 <meta name="robots" content="noindex, nofollow" />
 <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -27,37 +28,153 @@
 <main>
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
 <h1 class="dash-title">Free Faucet</h1>
-<p>Claim free coin rewards on a recurring timer. This quest opens next — your balance stays safe.</p>
+<p>Claim a free <b>$0.15</b> drip every <b>5 minutes</b> — up to <b>10 times a day</b>. No deposit, timer-verified.</p>
+<div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to claim the drip.</div>
 <div class="bonus-card" id="faucet-card">
-<h2 style="margin:0 0 6px;font-size:20px">Faucet drips soon</h2>
-<p style="color:var(--muted);font-size:14px;margin:0 0 16px">We are wiring the 5-minute claim timer. Meanwhile, earn on live quests.</p>
-<p><span class="skeleton" style="width:70%"></span></p>
-<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-<a class="btn btn-green" href="earn.html" style="min-height:48px">Back to Earn</a>
-<a class="btn btn-ghost" href="spin.html" style="min-height:48px">Try Spin instead</a>
+<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+<div><div class="big" id="faucet-amount" style="font-size:28px;font-weight:800;color:#ffd75e;font-variant-numeric:tabular-nums">$0.15</div>
+<p id="faucet-status" style="color:var(--muted);font-size:14px;margin:2px 0 0">Checking your drip…</p></div>
+<button class="btn btn-green" id="claim-btn" style="margin-left:auto;min-height:48px;min-width:170px" disabled>Claim $0.15</button>
 </div>
+<div class="prog" style="margin:14px 0 0"><i id="faucet-bar" style="width:0%"></i></div>
+<p id="faucet-sub" style="color:var(--faint);font-size:12px;margin:8px 0 0">10 claims daily · resets UTC midnight.</p>
 </div>
+<h2 style="font-size:20px;margin:26px 0 0">Recent drips</h2>
+<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Amount</th><th>Date</th></tr></thead><tbody id="f-rows"><tr><td colspan="2" style="color:var(--muted)">Sign in to see your claims.</td></tr></tbody></table></div>
 </div></section>
 </main>
 <footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="earn.html">Earn</a></span></div></div></footer>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet } from './js/firebase.js';
+import { auth, onAuthStateChanged, getWallet, fetchUserDocs, faucetState, claimFaucet, getUnclaimedRewards, track, FAUCET_AMOUNT, FAUCET_INTERVAL_MS, FAUCET_DAILY_CAP } from './js/firebase.js';
+import { paintDualChip, startDiamondChest } from './js/diamonds.js';
 if (window.FavLoader) FavLoader.hold();
 (function () {
-  function ready() { if (window.FavLoader) FavLoader.pageReady(); }
-  try {
-    onAuthStateChanged(auth, async function (user) {
-      if (!user) { document.getElementById('chip-bal').textContent='\u2014'; document.getElementById('chip-name').textContent='Sign in'; ready(); return; }
-      try {
-        var w = await getWallet(user.uid);
-        document.getElementById('chip-bal').textContent = '$' + Number(w.pending).toFixed(2);
-        document.getElementById('chip-name').textContent = (user.email || 'Member').split('@')[0];
-      } catch (e) {}
+  var uid=null, stopChest=null, proofs=[], tickTimer=null;
+  var toast=document.getElementById('toast'), tm=null;
+  function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
+  function money(n,d){return '$'+Number(n||0).toFixed(d==null?2:d);}
+  function msToClock(ms){
+    ms=Math.max(0,ms);var s=Math.ceil(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),ss=s%60;
+    function p(x){return (x<10?'0':'')+x;}
+    if(h>0)return p(h)+':'+p(m)+':'+p(ss);
+    return p(m)+':'+p(ss);
+  }
+  function relDate(ts){
+    if(!ts)return 'recently';
+    var ms=ts.seconds?ts.seconds*1000:new Date(ts).getTime();
+    if(!ms)return 'recently';
+    var d=Math.max(0,Math.round((Date.now()-ms)/864e5));
+    if(d===0)return 'today';if(d===1)return '1 day ago';if(d<30)return d+' days ago';
+    return Math.floor(d/30)+'mo ago';
+  }
+  // Instant local assist for the countdown (authority stays server proofs).
+  function localLast(){
+    try{var v=parseInt(localStorage.getItem('fav_faucet_last')||'0',10);return isFinite(v)?v:0;}catch(e){return 0;}
+  }
+  function paint(){
+    var btn=document.getElementById('claim-btn'),
+        st=document.getElementById('faucet-status'),
+        sub=document.getElementById('faucet-sub'),
+        bar=document.getElementById('faucet-bar');
+    var now=Date.now();
+    var s=faucetState(proofs, now);
+    // Fold in the instant local stamp so the button flips without a refetch.
+    var ll=localLast();
+    if(ll>s.lastClaimMs){s=faucetState(proofs.concat([{label:'play:faucet',at:ll}]), now);}
+    if(s.capped){
+      btn.disabled=true;btn.textContent='Daily max reached';
+      st.textContent='10 of 10 claimed — fresh drips at UTC midnight.';
+      if(bar)bar.style.width='100%';
+    }else if(s.ready){
+      btn.disabled=false;btn.textContent='Claim '+money(FAUCET_AMOUNT);
+      st.textContent='Drip ready — '+s.remainingToday+' of '+FAUCET_DAILY_CAP+' left today.';
+      if(bar)bar.style.width='100%';
+    }else{
+      btn.disabled=true;btn.textContent='Next in '+msToClock(s.waitMs);
+      st.textContent='Next drip in '+msToClock(s.waitMs)+' — '+s.remainingToday+' of '+FAUCET_DAILY_CAP+' left today.';
+      if(bar)bar.style.width=Math.min(100,Math.round((FAUCET_INTERVAL_MS-s.waitMs)/FAUCET_INTERVAL_MS*100))+'%';
+    }
+    if(sub)sub.textContent=s.remainingToday+' claims left today · resets UTC midnight.';
+  }
+  function paintRows(){
+    var body=document.getElementById('f-rows');
+    var rows=(proofs||[]).filter(function(p){return String((p&&p.label)||'')==='play:faucet';}).slice(0,10);
+    if(!rows.length){body.innerHTML='<tr><td colspan="2" style="color:var(--muted)">No drips yet — your first $0.15 is one tap away.</td></tr>';return;}
+    body.innerHTML=rows.map(function(p){
+      return '<tr><td>'+money(p.amount!=null?p.amount:FAUCET_AMOUNT)+'</td><td>'+relDate(p.at)+'</td></tr>';
+    }).join('');
+  }
+  async function refresh(notify){
+    if(!uid)return;
+    try{
+      proofs=await fetchUserDocs(uid,'proofs',100);
+      paint();paintRows();
+      if(notify){
+        try{
+          var w=await getWallet(uid);
+          paintDualChip(w.pending,w.diamonds);
+        }catch(e){}
+      }
+    }catch(e){paint();}
+  }
+  async function doClaim(){
+    var r;
+    try{r=await claimFaucet(uid);}
+    catch(e){show('Claim failed — check connection and try again.');return;}
+    if(!r.ok){
+      if(r.reason==='capped')show('Daily max reached — back at UTC midnight.');
+      else if(r.reason==='cooldown')show('Too soon — next drip in '+msToClock(r.waitMs)+'.');
+      else show('Claim failed — check connection and try again.');
+      await refresh(false);
+      return;
+    }
+    try{localStorage.setItem('fav_faucet_last',String(Date.now()));}catch(e){}
+    try{track('faucet_claim',{amount:r.amount});}catch(_){}
+    show('Claimed '+money(r.amount)+' to available.');
+    await refresh(true);
+  }
+  document.getElementById('claim-btn').addEventListener('click',function(){
+    var b=this;
+    if(b.disabled)return;
+    if(window.FavLoader){return FavLoader.withButton(b,doClaim);}
+    return doClaim();
+  });
+  function ready(){if(window.FavLoader)FavLoader.pageReady();}
+  try{
+    onAuthStateChanged(auth,async function(user){
+      if(!user){
+        uid=null;proofs=[];
+        if(stopChest){try{stopChest();}catch(_){}stopChest=null;}
+        if(tickTimer){clearInterval(tickTimer);tickTimer=null;}
+        document.getElementById('auth-wall').style.display='';
+        document.getElementById('user-chip').setAttribute('href','signin.html');
+        document.getElementById('chip-bal').textContent='—';
+        document.getElementById('chip-name').textContent='Sign in';
+        document.getElementById('claim-btn').disabled=true;
+        document.getElementById('faucet-status').textContent='Sign in to claim the drip.';
+        document.getElementById('f-rows').innerHTML='<tr><td colspan="2" style="color:var(--muted)">Sign in to see your claims.</td></tr>';
+        ready();return;
+      }
+      uid=user.uid;
+      document.getElementById('auth-wall').style.display='none';
+      document.getElementById('user-chip').setAttribute('href','profile.html');
+      document.getElementById('chip-name').textContent=(user.email||'Member').split('@')[0];
+      try{
+        var w=await getWallet(uid);
+        paintDualChip(w.pending,w.diamonds);
+        if(stopChest){try{stopChest();}catch(_){}}
+        stopChest=startDiamondChest(uid,{onBalance:function(w2){paintDualChip(w2.pending,w2.diamonds);}});
+        try{await getUnclaimedRewards(uid);}catch(_){}
+      }catch(e){}
+      await refresh(false);
+      if(tickTimer)clearInterval(tickTimer);
+      tickTimer=setInterval(paint,1000);
+      try{setInterval(function(){refresh(false);},20000);}catch(e){}
       ready();
     });
-  } catch (e) { ready(); }
-  setTimeout(ready, 6000);
+  }catch(e){ready();}
+  setTimeout(ready,6000);
 })();
 </script>
 </body>

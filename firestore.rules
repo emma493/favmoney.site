@@ -15,6 +15,11 @@
 // spin-ticket / spin-free / spin-extra (amount 0 bookkeeping).
 // proofs rows with label diamond-* carry amount 0 (USD untouched) plus an
 // optional signed diamonds delta for history.
+// Admin model (Fav-Admin ops console): admin/owner holds the single-seat uid.
+// isAdmin() unlocks cross-user list/get on users/wallets/proofs/cashouts/
+// referrals/commissions, bounded wallet adjusts (shape-checked), audit proofs
+// (any uid, amount <= 100, labelled), and cashout decisions review ->
+// paid|rejected with nothing else changing. PASTE THIS FILE after editing.
 // NOTE: client-side increments are validated for shape here; full authoritative
 // accounting (server-set amounts) needs a Cloud Function when backend lands.
 rules_version = '2';
@@ -26,12 +31,22 @@ service cloud.firestore {
     function authed() {
       return request.auth != null;
     }
+    // Single-seat admin: the uid recorded in admin/owner. Powers below are
+    // read-mostly; writes are tightly bounded (adjust <= $100 with a full
+    // audit proof, cashouts review -> paid|rejected only). Full authority
+    // still needs a backend; these rules only unlock an ops console.
+    function isAdmin() {
+      return authed()
+        && exists(/databases/$(database)/documents/admin/owner)
+        && get(/databases/$(database)/documents/admin/owner).data.uid == request.auth.uid;
+    }
     function isCode(s) {
       return s is string && s.matches('^[A-Z]{6}$');
     }
 
     match /users/{userId} {
       allow read: if self(userId);
+      allow list, get: if isAdmin();
       allow create: if self(userId)
         && request.resource.data.keys().hasOnly(['email', 'provider', 'createdAt', 'updatedAt', 'streak', 'started', 'claimedQuests', 'refcode', 'referredBy', 'myCode', 'taskEarned', 'investedUser', 'activeDays', 'lastSpinDay', 'spinTickets', 'spinCount', 'spinWon'])
         && (request.resource.data.email is string || request.resource.data.email == null)
@@ -88,6 +103,7 @@ service cloud.firestore {
         && request.resource.data.claimed == false;
       allow read: if authed()
         && (resource.data.ownerUid == request.auth.uid || resource.data.newUid == request.auth.uid);
+      allow list: if isAdmin();
       // Owner flips claimed false -> true exactly once.
       allow update: if authed()
         && resource.data.ownerUid == request.auth.uid
@@ -111,6 +127,7 @@ service cloud.firestore {
         && request.resource.data.claimed == false;
       allow read: if authed()
         && (resource.data.ownerUid == request.auth.uid || resource.data.fromUid == request.auth.uid);
+      allow list: if isAdmin();
       allow update: if authed()
         && resource.data.ownerUid == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['claimed'])
@@ -121,6 +138,7 @@ service cloud.firestore {
 
     match /wallets/{userId} {
       allow read: if self(userId);
+      allow read: if isAdmin();
       allow create: if self(userId)
         && request.resource.data.pending is number && request.resource.data.pending >= 0
         && request.resource.data.lifetime is number && request.resource.data.lifetime >= 0
@@ -139,15 +157,21 @@ service cloud.firestore {
         && (!('diamonds' in request.resource.data) || (request.resource.data.diamonds is number && request.resource.data.diamonds >= 0))
         && (!('lastDiamondAdAt' in request.resource.data) || (request.resource.data.lastDiamondAdAt is number && request.resource.data.lastDiamondAdAt >= 0))
         && (!('lastDiamondPassiveAt' in request.resource.data) || (request.resource.data.lastDiamondPassiveAt is number && request.resource.data.lastDiamondPassiveAt >= 0));
+      // Admin manual adjust: same shape, any user. Audit proof written separately.
+      allow update: if isAdmin()
+        && request.resource.data.pending is number && request.resource.data.pending >= 0
+        && request.resource.data.lifetime is number && request.resource.data.lifetime >= 0;
       allow delete: if false;
     }
 
     match /proofs/{docId} {
       allow create: if authed()
-        && request.resource.data.uid == request.auth.uid
         && request.resource.data.amount is number && request.resource.data.amount >= 0
         && (
-          request.resource.data.status == 'pending'
+          (
+            request.resource.data.uid == request.auth.uid
+            && (
+              request.resource.data.status == 'pending'
           || (
             request.resource.data.status == 'done'
             && (
@@ -167,10 +191,20 @@ service cloud.firestore {
                // Diamonds are play-only chips: all diamond moves carry amount 0
                // (USD untouched) with a signed diamonds delta for history.
                || (request.resource.data.label.matches('diamond-.*') && request.resource.data.amount == 0)
+              )
             )
+          )
+          // Admin audit rows (manual adjust <= $100): any uid, labelled, bounded.
+          || (
+            isAdmin()
+            && request.resource.data.uid is string
+            && request.resource.data.label is string
+            && request.resource.data.amount <= 100
+            && (request.resource.data.status == 'pending' || request.resource.data.status == 'done')
           )
         );
       allow read: if authed() && resource.data.uid == request.auth.uid;
+      allow read: if isAdmin();
       allow update, delete: if false;
     }
 
@@ -197,7 +231,15 @@ service cloud.firestore {
         && request.resource.data.amount is number && request.resource.data.amount >= 5
         && request.resource.data.status == 'review';
       allow read: if authed() && resource.data.uid == request.auth.uid;
-      allow update, delete: if false;
+      allow read: if isAdmin();
+      // Admin decision: review -> paid|rejected, nothing else changes.
+      allow update: if isAdmin()
+        && resource.data.status == 'review'
+        && request.resource.data.status in ['paid', 'rejected']
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.amount == resource.data.amount;
+      allow delete: if false;
     }
   }
 }

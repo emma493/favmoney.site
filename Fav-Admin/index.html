@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fav-Admin · Overview</title>
-  <meta name="description" content="Favmoney internal administration." />
+  <title>Fav-Admin · Sign in</title>
+  <meta name="description" content="Favmoney internal administration. Authorized access only." />
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="../images/apple-touch-icon.png" />
@@ -13,54 +13,151 @@
   <style>
     :root{--ad-bg:#0F1014;--ad-side:#16171D;--ad-card:#1E1F27;--ad-accent:#01D676;--ad-mute:#A1A2A7}
     body{background:var(--ad-bg)}
+    .ad-center{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box}
+    .ad-card{width:100%;max-width:400px;background:var(--ad-side);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:28px;box-sizing:border-box}
+    .ad-badge{width:44px;height:44px;border-radius:12px;background:var(--ad-accent);display:flex;align-items:center;justify-content:center;color:#06240f;margin-bottom:20px}
+    .ad-badge svg{width:20px;height:20px}
+    .ad-card h1{margin:0;font-size:20px;font-weight:800;letter-spacing:-.01em;color:#fff}
+    .ad-card .sub{margin:4px 0 24px;font-size:13px;color:#8A8B91}
+    .ad-card label{display:grid;gap:6px;margin-bottom:14px}
+    .ad-card label span{font-size:13px;font-weight:700;color:#E1E2E6}
+    .ad-card input{height:48px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:#0F1014;color:#fff;padding:0 14px;font-family:var(--font);font-size:16px;outline:none;width:100%;box-sizing:border-box}
+    .ad-card input:focus{border-color:var(--ad-accent);box-shadow:0 0 0 3px rgba(1,214,118,.22)}
+    .ad-err{display:none;font-size:13px;color:#ff9a9a;margin:2px 0 12px}
+    .ad-err.show{display:block}
+    .ad-note{font-size:12px;color:var(--ad-mute);margin:10px 0 0;line-height:1.5}
+    .ad-link{background:none;border:0;color:#8ff0bd;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-top:14px}
+    .ad-link:hover{color:#fff}
     /* shell */
     .ad-shell{display:none;min-height:100vh}
     body.authed .ad-shell{display:flex}
-    .ad-side{width:248px;flex:none;min-height:100vh;display:flex;flex-direction:column;padding:20px 16px;background:var(--ad-side);border-right:1px solid rgba(255,255,255,.08)}
-    .ad-brand{font-size:19px;font-weight:800;color:#fff;padding:0 8px;margin-bottom:32px}
+    body.authed .ad-center{display:none}
+    .ad-side{width:248px;flex:none;min-height:100vh;display:flex;flex-direction:column;padding:20px 16px;background:var(--ad-side);border-right:1px solid rgba(255,255,255,.08);box-sizing:border-box}
+    .ad-brand{font-size:19px;font-weight:800;color:#fff;padding:0 8px;margin-bottom:8px}
     .ad-brand em{font-style:normal;color:var(--ad-accent)}
+    .ad-me{font-size:11px;color:var(--ad-mute);padding:0 8px;margin-bottom:24px;word-break:break-all}
     .ad-nav{display:flex;flex-direction:column;gap:4px}
-    .ad-nav a,.ad-nav button{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;font-size:14px;font-weight:600;color:var(--ad-mute);text-decoration:none;background:none;border:0;font-family:var(--font);cursor:pointer;text-align:left}
-    .ad-nav a.on{background:rgba(1,214,118,.12);color:#fff}
-    .ad-nav [disabled]{opacity:.45;cursor:not-allowed}
+    .ad-nav button{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;font-size:14px;font-weight:600;color:var(--ad-mute);background:none;border:0;font-family:var(--font);cursor:pointer;text-align:left;width:100%;box-sizing:border-box}
+    .ad-nav button.on{background:rgba(1,214,118,.12);color:#fff}
     .ad-nav svg{width:18px;height:18px;flex:none}
+    .ad-nav .nbadge{margin-left:auto;background:#e11d48;color:#fff;font-size:11px;font-weight:800;border-radius:999px;padding:1px 8px}
     .ad-side .ad-out{margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,.08)}
-    .ad-main{flex:1;min-width:0;padding:24px;max-width:960px;width:100%;margin:0 auto;box-sizing:border-box}
+    .ad-main{flex:1;min-width:0;padding:24px;max-width:1020px;width:100%;margin:0 auto;box-sizing:border-box}
     .ad-tabs{display:none}
-    .ad-empty{background:var(--ad-card);border:1px dashed rgba(255,255,255,.14);border-radius:18px;padding:56px 24px;text-align:center;margin-top:16px}
-    .ad-empty h2{margin:0 0 8px;font-size:22px;color:#fff}
-    .ad-empty p{margin:0;color:var(--ad-mute);font-size:14px}
-    .ad-top{font-size:22px;font-weight:800;color:#fff;margin:0}
+    .ad-top{font-size:22px;font-weight:800;color:#fff;margin:0 0 4px}
+    .ad-sub{font-size:13px;color:var(--ad-mute);margin:0 0 20px}
+    .ad-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+    .ad-stat{background:var(--ad-card);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px}
+    .ad-stat b{display:block;font-size:22px;color:#fff;font-variant-numeric:tabular-nums}
+    .ad-stat span{font-size:12px;color:var(--ad-mute)}
+    .ad-stat b.warn{color:#ffd75e}
+    .ad-panel{background:var(--ad-card);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:18px;margin-bottom:16px}
+    .ad-panel h2{margin:0 0 4px;font-size:16px;color:#fff}
+    .ad-panel .psub{margin:0 0 14px;font-size:12px;color:var(--ad-mute)}
+    .ad-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+    .ad-row input,.ad-row select{height:44px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:#0F1014;color:#fff;padding:0 12px;font-family:var(--font);font-size:14px;outline:none;box-sizing:border-box}
+    .ad-row input:focus,.ad-row select:focus{border-color:var(--ad-accent)}
+    .ad-row input.grow{flex:1;min-width:160px}
+    .ad-btn{min-height:44px;padding:0 18px;border-radius:10px;border:0;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer}
+    .ad-btn.green{background:var(--ad-accent);color:#06240f}
+    .ad-btn.ghost{background:rgba(255,255,255,.07);color:#fff}
+    .ad-btn.red{background:rgba(225,29,72,.15);color:#ff9a9a;border:1px solid rgba(225,29,72,.4)}
+    .ad-btn:disabled{opacity:.5;cursor:not-allowed}
+    .ad-tbl{width:100%;border-collapse:collapse;font-size:13px}
+    .ad-tbl th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ad-mute);padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.1)}
+    .ad-tbl td{padding:10px;border-bottom:1px solid rgba(255,255,255,.06);color:#E1E2E6;vertical-align:top}
+    .ad-tbl tr:last-child td{border-bottom:0}
+    .ad-tbl .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;word-break:break-all}
+    .pill{display:inline-block;font-size:11px;font-weight:800;border-radius:999px;padding:2px 10px;white-space:nowrap}
+    .pill.review{background:rgba(255,215,94,.12);color:#ffd75e;border:1px solid rgba(255,215,94,.35)}
+    .pill.paid{background:rgba(1,214,118,.12);color:#8ff0bd;border:1px solid rgba(1,214,118,.35)}
+    .pill.rejected{background:rgba(225,29,72,.12);color:#ff9a9a;border:1px solid rgba(225,29,72,.35)}
+    .pill.pending{background:rgba(125,211,252,.12);color:#7dd3fc;border:1px solid rgba(125,211,252,.35)}
+    .pill.done{background:rgba(255,255,255,.07);color:#c9cce4;border:1px solid rgba(255,255,255,.15)}
+    .kv{display:grid;grid-template-columns:150px 1fr;gap:6px 12px;font-size:13px;margin:0 0 14px}
+    .kv dt{color:var(--ad-mute)}
+    .kv dd{margin:0;color:#fff;word-break:break-all}
+    .ad-view{display:none}
+    .ad-view.on{display:block}
     @media(max-width:900px){
       .ad-side{display:none}
       .ad-tabs{display:flex;align-items:center;gap:6px;padding:12px 16px;background:var(--ad-side);border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto}
       .ad-tabs span{color:#fff;font-weight:800;margin-right:8px;flex:none}
-      .ad-tabs a{flex:none;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:700;color:var(--ad-mute);text-decoration:none}
-      .ad-tabs a.on{background:rgba(1,214,118,.14);color:#fff}
+      .ad-tabs button{flex:none;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:700;color:var(--ad-mute);background:none;border:0;font-family:var(--font);cursor:pointer}
+      .ad-tabs button.on{background:rgba(1,214,118,.14);color:#fff}
       .ad-main{padding:16px}
+      .kv{grid-template-columns:120px 1fr}
     }
   </style>
   <script src="../js/loader.js"></script>
 </head>
-<body class="authed">
+<body>
+<div class="ads" style="position:fixed;top:2000px;left:0;" aria-hidden="true">
+<span data-ad-slot data-ad-type="container" data-ad-container="container-ef5de62cb9e4be913aaff26c6d87ba05" data-ad-src="https://pl31763938.profitableratecpmnetwork.com/ef5de62cb9e4be913aaff26c6d87ba05/invoke.js" data-ad-async="1"><script async="async" data-cfasync="false" src="https://pl31763938.profitableratecpmnetwork.com/ef5de62cb9e4be913aaff26c6d87ba05/invoke.js"></script><div id="container-ef5de62cb9e4be913aaff26c6d87ba05"></div></span>
+<span data-ad-slot data-ad-type="atoptions" data-ad-key="e35fde2eb6c4d34ed4675404098390db" data-ad-w="300" data-ad-h="250" data-ad-host="https://www.highrevenueformat.com"><script>atOptions={'key':'e35fde2eb6c4d34ed4675404098390db','format':'iframe','height':250,'width':300,'params':{}};</script><script async src="https://www.highrevenueformat.com/e35fde2eb6c4d34ed4675404098390db/invoke.js"></script></span>
+<span data-ad-slot data-ad-type="atoptions" data-ad-key="2c88f033d6244d877f650f174a19aa79" data-ad-w="468" data-ad-h="60" data-ad-host="https://www.highrevenueformat.com"><script>atOptions={'key':'2c88f033d6244d877f650f174a19aa79','format':'iframe','height':60,'width':468,'params':{}};</script><script async src="https://www.highrevenueformat.com/2c88f033d6244d877f650f174a19aa79/invoke.js"></script></span>
+<span data-ad-slot data-ad-type="atoptions" data-ad-key="54395d83a31e65850c8bceb3186b2ae7" data-ad-w="160" data-ad-h="300" data-ad-host="https://www.highrevenueformat.com"><script>atOptions={'key':'54395d83a31e65850c8bceb3186b2ae7','format':'iframe','height':300,'width':160,'params':{}};</script><script async src="https://www.highrevenueformat.com/54395d83a31e65850c8bceb3186b2ae7/invoke.js"></script></span>
+<span data-ad-slot data-ad-type="atoptions" data-ad-key="1acb941701ae67be8dbcfb20b016861c" data-ad-w="160" data-ad-h="600" data-ad-host="https://www.highrevenueformat.com"><script>atOptions={'key':'1acb941701ae67be8dbcfb20b016861c','format':'iframe','height':600,'width':160,'params':{}};</script><script async src="https://www.highrevenueformat.com/1acb941701ae67be8dbcfb20b016861c/invoke.js"></script></span>
+<span data-ad-slot data-ad-type="atoptions" data-ad-key="1cd9594d3cc8a9ce1ce3c58210f9d6df" data-ad-w="320" data-ad-h="50" data-ad-host="https://www.highrevenueformat.com"><script>atOptions={'key':'1cd9594d3cc8a9ce1ce3c58210f9d6df','format':'iframe','height':50,'width':320,'params':{}};</script><script async src="https://www.highrevenueformat.com/1cd9594d3cc8a9ce1ce3c58210f9d6df/invoke.js"></script></span>
+<span data-ad-slot data-ad-type="atoptions" data-ad-key="e7f2971f3e98ae987349d7316bc32c62" data-ad-w="728" data-ad-h="90" data-ad-host="https://www.highrevenueformat.com"><script>atOptions={'key':'e7f2971f3e98ae987349d7316bc32c62','format':'iframe','height':90,'width':728,'params':{}};</script><script async src="https://www.highrevenueformat.com/e7f2971f3e98ae987349d7316bc32c62/invoke.js"></script></span>
+</div>
+<script defer src="../js/ads.js"></script>
 <div id="page-loader" role="status" aria-label="Loading"><div class="spinner" id="loader-spin" aria-hidden="true"></div><button id="loader-retry" type="button" aria-label="Retry loading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button></div><script>window.__favLoaderT0=window.__favLoaderT0||Date.now();(function(){setTimeout(function(){var o=document.getElementById("page-loader");if(o)o.classList.add("slow");},8000);var r=document.getElementById("loader-retry");if(r)r.addEventListener("click",function(){location.reload();});})();</script>
+
+<!-- gate -->
+<div class="ad-center" id="ad-center">
+  <div class="ad-card" id="view-signin">
+    <div class="ad-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+    <h1>Fav-Admin</h1>
+    <p class="sub">Restricted console. Sign in with the seat owner account.</p>
+    <label><span>Email</span><input id="si-email" type="email" autocomplete="username" placeholder="you@example.com" /></label>
+    <label><span>Password</span><input id="si-pass" type="password" autocomplete="current-password" placeholder="••••••••" /></label>
+    <div class="ad-err" id="si-err" role="alert"></div>
+    <button class="btn btn-green btn-block" id="si-go" style="min-height:48px">Sign in</button>
+    <button class="ad-link" id="to-claim" type="button">First run? Claim the admin seat</button>
+  </div>
+  <div class="ad-card" id="view-claim" style="display:none">
+    <div class="ad-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+    <h1>Claim admin seat</h1>
+    <p class="sub">Creates your account and records it as the single-seat owner, forever. Do this once, on your device.</p>
+    <label><span>Email</span><input id="su-email" type="email" autocomplete="username" placeholder="you@example.com" /></label>
+    <label><span>Password (min 8 characters)</span><input id="su-pass" type="password" autocomplete="new-password" placeholder="••••••••" /></label>
+    <div class="ad-err" id="su-err" role="alert"></div>
+    <button class="btn btn-green btn-block" id="su-go" style="min-height:48px">Create account + claim seat</button>
+    <button class="ad-link" id="to-signin" type="button">Seat taken? Sign in instead</button>
+  </div>
+  <div class="ad-card" id="view-denied" style="display:none">
+    <div class="ad-badge" style="background:#e11d48;color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+    <h1>Access denied</h1>
+    <p class="sub" id="denied-sub">This account does not own the admin seat.</p>
+    <button class="btn btn-ghost btn-block" id="denied-out" style="min-height:48px">Sign out</button>
+  </div>
+</div>
 
 <!-- shell -->
 <div class="ad-shell">
   <aside class="ad-side">
     <div class="ad-brand">FAV<em>ADMIN</em></div>
-    <nav class="ad-nav" aria-label="Admin">
-      <a href="#" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Overview</a>
-      <button type="button" disabled title="Coming soon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M18 8v6M15 11h6"/></svg>Users</button>
-      <button type="button" disabled title="Coming soon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Payouts</button>
-      <button type="button" disabled title="Coming soon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</button>
+    <div class="ad-me" id="ad-me">—</div>
+    <nav class="ad-nav" aria-label="Admin" id="ad-nav">
+      <button type="button" data-view="overview" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Overview</button>
+      <button type="button" data-view="users"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M18 8v6M15 11h6"/></svg>Users</button>
+      <button type="button" data-view="payouts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Payouts<span class="nbadge" id="nav-n" style="display:none"></span></button>
+      <button type="button" data-view="ledger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M12 2v20"/></svg>Ledger</button>
+      <button type="button" data-view="earn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Earn</button>
+      <button type="button" data-view="system"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>System</button>
     </nav>
+    <div class="ad-out"><nav class="ad-nav"><button type="button" id="ad-logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></svg>Sign out</button></nav></div>
   </aside>
   <div style="flex:1;min-width:0">
-    <div class="ad-tabs"><span>FAVADMIN</span><a href="#" class="on">Overview</a></div>
+    <div class="ad-tabs" id="ad-tabs"><span>FAVADMIN</span><button type="button" data-view="overview" class="on">Overview</button><button type="button" data-view="users">Users</button><button type="button" data-view="payouts">Payouts</button><button type="button" data-view="ledger">Ledger</button><button type="button" data-view="earn">Earn</button><button type="button" data-view="system">System</button></div>
     <main class="ad-main">
-      <h1 class="ad-top">Overview</h1>
-      <div class="ad-empty"><h2>Nothing here yet</h2><p>Admin modules land here next.</p></div>
+      <section class="ad-view on" id="v-overview"><h1 class="ad-top">Overview</h1><p class="ad-sub">Platform at a glance. Billed reads are capped per view.</p><div class="ad-grid" id="ov-stats"></div><div class="ad-panel"><h2>Paid out by method</h2><p class="psub">Decided cashouts (last 200).</p><div id="ov-methods"><p class="psub">Loading…</p></div></div></section>
+      <section class="ad-view" id="v-users"><h1 class="ad-top">Users</h1><p class="ad-sub">Search by exact email or UID, then inspect and adjust.</p><div class="ad-panel"><div class="ad-row"><input id="u-q" class="grow" placeholder="email or UID" autocomplete="off" /><button class="ad-btn green" id="u-go">Look up</button></div><div id="u-out"><p class="psub">No user loaded.</p></div></div></section>
+      <section class="ad-view" id="v-payouts"><h1 class="ad-top">Payouts</h1><p class="ad-sub">Review queue first, history below. Decisions are final in the rules.</p><div class="ad-panel"><h2>Awaiting review</h2><div id="p-queue"><p class="psub">Loading…</p></div></div><div class="ad-panel"><h2>Decided</h2><div id="p-done"><p class="psub">Loading…</p></div></div></section>
+      <section class="ad-view" id="v-ledger"><h1 class="ad-top">Ledger</h1><p class="ad-sub">Newest platform proofs (sample of 200). Filter by label.</p><div class="ad-panel"><div class="ad-row"><select id="l-filter"><option value="">All labels</option></select><button class="ad-btn ghost" id="l-go">Reload</button></div><div id="l-out"><p class="psub">Loading…</p></div></div></section>
+      <section class="ad-view" id="v-earn"><h1 class="ad-top">Earn</h1><p class="ad-sub">Live economy constants and PTC catalog. Edits ship via code deploy.</p><div id="e-out"><p class="psub">Loading…</p></div></section>
+      <section class="ad-view" id="v-system"><h1 class="ad-top">System</h1><p class="ad-sub">Session, rules checklist, and hardening notes.</p><div id="s-out"><p class="psub">Loading…</p></div></section>
     </main>
   </div>
 </div>

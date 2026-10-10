@@ -12,7 +12,6 @@
   <link rel="stylesheet" href="css/style.css" />
   <style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(20,21,35,.35);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#01D676;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#01D676;border:0;cursor:pointer;align-items:center;justify-content:center;color:#0d1a13;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
   <script src="js/loader.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     .inv-linkrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
     .inv-linkrow input{flex:1;min-width:200px;height:48px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:#101223;color:#fff;padding:0 14px;font-family:var(--font);font-size:13px;outline:none}
@@ -21,10 +20,32 @@
     .share-row a{min-height:44px;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:#fff;border-radius:999px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);text-decoration:none}
     .share-row a:hover{border-color:rgba(1,214,118,.5)}
     .share-row svg{width:16px;height:16px}
-    .how-ico{flex:none;width:48px;height:48px;border-radius:12px;background:rgba(1,214,118,.12);border:1px solid rgba(1,214,118,.3);display:flex;align-items:center;justify-content:center;color:#8ff0bd}
-    .how-ico svg{width:24px;height:24px}
     .faq-item .a div p{margin:0 0 8px}
-    @media(max-width:640px){.inv-linkrow .btn{flex:1 1 100%;min-height:48px}.inv-code{font-size:26px}}
+    .reward-ledger{background:var(--card-2);border:1px solid var(--line-soft);border-radius:16px;margin-top:16px;overflow:hidden}
+    .rl-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line-soft);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9aa0c3}
+    .rl-chip{font-size:11px;font-weight:800;color:#8ff0bd;background:rgba(1,214,118,.14);padding:3px 10px;border-radius:999px;text-transform:none;letter-spacing:0;white-space:nowrap}
+    .rl-row{display:flex;align-items:center;gap:14px;padding:16px 18px;border-bottom:1px solid var(--line-soft)}
+    .rl-row:last-of-type{border-bottom:0}
+    .rl-mark{flex:none;width:44px;height:44px;border-radius:12px;background:#101223;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:#8ff0bd}
+    .rl-mark svg{width:22px;height:22px}
+    .rl-mid{flex:1;min-width:0}
+    .rl-mid b{display:block;font-size:15px}
+    .rl-mid span{font-size:13px;color:var(--muted)}
+    .rl-amt{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+    .rl-amt.g{color:var(--green)}
+    .rl-amt--pct{font-size:17px}
+    .rl-foot{margin:0;padding:12px 18px;font-size:12px;color:var(--faint);border-top:1px solid var(--line-soft)}
+    .lb-av{position:relative;flex:none;width:40px;height:40px;border-radius:50%;background:rgba(1,214,118,.12);color:#8ff0bd;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center}
+    .lb-av i{font-style:normal}
+    .lb-av img{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;object-fit:cover}
+    .lb-av .crown{position:absolute;top:-9px;right:-7px;width:16px;height:16px;transform:rotate(12deg);filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+    .aff-leader .row.lb-you{border-color:rgba(1,214,118,.5);background:rgba(1,214,118,.06)}
+    .aff-leader .row.lb-you .lb-av{background:var(--green);color:#06240f}
+    .aff-leader .row b{font-variant-numeric:tabular-nums;white-space:nowrap}
+    .quest-row{position:relative}
+    .quest-row .qico{background:#101223;border-color:var(--line);color:var(--green)}
+    .quest-row + .quest-row::before{content:"";position:absolute;left:39px;top:-10px;height:10px;width:2px;background:var(--line)}
+    @media(max-width:640px){.inv-linkrow .btn{flex:1 1 100%;min-height:48px}.inv-code{font-size:26px}.rl-row{padding:14px;gap:12px}.rl-amt{font-size:17px}.rl-amt--pct{font-size:14px}.rl-mark{width:40px;height:40px}.rl-head{padding:12px 14px}.rl-foot{padding:10px 14px}}
   </style>
 </head>
 <body>
@@ -63,17 +84,17 @@
 <p style="color:var(--muted);font-size:14px;margin:0">Share it anywhere. Every signup with your code pays you $0.50 instantly and pays them $1.00 instantly.</p>
 <div class="inv-linkrow">
 <input id="inv-link" type="text" readonly value="" aria-label="Your invite link" />
-<button class="btn btn-green" id="copy-btn" style="min-height:48px"><i data-lucide="copy" aria-hidden="true"></i>Copy</button>
-<button class="btn btn-ghost" id="share-btn" style="min-height:48px"><i data-lucide="share-2" aria-hidden="true"></i>Share</button>
+<button class="btn btn-green" id="copy-btn" style="min-height:48px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>
+<button class="btn btn-ghost" id="share-btn" style="min-height:48px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>Share</button>
 </div>
 <p style="font-size:12px;color:var(--faint);margin:10px 0 0">Your code</p>
 <p class="inv-code" id="my-code">——————</p>
 <div class="share-row" id="share-row">
-<a id="sh-wa" href="#" target="_blank" rel="noopener">WhatsApp</a>
-<a id="sh-tg" href="#" target="_blank" rel="noopener">Telegram</a>
-<a id="sh-x" href="#" target="_blank" rel="noopener">X</a>
-<a id="sh-fb" href="#" target="_blank" rel="noopener">Facebook</a>
-<a id="sh-em" href="#">Email</a>
+<a id="sh-wa" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="#25D366" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>WhatsApp</a>
+<a id="sh-tg" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="#229ED9" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>Telegram</a>
+<a id="sh-x" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>X</a>
+<a id="sh-fb" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="#1877F2" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>Facebook</a>
+<a id="sh-em" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="#9be9c4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>Email</a>
 </div>
 </div>
 
@@ -87,10 +108,12 @@
 </div>
 
 <h2 style="font-size:20px;margin:30px 0 0">Your reward</h2>
-<div class="steps-3">
-<div class="bonus-card" style="margin:0"><div class="how-ico"><i data-lucide="gift" aria-hidden="true"></i></div><h3 style="margin:12px 0 4px;font-size:16px">Friend gets $1.00</h3><p style="color:var(--muted);font-size:13px;margin:0">Instantly available the moment they sign up with your code.</p></div>
-<div class="bonus-card" style="margin:0"><div class="how-ico"><i data-lucide="coins" aria-hidden="true"></i></div><h3 style="margin:12px 0 4px;font-size:16px">You get $0.50</h3><p style="color:var(--muted);font-size:13px;margin:0">Instantly available every time your code is used. No waiting, no hold.</p></div>
-<div class="bonus-card" style="margin:0"><div class="how-ico"><i data-lucide="trending-up" aria-hidden="true"></i></div><h3 style="margin:12px 0 4px;font-size:16px">Plus 25% / 10% lifetime</h3><p style="color:var(--muted);font-size:13px;margin:0">25% of their task earnings, 10% of their offer and survey earnings — for life.</p></div>
+<div class="reward-ledger">
+<div class="rl-head"><span>What lands and when</span><span class="rl-chip">Always instant</span></div>
+<div class="rl-row"><div class="rl-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg></div><div class="rl-mid"><b>Friend gets $1.00</b><span>Lands in their balance the second they sign up with your code.</span></div><div class="rl-amt g">+$1.00</div></div>
+<div class="rl-row"><div class="rl-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg></div><div class="rl-mid"><b>You get $0.50</b><span>Added to your available balance on every signup. No waiting, no hold.</span></div><div class="rl-amt g">+$0.50</div></div>
+<div class="rl-row"><div class="rl-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M19 5 5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div><div class="rl-mid"><b>Plus 25% / 10% for life</b><span>25% of their task, faucet and game earnings, 10% of offers and surveys — paid on top, forever.</span></div><div class="rl-amt g rl-amt--pct">25% / 10%</div></div>
+<p class="rl-foot">Commission costs your friends nothing — Favmoney pays it on top of their earnings.</p>
 </div>
 
 <h2 style="font-size:20px;margin:30px 0 0">How it works</h2>
@@ -100,15 +123,20 @@
 
 <h2 style="font-size:20px;margin:30px 0 0">Top inviters</h2>
 <div class="aff-leader">
-<div class="row"><span class="rank">1</span><span style="flex:1">AVA***</span><b>142 invited</b></div>
-<div class="row"><span class="rank">2</span><span style="flex:1">KOF***</span><b>98 invited</b></div>
-<div class="row"><span class="rank">3</span><span style="flex:1">DER***</span><b>61 invited</b></div>
-<div class="row"><span class="rank">4</span><span style="flex:1">AMA***</span><b>44 invited</b></div>
-<div class="row"><span class="rank">5</span><span style="flex:1">YOU</span><b id="lb-you">0 invited</b></div>
+<div class="row"><span class="rank">1</span><span class="lb-av"><i>A</i><img src="https://randomuser.me/api/portraits/women/44.jpg" alt="" loading="lazy" width="40" height="40" onerror="this.remove()"><svg class="crown" viewBox="0 0 24 24" fill="#FFC93C" aria-hidden="true"><path d="M3 8.5 7 11l5-6.5L17 11l4-2.5L19.5 18h-15L3 8.5z"/></svg></span><span style="flex:1">AVA***</span><b>142 invited</b></div>
+<div class="row"><span class="rank">2</span><span class="lb-av"><i>K</i><img src="https://randomuser.me/api/portraits/men/32.jpg" alt="" loading="lazy" width="40" height="40" onerror="this.remove()"><svg class="crown" viewBox="0 0 24 24" fill="#C9D2E0" aria-hidden="true"><path d="M3 8.5 7 11l5-6.5L17 11l4-2.5L19.5 18h-15L3 8.5z"/></svg></span><span style="flex:1">KOF***</span><b>98 invited</b></div>
+<div class="row"><span class="rank">3</span><span class="lb-av"><i>D</i><img src="https://randomuser.me/api/portraits/men/75.jpg" alt="" loading="lazy" width="40" height="40" onerror="this.remove()"><svg class="crown" viewBox="0 0 24 24" fill="#9BE9FF" aria-hidden="true"><path d="M3 8.5 7 11l5-6.5L17 11l4-2.5L19.5 18h-15L3 8.5z"/></svg></span><span style="flex:1">DER***</span><b>61 invited</b></div>
+<div class="row"><span class="rank">4</span><span class="lb-av"><i>A</i><img src="https://randomuser.me/api/portraits/women/68.jpg" alt="" loading="lazy" width="40" height="40" onerror="this.remove()"></span><span style="flex:1">AMA***</span><b>44 invited</b></div>
+<div class="row lb-you"><span class="rank">5</span><span class="lb-av"><i>Y</i></span><span style="flex:1">YOU</span><b id="lb-you">0 invited</b></div>
+<div class="row"><span class="rank">6</span><span class="lb-av"><i>E</i><img src="https://randomuser.me/api/portraits/women/12.jpg" alt="" loading="lazy" width="40" height="40" onerror="this.remove()"></span><span style="flex:1">EME***</span><b>32 invited</b></div>
+<div class="row"><span class="rank">7</span><span class="lb-av"><i>K</i><img src="https://randomuser.me/api/portraits/men/22.jpg" alt="" loading="lazy" width="40" height="40" onerror="this.remove()"></span><span style="flex:1">KWA***</span><b>27 invited</b></div>
+<div class="row"><span class="rank">8</span><span class="lb-av"><i>N</i><img src="https://randomuser.me/api/portraits/women/33.jpg" alt="" loading="lazy" width="40" height="40" onerror="this.remove()"></span><span style="flex:1">NAD***</span><b>19 invited</b></div>
+<div class="row"><span class="rank">9</span><span class="lb-av"><i>O</i><img src="https://randomuser.me/api/portraits/men/45.jpg" alt="" loading="lazy" width="40" height="40" onerror="this.remove()"></span><span style="flex:1">OSE***</span><b>14 invited</b></div>
+<div class="row"><span class="rank">10</span><span class="lb-av"><i>T</i><img src="https://randomuser.me/api/portraits/women/56.jpg" alt="" loading="lazy" width="40" height="40" onerror="this.remove()"></span><span style="flex:1">TUN***</span><b>9 invited</b></div>
 </div>
 
 <h2 style="font-size:20px;margin:30px 0 0">My referrals</h2>
-<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Friend</th><th>Reward</th><th>Status</th><th>Date</th></tr></thead><tbody id="ref-rows"><tr class="skel"><td colspan="4"><span class="skeleton" style="width:90%"></span></td></tr><tr class="skel"><td colspan="4"><span class="skeleton" style="width:75%"></span></td></tr><tr class="skel"><td colspan="4"><span class="skeleton" style="width:82%"></span></td></tr></tbody></table></div>
+<div class="tbl-wrap"><table class="tbl tbl--cards"><thead><tr><th>Friend</th><th>Reward</th><th>Status</th><th>Date</th></tr></thead><tbody id="ref-rows"><tr class="skel"><td colspan="4"><span class="skeleton" style="width:90%"></span></td></tr><tr class="skel"><td colspan="4"><span class="skeleton" style="width:75%"></span></td></tr><tr class="skel"><td colspan="4"><span class="skeleton" style="width:82%"></span></td></tr></tbody></table></div>
 
 <h2 style="font-size:20px;margin:30px 0 0">Good to know</h2>
 <div class="faq" style="margin-top:14px">
@@ -124,7 +152,6 @@
 <footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="earn.html">Earn</a> · <a href="withdraw.html">Cashout</a></span></div></div></footer>
 <nav class="mobilenav" aria-label="Mobile"><a href="earn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="grow.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Grow</a><a href="invite.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M18 8v6M15 11h6"/></svg>Invite</a><a href="rewards.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="12" rx="1.5"/><path d="M4 13h16M12 9v12M12 9S7.5 9 6 7.5 5.5 4.8 7 4.5 12 9 12 9Zm0 0s4.5 0 6-1.5S18.5 4.8 17 4.5 12 9 12 9Z"/></svg>Rewards</a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
 <div class="toast" id="toast" role="status"></div>
-<script>if(window.lucide){try{lucide.createIcons();}catch(e){}}</script>
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getOrCreateMyCode, claimReferrals, claimCommissions, fetchReferrals, fetchUserDocs, track } from './js/firebase.js';
 (function(){
@@ -182,7 +209,7 @@ import { auth, onAuthStateChanged, getWallet, getOrCreateMyCode, claimReferrals,
     }else{
       rows.innerHTML=refs.map(function(r){
         var pill=r.claimed?'<span class="pill paid">Paid</span>':'<span class="pill pending">Pending</span>';
-        return '<tr><td>'+mask(r.newUid||r.id)+'</td><td>$0.50</td><td>'+pill+'</td><td>'+relDate(r.createdAt)+'</td></tr>';
+        return '<tr><td data-label="Friend">'+mask(r.newUid||r.id)+'</td><td data-label="Reward">$0.50</td><td data-label="Status">'+pill+'</td><td data-label="Date">'+relDate(r.createdAt)+'</td></tr>';
       }).join('');
     }
     try{

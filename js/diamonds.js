@@ -7,7 +7,7 @@
 import { getWallet, getChestState, claimDiamondAd, claimDiamondPassive } from './firebase.js';
 
 export const DIA_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12l4 6-10 12L2 9l4-6z"/><path d="M2 9h20M9 3l3 6 3-6M12 9l0 12"/></svg>';
-const CHEST_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2H3V8z"/><path d="M3 10v8a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-8"/><path d="M12 12v6M9.5 13.5 12 11l2.5 2.5"/></svg>';
+const CHEST_SVG = '<svg class="chest-scene" viewBox="0 0 96 80" aria-hidden="true"><defs><linearGradient id="chWood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6b4226"/><stop offset=".55" stop-color="#4a2c1a"/><stop offset="1" stop-color="#2e1c10"/></linearGradient><linearGradient id="chGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".35" stop-color="#ffd75e"/><stop offset=".7" stop-color="#c9962e"/><stop offset="1" stop-color="#8a5f14"/></linearGradient><radialGradient id="chGlow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffdc82" stop-opacity=".95"/><stop offset=".6" stop-color="#ffb450" stop-opacity=".45"/><stop offset="1" stop-color="#ffb450" stop-opacity="0"/></radialGradient><linearGradient id="chGem" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".45" stop-color="#bfe3ff"/><stop offset=".8" stop-color="#6aa9e8"/><stop offset="1" stop-color="#3b6ea5"/></linearGradient><linearGradient id="chFire" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fef08a"/><stop offset=".5" stop-color="#f0abfc"/><stop offset="1" stop-color="#67e8f9"/></linearGradient></defs><ellipse cx="48" cy="72" rx="30" ry="4" fill="#000" opacity=".35"/><rect x="22" y="64" width="9" height="7" rx="1.5" fill="#241407" stroke="#120903"/><rect x="65" y="64" width="9" height="7" rx="1.5" fill="#241407" stroke="#120903"/><path d="M17,38 L79,38 L75,64 L21,64 Z" fill="url(#chWood)" stroke="#160c05"/><path d="M19,51 L77,51 M38,40 L38,62 M58,40 L58,62" stroke="#241407" stroke-width="1" opacity=".55"/><rect x="19" y="62" width="58" height="3" fill="url(#chGold)"/><rect x="15" y="35" width="66" height="4" rx="2" fill="url(#chGold)"/><circle cx="24" cy="37" r="1.2" fill="#fff3c4"/><circle cx="72" cy="37" r="1.2" fill="#fff3c4"/><g class="g-closed"><path d="M17,36 C17,20 31,11 48,11 C65,11 79,20 79,36 Z" fill="url(#chWood)" stroke="#160c05"/><path d="M30,34 C32,24 40,18 48,18 M66,34 C64,24 56,18 48,18" stroke="#241407" stroke-width="1" fill="none" opacity=".55"/><rect x="15" y="33" width="66" height="5" rx="2.5" fill="url(#chGold)"/><rect x="42" y="33" width="12" height="13" rx="2" fill="url(#chGold)" stroke="#7a5410"/><circle cx="48" cy="39" r="2" fill="#241407"/><rect x="47" y="39" width="2" height="4" fill="#241407"/></g><g class="g-open"><g transform="rotate(-24 48 37)"><path d="M17,32 C17,12 31,3 48,3 C65,3 79,12 79,32 Z" fill="url(#chWood)" stroke="#160c05"/><rect x="15" y="29" width="66" height="5" rx="2.5" fill="url(#chGold)"/></g><ellipse cx="48" cy="37" rx="29" ry="5.5" fill="#0b0603"/><ellipse class="glow" cx="48" cy="33" rx="22" ry="9" fill="url(#chGlow)"/><g class="pile"><polygon points="48,16 54,19 57,25 54,31 48,34 42,31 39,25 42,19" fill="url(#chGem)" stroke="#e8f6ff" stroke-width=".8"/><path d="M48,25 L48,16 M48,25 L54,19 M48,25 L57,25 M48,25 L54,31 M48,25 L48,34 M48,25 L42,31 M48,25 L39,25 M48,25 L42,19" stroke="#ffffff" stroke-width=".6" opacity=".7"/><polygon points="48,21 51,23 52,25 51,27 48,29 45,27 44,25 45,23" fill="none" stroke="#ffffff" stroke-width=".6" opacity=".8"/><path d="M20,29 Q30,21 40,29 Q30,37 20,29 Z" fill="url(#chGem)" stroke="#e8f6ff" stroke-width=".7"/><path d="M20,29 L40,29 M30,23 L30,35" stroke="#ffffff" stroke-width=".6" opacity=".7"/><path d="M56,29 Q66,21 76,29 Q66,37 56,29 Z" fill="url(#chGem)" stroke="#e8f6ff" stroke-width=".7"/><path d="M56,29 L76,29 M66,23 L66,35" stroke="#ffffff" stroke-width=".6" opacity=".7"/><rect x="41" y="29" width="14" height="8" fill="url(#chGem)" stroke="#e8f6ff" stroke-width=".7"/><rect x="43.5" y="30.5" width="9" height="5" fill="none" stroke="#ffffff" stroke-width=".6" opacity=".8"/><circle cx="35" cy="22" r="2.6" fill="url(#chGem)" stroke="#e8f6ff" stroke-width=".6"/><circle cx="61" cy="22" r="2.6" fill="url(#chGem)" stroke="#e8f6ff" stroke-width=".6"/><polygon class="fire f-a" points="46,19 48.5,23 45,23" fill="url(#chFire)"/><polygon class="fire f-b" points="58,27 60.5,31 57,31" fill="url(#chFire)"/></g><polygon class="fl f1" points="36,9 38.5,12 36,15 33.5,12" fill="url(#chGem)" stroke="#e8f6ff" stroke-width=".5"/><polygon class="fl f2" points="52,6 54.5,9 52,12 49.5,9" fill="url(#chGem)" stroke="#e8f6ff" stroke-width=".5"/><polygon class="fl f3" points="63,11 65.5,14 63,17 60.5,14" fill="url(#chGem)" stroke="#e8f6ff" stroke-width=".5"/><polygon class="burst-gem" style="--dx:-16px" points="48,26 50,28 48,30 46,28" fill="url(#chGem)"/><polygon class="burst-gem" style="--dx:-8px;animation-delay:.05s" points="48,26 50,28 48,30 46,28" fill="url(#chFire)"/><polygon class="burst-gem" style="--dx:0px" points="48,25 50.5,28 48,31 45.5,28" fill="url(#chGem)"/><polygon class="burst-gem" style="--dx:8px;animation-delay:.08s" points="48,26 50,28 48,30 46,28" fill="url(#chFire)"/><polygon class="burst-gem" style="--dx:16px" points="48,26 50,28 48,30 46,28" fill="url(#chGem)"/><ellipse class="flash" cx="48" cy="28" rx="30" ry="13" fill="#fff7d6"/></g></svg>';
 
 function fmtClock(ms) {
   ms = Math.max(0, Number(ms || 0));
@@ -31,7 +31,25 @@ function pageToast(msg) {
 
 // Paint `$X.XX | ◆ N` into the standard header chip. Injects the diamond span
 // on first call so no per-page HTML edit is required.
-export function paintDualChip(pending, diamonds) {
+// opts: { flip: 'usd' | 'dia' | 'both', glow: true } replays the flip
+// animation on change and flashes the dollar green (see css fav-flip/fav-glow).
+function replayFlip(el) {
+  if (!el) return;
+  try {
+    el.classList.remove('fav-flip');
+    void el.offsetWidth;
+    el.classList.add('fav-flip');
+  } catch (_) {}
+}
+function replayGlow(el) {
+  if (!el) return;
+  try {
+    el.classList.remove('fav-glow');
+    void el.offsetWidth;
+    el.classList.add('fav-glow');
+  } catch (_) {}
+}
+export function paintDualChip(pending, diamonds, opts) {
   try {
     const bal = document.getElementById('chip-bal');
     if (bal) bal.textContent = '$' + Number(pending || 0).toFixed(2);
@@ -50,6 +68,10 @@ export function paintDualChip(pending, diamonds) {
     }
     dia.innerHTML = DIA_SVG + '<span>' + Math.max(0, Math.floor(Number(diamonds || 0))) + '</span>';
     dia.setAttribute('title', 'Diamonds — play-only chips for Spin');
+    const o = opts || {};
+    if (o.flip === 'usd' || o.flip === 'both') replayFlip(bal);
+    if (o.flip === 'dia' || o.flip === 'both') replayFlip(dia);
+    if (o.glow) replayGlow(bal);
   } catch (_) {}
 }
 
@@ -68,11 +90,21 @@ export function startDiamondChest(uid, opts) {
     chest.id = 'dia-chest';
     chest.type = 'button';
     chest.setAttribute('aria-label', 'Diamond chest — earn play chips');
-    chest.innerHTML = '<span class="chest-btn">' + CHEST_SVG + '<span class="chest-count" id="dia-chest-count">0</span></span><span class="chest-sub" id="dia-chest-sub">Chest</span>';
+    chest.innerHTML = '<span class="chest-btn"><span class="chest-art">' + CHEST_SVG + '</span><span class="chest-count" id="dia-chest-count">0</span></span><span class="chest-sub" id="dia-chest-sub">Chest</span>';
     document.body.appendChild(chest);
   }
   const countEl = document.getElementById('dia-chest-count');
   const subEl = document.getElementById('dia-chest-sub');
+
+  function pageBurst() {
+    try {
+      if (!chest) return;
+      chest.classList.remove('burst');
+      void chest.offsetWidth;
+      chest.classList.add('burst');
+      setTimeout(function () { try { chest.classList.remove('burst'); } catch (_) {} }, 950);
+    } catch (_) {}
+  }
 
   // --- inject ad modal (namespaced, Grow untouched) ---
   let veil = document.getElementById('dia-ad-modal');
@@ -149,6 +181,7 @@ export function startDiamondChest(uid, opts) {
         const r = await claimDiamondAd(uid);
         if (r.ok) {
           pageToast('+' + r.reward + ' diamonds — spend them on Spin.');
+          pageBurst();
           await refresh(true);
         } else if (r.reason === 'cooldown') {
           pageToast('Chest refills in ' + fmtClock(r.waitMs) + '.');
@@ -171,6 +204,7 @@ export function startDiamondChest(uid, opts) {
         const r = await claimDiamondPassive(uid);
         if (r.ok) {
           pageToast('+' + r.reward + ' diamonds from the chest drip.');
+          pageBurst();
           await refresh(true);
         } else { openAdIfReady(st); }
       } catch (_) { pageToast('Claim failed — check connection and try again.'); }

@@ -650,15 +650,37 @@ tr.skel td{padding:12px 10px}
 .user-chip .dia svg{width:14px;height:14px}
 .user-chip .dia-sep{color:rgba(255,255,255,.25);font-weight:400}
 #dia-chest{position:fixed;right:16px;bottom:84px;z-index:80;display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:0;padding:0;cursor:pointer;font-family:var(--font)}
-#dia-chest .chest-btn{position:relative;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#1c2a4a,#101a33);border:2px solid rgba(125,211,252,.45);display:flex;align-items:center;justify-content:center;color:#7dd3fc;box-shadow:0 6px 24px rgba(0,0,0,.5);transition:transform .15s ease,box-shadow .15s ease}
+#dia-chest .chest-btn{position:relative;width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,#1c2a4a,#101a33);border:2px solid rgba(125,211,252,.45);display:flex;align-items:center;justify-content:center;color:#7dd3fc;box-shadow:0 6px 24px rgba(0,0,0,.5);transition:transform .15s ease,box-shadow .15s ease}
 #dia-chest:active .chest-btn{transform:scale(.94)}
-#dia-chest .chest-btn svg{width:28px;height:28px}
-#dia-chest .chest-count{position:absolute;top:-6px;right:-6px;min-width:24px;height:24px;border-radius:12px;background:#0ea5e9;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 6px;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+#dia-chest .chest-art{display:block;line-height:0;transform:scale(.9);filter:saturate(.65) brightness(.8);transition:transform .25s ease,filter .25s ease}
+#dia-chest .chest-art svg{width:54px;height:45px;overflow:visible}
+#dia-chest .chest-count{position:absolute;top:-6px;right:-6px;min-width:24px;height:24px;border-radius:12px;background:radial-gradient(circle at 35% 30%,#ffb3ab,#f43f5e 45%,#9f1239 100%);color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 6px;box-shadow:inset 0 1px 1px rgba(255,255,255,.6),0 2px 8px rgba(0,0,0,.5)}
 #dia-chest .chest-sub{font-size:11px;font-weight:800;color:#c9cce4;background:rgba(16,18,35,.92);border:1px solid var(--line-soft);border-radius:999px;padding:3px 10px;white-space:nowrap;font-variant-numeric:tabular-nums}
 #dia-chest.ready .chest-btn{border-color:#7dd3fc;box-shadow:0 0 0 4px rgba(125,211,252,.18),0 6px 28px rgba(14,165,233,.5);animation:dia-pulse 1.6s ease-in-out infinite}
 #dia-chest.ready .chest-sub{color:#7dd3fc;border-color:rgba(125,211,252,.5)}
 @keyframes dia-pulse{0%,100%{box-shadow:0 0 0 4px rgba(125,211,252,.18),0 6px 28px rgba(14,165,233,.5)}50%{box-shadow:0 0 0 8px rgba(125,211,252,.08),0 6px 28px rgba(14,165,233,.35)}}
-@media(prefers-reduced-motion:reduce){#dia-chest.ready .chest-btn{animation:none}}
+/* ===== Reward chest states: A locked / B ready-open / C claim-burst ===== */
+/* State A (default): closed lid, dim, 0.9x. Open/pile/glow/float/burst hidden
+   everywhere the scene renders (button + modal mark share one SVG). */
+.chest-scene .g-open,.chest-scene .burst-gem,.chest-scene .flash{display:none}
+#dia-chest.ready .chest-art{transform:scale(1);filter:none;animation:chest-breathe 3s ease-in-out infinite}
+#dia-chest.ready .g-closed{display:none}
+#dia-chest.ready .g-open{display:block}
+#dia-chest.ready .glow{animation:glow-pulse 2.2s ease-in-out infinite}
+#dia-chest.ready .fire{animation:fire-flick 1.8s ease-in-out infinite}
+#dia-chest.ready .fire.f-b{animation-delay:.9s}
+#dia-chest.ready .fl{animation:float-up 2.6s linear infinite}
+#dia-chest.ready .fl.f2{animation-delay:.85s}
+#dia-chest.ready .fl.f3{animation-delay:1.7s}
+#dia-chest.burst .burst-gem{display:block;animation:burst-up .9s ease-out forwards}
+#dia-chest.burst .flash{display:block;animation:flash-pop .9s ease-out forwards}
+@keyframes chest-breathe{0%,100%{transform:translateY(2px) rotate(-1deg) scale(1)}50%{transform:translateY(-3px) rotate(1.2deg) scale(1)}}
+@keyframes glow-pulse{0%,100%{opacity:.55}50%{opacity:.95}}
+@keyframes fire-flick{0%,100%{opacity:.15}50%{opacity:1}}
+@keyframes float-up{0%{transform:translateY(4px);opacity:0}30%{opacity:1}100%{transform:translateY(-12px);opacity:0}}
+@keyframes burst-up{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--dx,-10px),-46px) scale(.4);opacity:0}}
+@keyframes flash-pop{0%{opacity:0}15%{opacity:.9}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){#dia-chest.ready .chest-btn,#dia-chest.ready .chest-art,#dia-chest.ready .glow,#dia-chest.ready .fire,#dia-chest.ready .fl,#dia-chest.burst .burst-gem,#dia-chest.burst .flash{animation:none}}
 @media(max-width:640px){#dia-chest{right:12px;bottom:92px}}
 /* diamond ad viewer (namespaced so Grow's #ad-modal is untouched) */
 .dia-veil{position:fixed;inset:0;z-index:95;background:rgba(10,11,22,.9);display:none;align-items:center;justify-content:center;padding:20px}
@@ -672,3 +694,9 @@ tr.skel td{padding:12px 10px}
 .dia-foot{padding:16px 20px 20px}
 .dia-timer{display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px}
 .dia-timer b{color:#7dd3fc}
+/* payout feedback: flip-on-change + green glow (reduced-motion safe) */
+.fav-flip{display:inline-block;animation:fav-flip .5s ease}
+@keyframes fav-flip{0%{transform:rotateX(0)}50%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
+.fav-glow{animation:fav-glow-green 1.4s ease}
+@keyframes fav-glow-green{0%,100%{text-shadow:none}25%{text-shadow:0 0 14px rgba(1,214,118,.95);color:#8ff0bd}}
+@media(prefers-reduced-motion:reduce){.fav-flip,.fav-glow{animation:none}}

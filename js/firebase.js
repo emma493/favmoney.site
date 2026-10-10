@@ -351,7 +351,8 @@ export const DIAMOND_AD_COOLDOWN_MS = 3600000; // 1h between ad rewards
 export const DIAMOND_PASSIVE_AMOUNT = 2;
 export const DIAMOND_PASSIVE_INTERVAL_MS = 3 * 3600000; // 3h drip, claimable
 export const DIAMOND_COST_SPIN = 10; // locked 2026-10-10: 1 free/day + extras @10
-export const DIAMOND_GAME_COSTS = { spin: DIAMOND_COST_SPIN };
+export const DIAMOND_COST_QUIZ = 10; // Quiz & Earn entry: 10 diamonds buys a 30-question session
+export const DIAMOND_GAME_COSTS = { spin: DIAMOND_COST_SPIN, quiz: DIAMOND_COST_QUIZ };
 
 // Weighted 2-10 roll: 2 @30%, 3-5 @50%, 6-10 @20%. Pure, unit-testable.
 export function rollDiamondReward(rand) {
@@ -606,6 +607,248 @@ export async function claimFaucet(uid) {
   return { ok: true, amount: FAUCET_AMOUNT, remainingToday: st.remainingToday - 1 };
 }
 
+// ---- Quiz & Earn math arcade: 10-diamond entry, 30-question sessions ----
+// Loop: deposit 10 diamonds -> pick + - x / -> answer generated questions
+// (4 options, 10s each). Correct pays $0.10 to main balance via creditReward
+// (label 'play:quiz': Rewards track + 25% commission + Grow gate, no rules
+// change — status 'pending' passes with any label). One rescue life per
+// session via a 20s house-promo view; a second fail ends the session and
+// unanswered questions are lost. Max exposure: 30 x $0.10 = $3.00/session.
+export const QUIZ_ENTRY_COST = DIAMOND_COST_QUIZ;
+export const QUIZ_SESSION_SIZE = 30;
+export const QUIZ_PAY = 0.10;
+export const QUIZ_TIME_MS = 10000;
+export const QUIZ_OPS = ['+', '-', 'x', '/'];
+
+// Difficulty tier from questions already answered this session. Pure.
+export function quizTier(answered) {
+  const n = Math.max(0, Math.floor(Number(answered || 0)));
+  return n < 10 ? 0 : n < 20 ? 1 : 2;
+}
+
+function qint(rand, lo, hi) {
+  return lo + Math.floor(rand() * (hi - lo + 1));
+}
+
+// Pure question generator — no Firestore. Returns
+// { a, op, b, answer, text }. Division is always clean, subtraction never
+// goes negative. rand is an injectable () => [0,1) for tests.
+export function genQuizQuestion(op, answered, rand) {
+  const r = typeof rand === 'function' ? rand : Math.random;
+  const R = function (lo, hi) { return qint(r, lo, hi); };
+  const t = quizTier(answered);
+  const o = QUIZ_OPS.indexOf(op) >= 0 ? op : QUIZ_OPS[Math.floor(r() * 4)];
+  let a = 0, b = 0, answer = 0;
+  if (o === '+') {
+    const hi = t === 0 ? 20 : t === 1 ? 50 : 100;
+    const lo = t === 0 ? 2 : t === 1 ? 5 : 10;
+    a = R(lo, hi); b = R(lo, hi); answer = a + b;
+  } else if (o === '-') {
+    const hi = t === 0 ? 20 : t === 1 ? 50 : 100;
+    const lo = t === 0 ? 2 : t === 1 ? 5 : 10;
+    a = R(lo, hi); b = R(lo, a); answer = a - b;
+  } else if (o === 'x') {
+    const hi = t === 0 ? 5 : t === 1 ? 9 : 12;
+    a = R(2, hi); b = R(2, hi); answer = a * b;
+  } else {
+    const hi = t === 0 ? 5 : t === 1 ? 9 : 12;
+    b = R(2, hi); answer = R(2, hi); a = b * answer;
+  }
+  const sym = o === 'x' ? '×' : o === '/' ? '÷' : o === '-' ? '−' : '+';
+  return { a, op: o, b, answer, text: a + ' ' + sym + ' ' + b };
+}
+
+// Pure: verify a question is internally consistent (a op b === answer).
+// The server re-checks this so tampered clients cannot invent pays.
+export function quizCheck(q) {
+  try {
+    if (!q || typeof q.a !== 'number' || typeof q.b !== 'number' || typeof q.answer !== 'number') return false;
+    const v = q.op === '+' ? q.a + q.b : q.op === '-' ? q.a - q.b : q.op === 'x' ? q.a * q.b : q.op === '/' ? (q.b !== 0 ? q.a / q.b : NaN) : NaN;
+    return v === q.answer;
+  } catch (_) { return false; }
+}
+
+function quizShuffle(arr, rand) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+// Pure: 4 unique options (correct + 3 distractors), shuffled. Distractors
+// stay >= 0. rand is injectable for tests.
+export function quizOptions(answer, rand) {
+  const r = typeof rand === 'function' ? rand : Math.random;
+  const ans = Math.floor(Number(answer || 0));
+  const cands = quizShuffle([ans + 1, ans - 1, ans + 2, ans - 2, ans + 3, ans - 3, ans + 5, ans - 5, ans + 10, ans - 10], r);
+  const picks = [];
+  for (const c of cands) {
+    if (picks.length >= 3) break;
+    if (c < 0 || c === ans || picks.indexOf(c) >= 0) continue;
+    picks.push(c);
+  }
+  // Answer 0..2 has fewer valid distractors — fill upward (never duplicates).
+  let f = ans + 4;
+  while (picks.length < 3) {
+    if (picks.indexOf(f) < 0 && f !== ans) picks.push(f);
+    f++;
+  }
+  return quizShuffle([ans].concat(picks), r);
+}
+
+// Pure session fold over proof rows — no Firestore. The session is anchored
+// on the latest diamond-spend:quiz entry; answers at the same-or-later
+// timestamp belong to it (server stamps have 1s resolution, so >= keeps a
+// same-second first answer inside the session — the safe direction).
+// Returns { entries, lastEntryMs, hasSession, active, answered, correct, lifeUsed, earned, remaining }.
+export function quizSession(proofs, nowMs) {
+  const now = Number(nowMs || Date.now());
+  const rows = Array.isArray(proofs) ? proofs : [];
+  let lastEntryMs = 0, entries = 0;
+  for (const p of rows) {
+    if (String((p && p.label) || '') !== 'diamond-spend:quiz') continue;
+    entries++;
+    const ms = proofMs(p, now);
+    if (ms > lastEntryMs) lastEntryMs = ms;
+  }
+  let answered = 0, correct = 0, lifeUsed = false, earned = 0;
+  if (entries > 0) {
+    for (const p of rows) {
+      const lb = String((p && p.label) || '');
+      if (lb !== 'play:quiz' && lb !== 'quiz-miss' && lb !== 'quiz-life') continue;
+      if (proofMs(p, now) < lastEntryMs) continue;
+      if (lb === 'play:quiz') { answered++; correct++; earned = Math.round((earned + Number(p.amount || 0)) * 100) / 100; }
+      else if (lb === 'quiz-miss') answered++;
+      else lifeUsed = true;
+    }
+  }
+  const remaining = Math.max(0, QUIZ_SESSION_SIZE - answered);
+  return {
+    entries, lastEntryMs, hasSession: entries > 0, active: entries > 0 && remaining > 0,
+    answered, correct, lifeUsed, earned, remaining
+  };
+}
+
+// Open a session: spends 10 diamonds. Fails if a session is already active
+// or diamonds are short. Returns { ok } or { ok:false, reason }.
+export async function startQuizSession(uid) {
+  let proofs = null;
+  try { proofs = await fetchUserDocs(uid, 'proofs', 100); } catch (_) { return { ok: false, reason: 'write' }; }
+  if (quizSession(proofs, Date.now()).active) return { ok: false, reason: 'active' };
+  const sp = await spendDiamonds(uid, QUIZ_ENTRY_COST, 'quiz');
+  if (!sp.ok) return { ok: false, reason: 'funds', balance: sp.balance };
+  return { ok: true };
+}
+
+// Grade one answer. q is the generated question, pickedIdx the tapped option
+// (-1 on timeout). Re-reads proofs first: session must be active and under
+// 30, the question must check out, and the picked option must equal the
+// answer — otherwise no pay. Correct writes play:quiz ($0.10 via
+// creditReward); wrong writes quiz-miss (amount 0 bookkeeping).
+// Returns { ok:true, correct } or { ok:false, reason }.
+export async function answerQuiz(uid, q, pickedIdx) {
+  if (!quizCheck(q) || !q.options || q.options.length !== 4 || q.options.indexOf(q.answer) < 0) {
+    return { ok: false, reason: 'question' };
+  }
+  // The options must be exactly {answer + 3 unique distractors}.
+  const uniq = {};
+  for (const o of q.options) {
+    if (typeof o !== 'number' || !(o >= 0)) return { ok: false, reason: 'question' };
+    uniq[o] = true;
+  }
+  if (Object.keys(uniq).length !== 4) return { ok: false, reason: 'question' };
+  let proofs = null;
+  try { proofs = await fetchUserDocs(uid, 'proofs', 100); } catch (_) { return { ok: false, reason: 'write' }; }
+  const st = quizSession(proofs, Date.now());
+  if (!st.active) return { ok: false, reason: 'session' };
+  const correct = Number(q.options[pickedIdx]) === Number(q.answer);
+  try {
+    if (correct) await creditReward(uid, QUIZ_PAY, 'play:quiz');
+    else await addDoc(collection(db, 'proofs'), { uid, amount: 0, label: 'quiz-miss', status: 'pending', at: serverTimestamp() });
+  } catch (_) { return { ok: false, reason: 'write' }; }
+  return { ok: true, correct };
+}
+
+// Spend the one rescue life for this session. The UI must verify the 20s ad
+// view BEFORE calling. Returns { ok } or { ok:false, reason }.
+export async function useQuizLife(uid) {
+  let proofs = null;
+  try { proofs = await fetchUserDocs(uid, 'proofs', 100); } catch (_) { return { ok: false, reason: 'write' }; }
+  const st = quizSession(proofs, Date.now());
+  if (!st.active) return { ok: false, reason: 'session' };
+  if (st.lifeUsed) return { ok: false, reason: 'used' };
+  try {
+    await addDoc(collection(db, 'proofs'), { uid, amount: 0, label: 'quiz-life', status: 'pending', at: serverTimestamp() });
+  } catch (_) { return { ok: false, reason: 'write' }; }
+  return { ok: true };
+}
+
+// ---- Paid PTC: per-link catalog views, 5 paid views per UTC day ----
+// Same timer-only, re-read-before-pay pattern as the faucet. Each catalog
+// entry carries its own secs/pay/intervalHrs; the pay is re-validated here
+// against PTC_MIN_PAY..PTC_MAX_PAY and the catalog row, so tampered clients
+// cannot invent amounts. Proofs use label 'ptc-view' (status 'pending'
+// passes rules with any label) and count toward the Rewards ads track.
+// Max exposure at launch: 5 x $0.20 = $1.00/user/day.
+export const PTC_DAILY_CAP = 5;
+export const PTC_MIN_PAY = 0.10;
+export const PTC_MAX_PAY = 0.30;
+
+// Pure PTC state — no Firestore.
+// catalog: array of {id,secs,pay,intervalHrs}; proofs: proof rows.
+// Returns { paidToday, remainingToday, capped, resetMs, ads: {id: {ready, waitMs, lastMs, pay, secs}} }.
+export function ptcState(proofs, catalog, nowMs) {
+  const now = Number(nowMs || Date.now());
+  const today = utcDayStr(now);
+  const list = Array.isArray(catalog) ? catalog : [];
+  const byAd = {};
+  let paidToday = 0;
+  for (const p of (Array.isArray(proofs) ? proofs : [])) {
+    if (String((p && p.label) || '') !== 'ptc-view') continue;
+    const id = p && p.adId ? String(p.adId) : '';
+    const ms = proofMs(p, now);
+    if (utcDayStr(ms) === today) paidToday++;
+    if (id) {
+      if (!byAd[id] || ms > byAd[id]) byAd[id] = ms;
+    }
+  }
+  const ads = {};
+  for (const a of list) {
+    if (!a || !a.id) continue;
+    const last = byAd[a.id] || 0;
+    const waitMs = Math.max(0, last + Number(a.intervalHrs || 24) * 3600000 - now);
+    ads[a.id] = { ready: waitMs <= 0, waitMs, lastMs: last, pay: Number(a.pay || 0), secs: Number(a.secs || 0) };
+  }
+  const remainingToday = Math.max(0, PTC_DAILY_CAP - paidToday);
+  return {
+    paidToday, remainingToday, capped: remainingToday <= 0,
+    resetMs: spinResetMs(now), ads
+  };
+}
+
+// Claim one catalog view. ad: the catalog row (id/secs/pay re-checked).
+// Returns { ok:true, amount } or { ok:false, reason:'unknown'|'capped'|'cooldown'|'write', ... }.
+export async function claimPtcView(uid, ad) {
+  if (!ad || !ad.id) return { ok: false, reason: 'unknown' };
+  const pay = Math.round(Number(ad.pay || 0) * 100) / 100;
+  const secs = Math.floor(Number(ad.secs || 0));
+  if (!(pay >= PTC_MIN_PAY && pay <= PTC_MAX_PAY && secs >= 10 && secs <= 60)) {
+    return { ok: false, reason: 'unknown' };
+  }
+  let proofs = [];
+  try { proofs = await fetchUserDocs(uid, 'proofs', 200); } catch (_) { return { ok: false, reason: 'write' }; }
+  const st = ptcState(proofs, [ad], Date.now());
+  if (st.capped) return { ok: false, reason: 'capped', remainingToday: 0, resetMs: st.resetMs };
+  const a = st.ads[ad.id];
+  if (!a || !a.ready) return { ok: false, reason: 'cooldown', waitMs: a ? a.waitMs : 0, remainingToday: st.remainingToday };
+  try {
+    await creditReward(uid, pay, 'ptc-view', { adId: ad.id });
+  } catch (_) { return { ok: false, reason: 'write' }; }
+  return { ok: true, amount: pay, remainingToday: st.remainingToday - 1 };
+}
+
 // ---- Rewards milestones: task-completion tracks claimed on rewards.html ----
 // Card tracks count proofs written by each game page via
 // creditReward(uid, amount, 'play:<card>') (status 'pending' passes rules with
@@ -637,6 +880,7 @@ export function foldRewardStats(proofs, userDoc, referrals) {
   for (const p of (Array.isArray(proofs) ? proofs : [])) {
     const lb = String((p && p.label) || '');
     if (lb === 'ad-view') { s.ads++; s.boosts++; continue; }
+    if (lb === 'ptc-view') { s.ads++; continue; }
     if (/^spin-(win|diamond|ticket|free|extra)$/.test(lb)) {
       // One spin = exactly one win row (win/diamond/ticket). Cost/entry rows
       // (free/extra) are bookkeeping and must not double-count the track.
@@ -647,6 +891,9 @@ export function foldRewardStats(proofs, userDoc, referrals) {
     if (lb === 'invest-yield') { s.yields++; continue; }
     if (lb === 'task-reward' && p.milestone) { s.claimed[String(p.milestone)] = true; continue; }
     const m = /^(?:play|diamond-play):([a-z]+)$/.exec(lb);
+    // Quiz entry (diamond-play:quiz) is a deposit, not a pass — only
+    // play:quiz (correct answers) counts toward the quiz track.
+    if (lb === 'diamond-play:quiz') continue;
     if (m && REWARD_COUNTERS.indexOf(m[1]) >= 0) s[m[1]]++;
   }
   s.invites = Array.isArray(referrals) ? referrals.length : 0;

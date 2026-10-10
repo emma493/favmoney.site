@@ -145,7 +145,8 @@
 </div>
 <div class="ad-foot">
 <div class="ad-timer"><span id="ad-msg">Keep this view visible…</span><b id="ad-count">20s</b></div>
-<div class="prog" style="margin:0 0 14px"><i id="ad-bar" style="width:0%"></i></div>
+<div class="prog" style="margin:0 0 8px"><i id="ad-bar" style="width:0%"></i></div>
+<p style="font-size:11px;color:var(--faint);margin:0 0 12px;text-align:center">Sponsored · Continue opens our partner in a new tab and lights your boost.</p>
 <button class="btn btn-green btn-block" id="ad-go" style="display:none">Continue · light my boost</button>
 <button class="btn btn-ghost btn-block" id="ad-close" style="margin-top:8px">Close</button>
 </div>
@@ -158,6 +159,7 @@
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveState, settleInvest, stakeInvest, unstakeAll, activateBoost, fetchUserDocs, computeYield, utcDayStr, track, getUnclaimedRewards, INVEST_BASE_APR, INVEST_BOOST_APR, INVEST_BOOST_MS, INVEST_SEED } from './js/firebase.js';
 import { paintDualChip, startDiamondChest } from './js/diamonds.js';
+import { SPONSOR_URL, openSponsor } from './js/ptc-catalog.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
   setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
@@ -364,7 +366,12 @@ import { paintDualChip, startDiamondChest } from './js/diamonds.js';
   }
   document.getElementById('boost-btn').addEventListener('click',openAd);
   document.getElementById('ad-close').addEventListener('click',closeAd);
-  document.getElementById('ad-go').addEventListener('click',function(){var __b=this;if(window.FavLoader){return FavLoader.withButton(__b,function(){return __boostWork();});}return __boostWork();async function __boostWork(){
+  document.getElementById('ad-go').addEventListener('click',function(){var __b=this;
+    // Safe sponsor open, synchronous in the click gesture: full new tab only.
+    // Never iframed/prefetched; the 20s view was already verified by timer.
+    try{openSponsor(SPONSOR_URL);}catch(_){}
+    try{track('grow_sponsor_open');}catch(_){}
+    if(window.FavLoader){return FavLoader.withButton(__b,function(){return __boostWork();});}return __boostWork();async function __boostWork(){
     closeAd();
     var r=await activateBoost(uid);
     if(!r.ok){

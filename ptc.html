@@ -4,12 +4,30 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Watch Ads · Favmoney</title>
+<meta name="description" content="Watch sponsored links on Favmoney and earn $0.10 to $0.30 per verified view, up to 5 times a day." />
 <meta name="robots" content="noindex, nofollow" />
 <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="css/style.css" />
 <style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(20,21,35,.35);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#01D676;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#01D676;border:0;cursor:pointer;align-items:center;justify-content:center;color:#0d1a13;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
 <script src="js/loader.js"></script>
+<style>
+.ptc-row{display:flex;gap:14px;align-items:center;background:var(--card-2);border:1px solid var(--line-soft);border-radius:16px;padding:16px 18px;margin-top:12px}
+.ptc-row .pinfo{flex:1;min-width:0}
+.ptc-row .pinfo b{font-size:15px;display:block}
+.ptc-row .pinfo small{color:var(--muted);font-size:12px}
+.ptc-pay{flex:none;font-size:15px;font-weight:800;color:#ffd75e;background:rgba(255,215,94,.1);border:1px solid rgba(255,215,94,.3);border-radius:999px;padding:4px 12px;white-space:nowrap}
+.ptc-row .btn{min-height:48px;flex:none}
+.ptc-veil{position:fixed;inset:0;z-index:90;background:rgba(10,11,22,.9);display:none;align-items:center;justify-content:center;padding:20px}
+.ptc-veil.open{display:flex}
+.ptc-box{width:min(480px,100%);background:linear-gradient(180deg,#232544,#181a30);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:var(--shadow-xl)}
+.ptc-stage{padding:24px;text-align:center}
+.ptc-stage h3{margin:0 0 6px;font-size:18px}
+.ptc-stage p{margin:0;color:var(--muted);font-size:13px}
+.ptc-foot{padding:0 20px 20px}
+.ptc-timer{display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px}
+.ptc-timer b{color:#ffd75e}
+</style>
 </head>
 <body>
 <div id="page-loader" role="status" aria-label="Loading Favmoney"><div class="spinner" id="loader-spin" aria-hidden="true"></div><button id="loader-retry" type="button" aria-label="Retry loading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button></div><script>window.__favLoaderT0=window.__favLoaderT0||Date.now();(function(){setTimeout(function(){var o=document.getElementById("page-loader");if(o)o.classList.add("slow");},8000);var r=document.getElementById("loader-retry");if(r)r.addEventListener("click",function(){location.reload();});})();</script>
@@ -27,37 +45,190 @@
 <main>
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
 <h1 class="dash-title">Watch Ads</h1>
-<p>Watch short video ads for continuous balance. This quest opens next. Your balance stays safe.</p>
-<div class="bonus-card" id="faucet-card">
-<h2 style="margin:0 0 6px;font-size:20px">Watch Ads opening soon</h2>
-<p style="color:var(--muted);font-size:14px;margin:0 0 16px">We are wiring watch ads. Meanwhile, earn on live quests.</p>
-<p><span class="skeleton" style="width:70%"></span></p>
-<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-<a class="btn btn-green" href="earn.html" style="min-height:48px">Back to Earn</a>
-<a class="btn btn-ghost" href="surveys.html" style="min-height:48px">Try Surveys instead</a>
+<p>Visit sponsored links in a new tab and earn <b>$0.10–$0.30</b> per verified view — up to <b>5 times a day</b>. Fresh batches land every few hours.</p>
+<div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to watch and earn.</div>
+<div id="member-zone" style="display:none">
+<div class="bonus-card" id="ptc-batch">
+<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+<div><div class="big" id="ptc-left" style="font-size:28px;font-weight:800;color:#ffd75e;font-variant-numeric:tabular-nums">5 left</div>
+<p id="ptc-sub" style="color:var(--muted);font-size:14px;margin:2px 0 0">Checking today's ads…</p></div>
 </div>
+</div>
+<div id="ptc-list"></div>
+<p class="hint" id="ptc-hint" style="font-size:12px;color:var(--faint);margin:12px 0 0">Sponsored links open in a new tab. Keep this page visible while the timer runs — background tabs don't count.</p>
 </div>
 </div></section>
 </main>
+<div class="ptc-veil" id="ptc-modal" role="dialog" aria-label="Sponsored view">
+<div class="ptc-box">
+<div class="ptc-stage">
+<h3 id="ptc-title">Sponsored view</h3>
+<p id="ptc-text">Your link opened in a new tab.</p>
+<p id="ptc-fallback" style="display:none;margin-top:10px">Popup blocked? <a id="ptc-anchor" href="#" target="_blank" rel="noopener sponsored nofollow" style="color:#8ff0bd;font-weight:700">Tap here to open it</a></p>
+</div>
+<div class="ptc-foot">
+<div class="ptc-timer"><span id="ptc-msg">Keep this view visible…</span><b id="ptc-count">40s</b></div>
+<div class="prog" style="margin:0 0 14px"><i id="ptc-bar" style="width:0%"></i></div>
+<button class="btn btn-green btn-block" id="ptc-claim" style="display:none">Claim</button>
+<button class="btn btn-ghost btn-block" id="ptc-close" style="margin-top:8px">Close</button>
+</div>
+</div>
+</div>
 <footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="earn.html">Earn</a></span></div></div></footer>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet } from './js/firebase.js';
+import { auth, onAuthStateChanged, getWallet, fetchUserDocs, ptcState, claimPtcView, getUnclaimedRewards, track, PTC_DAILY_CAP } from './js/firebase.js';
+import { adsForSlot, slotResetMs, getAd, openSponsor } from './js/ptc-catalog.js';
+import { paintDualChip, startDiamondChest } from './js/diamonds.js';
 if (window.FavLoader) FavLoader.hold();
 (function () {
-  function ready() { if (window.FavLoader) FavLoader.pageReady(); }
-  try {
-    onAuthStateChanged(auth, async function (user) {
-      if (!user) { document.getElementById('chip-bal').textContent='\u2014'; document.getElementById('chip-name').textContent='Sign in'; ready(); return; }
-      try {
-        var w = await getWallet(user.uid);
-        document.getElementById('chip-bal').textContent = '$' + Number(w.pending).toFixed(2);
-        document.getElementById('chip-name').textContent = (user.email || 'Member').split('@')[0];
-      } catch (e) {}
+  var uid=null, stopChest=null, proofs=[], tickTimer=null, pollTimer=null;
+  var activeAd=null, viewLeft=0, viewTimer=null, viewOpen=false;
+  var toast=document.getElementById('toast'), tm=null;
+  function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
+  function money(n,d){return '$'+Number(n||0).toFixed(d==null?2:d);}
+  function msToClock(ms){
+    ms=Math.max(0,ms);var s=Math.ceil(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),ss=s%60;
+    function p(x){return (x<10?'0':'')+x;}
+    if(h>0)return p(h)+':'+p(m)+':'+p(ss);
+    return p(m)+':'+p(ss);
+  }
+  function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function paint(){
+    if(!uid)return;
+    var st=ptcState(proofs, adsForSlot(Date.now()), Date.now());
+    var left=document.getElementById('ptc-left'), sub=document.getElementById('ptc-sub');
+    left.textContent=st.remainingToday+' left';
+    if(st.capped){sub.textContent='Daily max reached — 5 of 5 claimed. Fresh ads at UTC midnight.';}
+    else{sub.textContent='Fresh batch in '+msToClock(slotResetMs(Date.now()))+' · Resets UTC midnight.';}
+    var list=document.getElementById('ptc-list');
+    var ads=adsForSlot(Date.now());
+    if(!ads.length){list.innerHTML='<div class="ptc-row"><div class="pinfo"><b>No ads right now</b><small>Fresh batch in '+msToClock(slotResetMs(Date.now()))+'.</small></div></div>';return;}
+    list.innerHTML=ads.map(function(a){
+      var s2=(st.ads||{})[a.id]||{ready:true,waitMs:0};
+      var right;
+      if(st.capped)right='<button class="btn btn-ghost" disabled>Done</button>';
+      else if(s2.ready)right='<button class="btn btn-green" data-visit="'+esc(a.id)+'">Visit · '+money(a.pay)+'</button>';
+      else right='<button class="btn btn-ghost" disabled>Back in '+msToClock(s2.waitMs)+'</button>';
+      return '<div class="ptc-row"><div class="pinfo"><b>'+esc(a.title)+'</b><small>'+a.secs+'s view · every '+(a.intervalHrs||24)+'h · Sponsored</small></div><span class="ptc-pay">'+money(a.pay)+'</span>'+right+'</div>';
+    }).join('');
+  }
+  function paintView(){
+    if(!activeAd)return;
+    var s=Math.max(0,Math.ceil(viewLeft/1000));
+    document.getElementById('ptc-count').textContent=s+'s';
+    document.getElementById('ptc-bar').style.width=Math.min(100,(activeAd.secs*1000-viewLeft)/(activeAd.secs*1000)*100)+'%';
+    document.getElementById('ptc-msg').textContent=document.hidden?'Paused — keep this view visible…':(viewLeft>0?'Keep this view visible…':'View verified.');
+  }
+  function closeView(){
+    viewOpen=false;activeAd=null;
+    if(viewTimer){clearInterval(viewTimer);viewTimer=null;}
+    document.getElementById('ptc-modal').classList.remove('open');
+  }
+  function openView(ad){
+    activeAd=ad;viewLeft=ad.secs*1000;viewOpen=true;
+    document.getElementById('ptc-title').textContent=ad.title;
+    document.getElementById('ptc-text').textContent='Your link opened in a new tab — keep this page visible for '+ad.secs+'s, then claim '+money(ad.pay)+'.';
+    document.getElementById('ptc-claim').style.display='none';
+    document.getElementById('ptc-claim').textContent='Claim '+money(ad.pay);
+    document.getElementById('ptc-modal').classList.add('open');
+    paintView();
+    if(viewTimer)clearInterval(viewTimer);
+    viewTimer=setInterval(function(){
+      if(!viewOpen||!activeAd)return;
+      if(!document.hidden)viewLeft-=250;
+      paintView();
+      if(viewLeft<=0){
+        clearInterval(viewTimer);viewTimer=null;
+        document.getElementById('ptc-claim').style.display='';
+        document.getElementById('ptc-msg').textContent='View verified.';
+      }
+    },250);
+  }
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('[data-visit]');
+    if(!b||b.disabled||!uid)return;
+    var ad=getAd(b.getAttribute('data-visit'));
+    if(!ad)return;
+    // The ONLY touch of the sponsor URL: real click -> full new tab.
+    var ok=false;
+    try{ok=openSponsor(ad.url);}catch(_){ok=false;}
+    try{track('ptc_view',{ad:ad.id});}catch(_){}
+    var fb=document.getElementById('ptc-fallback');
+    if(!ok&&fb){fb.style.display='';document.getElementById('ptc-anchor').href=ad.url;}
+    else if(fb){fb.style.display='none';}
+    openView(ad);
+  });
+  document.getElementById('ptc-close').addEventListener('click',closeView);
+  document.getElementById('ptc-claim').addEventListener('click',function(){
+    var b=this;
+    if(!activeAd)return;
+    var ad=activeAd;
+    function done(){closeView();}
+    if(window.FavLoader){return FavLoader.withButton(b,function(){return doClaim(ad).then(done);});}
+    doClaim(ad).then(done);
+    async function doClaim(a){
+      var r;
+      try{r=await claimPtcView(uid,a);}
+      catch(e){show('Claim failed — check connection and try again.');return;}
+      if(!r.ok){
+        if(r.reason==='capped')show('Daily max reached — back at UTC midnight.');
+        else if(r.reason==='cooldown')show('Too soon — back in '+msToClock(r.waitMs)+'.');
+        else show('Claim failed — check connection and try again.');
+        await refresh(false);
+        return;
+      }
+      try{track('ptc_claim',{ad:a.id,amount:r.amount});}catch(_){}
+      show('Claimed '+money(r.amount)+' to available.');
+      await refresh(true);
+    }
+  });
+  async function refresh(notify){
+    if(!uid)return;
+    try{
+      proofs=await fetchUserDocs(uid,'proofs',200);
+      paint();
+      if(notify){
+        try{var w=await getWallet(uid);paintDualChip(w.pending,w.diamonds);}catch(e){}
+      }
+    }catch(e){paint();}
+  }
+  function ready(){if(window.FavLoader)FavLoader.pageReady();}
+  try{
+    onAuthStateChanged(auth,async function(user){
+      if(!user){
+        uid=null;proofs=[];closeView();
+        if(stopChest){try{stopChest();}catch(_){}stopChest=null;}
+        if(tickTimer){clearInterval(tickTimer);tickTimer=null;}
+        if(pollTimer){clearInterval(pollTimer);pollTimer=null;}
+        document.getElementById('auth-wall').style.display='';
+        document.getElementById('member-zone').style.display='none';
+        document.getElementById('user-chip').setAttribute('href','signin.html');
+        document.getElementById('chip-bal').textContent='—';
+        document.getElementById('chip-name').textContent='Sign in';
+        ready();return;
+      }
+      uid=user.uid;
+      document.getElementById('auth-wall').style.display='none';
+      document.getElementById('member-zone').style.display='';
+      document.getElementById('user-chip').setAttribute('href','profile.html');
+      document.getElementById('chip-name').textContent=(user.email||'Member').split('@')[0];
+      try{
+        var w=await getWallet(uid);
+        paintDualChip(w.pending,w.diamonds);
+        if(stopChest){try{stopChest();}catch(_){}}
+        stopChest=startDiamondChest(uid,{onBalance:function(w2){paintDualChip(w2.pending,w2.diamonds);}});
+        try{await getUnclaimedRewards(uid);}catch(_){}
+      }catch(e){}
+      await refresh(false);
+      if(tickTimer)clearInterval(tickTimer);
+      tickTimer=setInterval(paint,1000);
+      if(pollTimer)clearInterval(pollTimer);
+      try{pollTimer=setInterval(function(){refresh(false);},20000);}catch(e){}
       ready();
     });
-  } catch (e) { ready(); }
-  setTimeout(ready, 6000);
+  }catch(e){ready();}
+  setTimeout(ready,6000);
 })();
 </script>
 </body>

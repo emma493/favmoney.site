@@ -59,7 +59,7 @@
 <div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to earn milestones.</div>
 
 <div class="bonus-card" id="guest-card" style="display:none">
-<h2 style="margin:0 0 6px;font-size:20px">45 ways to earn · up to $39.70.</h2>
+<h2 style="margin:0 0 6px;font-size:20px">37 ways to earn · up to $32.50.</h2>
 <p style="color:var(--muted);font-size:14px;margin:0 0 16px">Watch ads, finish quests, invite friends, keep streaks, grow your balance — each track pays 4 tiers. Free account, no deposit.</p>
 <div style="display:flex;gap:10px;flex-wrap:wrap">
 <a class="btn btn-green" href="signup.html" style="min-height:48px">Create free account</a>
@@ -84,7 +84,7 @@
 
 <h2 style="font-size:20px;margin:30px 0 0">Good to know</h2>
 <div class="faq" style="margin-top:14px">
-<div class="faq-item"><button>What counts toward each card?<span class="plus">+</span></button><div class="a"><div><p>Verified completions: finished offers, surveys, quizzes, ad views, faucet claims, spins, cleared flip games, dice rolls, joined friends, active-day streaks and Grow actions. Counters never decrease.</p></div></div></div>
+<div class="faq-item"><button>What counts toward each card?<span class="plus">+</span></button><div class="a"><div><p>Verified completions: finished offers, surveys, quizzes, ad views, faucet claims, spins, joined friends, active-day streaks and Grow actions. Counters never decrease.</p></div></div></div>
 <div class="faq-item"><button>Why is a card sitting at 0?<span class="plus">+</span></button><div class="a"><div><p>Some games are still opening. A card starts counting the moment its game goes live — nothing is lost, and milestones never expire.</p></div></div></div>
 <div class="faq-item"><button>Where does claimed cash go?<span class="plus">+</span></button><div class="a"><div><p>Straight to available balance, counting toward the $5 cashout like any task earning — and it can be staked in Grow.</p></div></div></div>
 <div class="faq-item"><button>Can I claim a tier twice?<span class="plus">+</span></button><div class="a"><div><p>No. Each tier pays once ever. The claim is re-checked before paying, so double-taps and stale tabs can't double-pay.</p></div></div></div>
@@ -113,10 +113,10 @@ import { auth, onAuthStateChanged, getWallet, getRewardsProgress, claimMilestone
     if(d===0)return 'today';if(d===1)return '1 day ago';if(d<30)return d+' days ago';
     return Math.floor(d/30)+'mo ago';
   }
-  var UNITS={offers:['offer','offers'],surveys:['survey','surveys'],ads:['ad','ads'],quiz:['quiz','quizzes'],faucet:['claim','claims'],spin:['spin','spins'],flip:['game','games'],dice:['roll','rolls'],invite:['friend','friends'],streak:['day','days']};
+  var UNITS={offers:['offer','offers'],surveys:['survey','surveys'],ads:['ad','ads'],quiz:['quiz','quizzes'],faucet:['claim','claims'],spin:['spin','spins'],invite:['friend','friends'],streak:['day','days']};
   var GROW_TITLES=['First stake — invest anything','First boost — light one ad boost','First harvest — claim Grow yield','Big staker — $25 staked total'];
-  var LINKS={offers:['earn.html','View on Earn'],surveys:['earn.html','View on Earn'],ads:['grow.html','Boost on Grow'],quiz:['earn.html','View on Earn'],faucet:['earn.html','View on Earn'],spin:['earn.html','View on Earn'],flip:['earn.html','View on Earn'],dice:['earn.html','View on Earn'],invite:['invite.html','Invite friends'],streak:['earn.html','Earn today'],grow:['grow.html','Open Grow']};
-  var UNLAUNCHED=['offers','surveys','quiz','faucet','spin','flip','dice'];
+  var LINKS={offers:['earn.html','View on Earn'],surveys:['earn.html','View on Earn'],ads:['grow.html','Boost on Grow'],quiz:['earn.html','View on Earn'],faucet:['earn.html','View on Earn'],spin:['earn.html','View on Earn'],invite:['invite.html','Invite friends'],streak:['earn.html','Earn today'],grow:['grow.html','Open Grow']};
+  var UNLAUNCHED=['offers','surveys','quiz','faucet','spin'];
   function tierLabel(t,i,tr){
     if(t.id==='welcome')return 'New here — gift unlocked';
     if(t.id==='grow')return GROW_TITLES[i];
@@ -158,7 +158,7 @@ import { auth, onAuthStateChanged, getWallet, getRewardsProgress, claimMilestone
     if(!uid)return;
     try{
       var p=await getRewardsProgress(uid);
-      var cards=p.tracks.filter(function(t){return ['welcome','offers','surveys','ads','quiz','faucet','spin','flip','dice'].indexOf(t.id)>=0;});
+      var cards=p.tracks.filter(function(t){return ['welcome','offers','surveys','ads','quiz','faucet','spin'].indexOf(t.id)>=0;});
       var bonus=p.tracks.filter(function(t){return ['invite','streak','grow'].indexOf(t.id)>=0;});
       document.getElementById('ms-cards').innerHTML=cards.map(cardHTML).join('');
       document.getElementById('ms-bonus').innerHTML=bonus.map(cardHTML).join('');

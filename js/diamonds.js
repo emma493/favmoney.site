@@ -49,7 +49,7 @@ export function paintDualChip(pending, diamonds) {
       chip.insertBefore(dia, document.getElementById('chip-name'));
     }
     dia.innerHTML = DIA_SVG + '<span>' + Math.max(0, Math.floor(Number(diamonds || 0))) + '</span>';
-    dia.setAttribute('title', 'Diamonds — play-only chips for Spin, Flip, Dice');
+    dia.setAttribute('title', 'Diamonds — play-only chips for Spin');
   } catch (_) {}
 }
 
@@ -148,7 +148,7 @@ export function startDiamondChest(uid, opts) {
       try {
         const r = await claimDiamondAd(uid);
         if (r.ok) {
-          pageToast('+' + r.reward + ' diamonds — spend them on Spin, Flip, Dice.');
+          pageToast('+' + r.reward + ' diamonds — spend them on Spin.');
           await refresh(true);
         } else if (r.reason === 'cooldown') {
           pageToast('Chest refills in ' + fmtClock(r.waitMs) + '.');

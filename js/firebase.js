@@ -340,21 +340,18 @@ export async function fetchReferrals(ownerUid, n) {
   } catch (e) { return []; }
 }
 
-// ---- Diamond economy: play-only chips for Spin / Flip / Dice ----
+// ---- Diamond economy: play-only chips for Spin ----
 // Diamonds are NEVER withdrawable and NEVER convert back to USD. Earned free
 // via the floating chest (hourly rewarded ad + 3-hour claimable drip), spent
-// on extra game plays beyond the daily free play. Game USD-cent wins (when
+// on extra spins beyond the daily free spin. Game USD-cent wins (when
 // they land) still flow through creditReward(); diamond wins use creditDiamonds().
-// USER TO CONFIRM: SPIN/FLIP/DICE extra-play costs when each game is built.
 export const DIAMOND_AD_MIN = 2;
 export const DIAMOND_AD_MAX = 10;
 export const DIAMOND_AD_COOLDOWN_MS = 3600000; // 1h between ad rewards
 export const DIAMOND_PASSIVE_AMOUNT = 2;
 export const DIAMOND_PASSIVE_INTERVAL_MS = 3 * 3600000; // 3h drip, claimable
 export const DIAMOND_COST_SPIN = 10; // locked 2026-10-10: 1 free/day + extras @10
-export const DIAMOND_COST_FLIP = 15; // USER TO CONFIRM
-export const DIAMOND_COST_DICE = 5; // USER TO CONFIRM
-export const DIAMOND_GAME_COSTS = { spin: DIAMOND_COST_SPIN, flip: DIAMOND_COST_FLIP, dice: DIAMOND_COST_DICE };
+export const DIAMOND_GAME_COSTS = { spin: DIAMOND_COST_SPIN };
 
 // Weighted 2-10 roll: 2 @30%, 3-5 @50%, 6-10 @20%. Pure, unit-testable.
 export function rollDiamondReward(rand) {
@@ -564,17 +561,15 @@ export const REWARD_TRACKS = [
   { id: 'quiz', name: 'Quiz & Earn', tag: 'Pass quizzes', icon: 'graduation-cap', counter: 'quiz', targets: [1, 5, 20, 50] },
   { id: 'faucet', name: 'Free Faucet', tag: 'Collect claims', icon: 'droplets', counter: 'faucet', targets: [5, 25, 100, 250] },
   { id: 'spin', name: 'Spin the Wheel', tag: 'Use daily spins', icon: 'rotate-cw', counter: 'spin', targets: [3, 7, 14, 30] },
-  { id: 'flip', name: 'Flip to Win', tag: 'Clear card games', icon: 'layout-grid', counter: 'flip', targets: [1, 10, 30, 100] },
-  { id: 'dice', name: 'Dice Roll', tag: 'Play dice rolls', icon: 'dices', counter: 'dice', targets: [10, 50, 200, 500] },
   { id: 'invite', name: 'Inviter', tag: 'Friends joined', icon: 'users', counter: 'invites', targets: [1, 3, 10, 25] },
   { id: 'streak', name: 'Streak Keeper', tag: 'Active days in a row', icon: 'flame', counter: 'streak', targets: [3, 7, 14, 30] },
   { id: 'grow', name: 'Grower', tag: 'Grow milestones', icon: 'trending-up', counter: null, targets: [1, 1, 1, 25], counters: ['stakes', 'boosts', 'yields', 'stakedTotal'] },
 ];
-const REWARD_COUNTERS = ['offers', 'surveys', 'ads', 'quiz', 'faucet', 'spin', 'flip', 'dice'];
+const REWARD_COUNTERS = ['offers', 'surveys', 'ads', 'quiz', 'faucet', 'spin'];
 
 // Pure stats fold over a proofs array + user doc + referrals — no Firestore.
 export function foldRewardStats(proofs, userDoc, referrals) {
-  const s = { welcome: 1, offers: 0, surveys: 0, ads: 0, quiz: 0, faucet: 0, spin: 0, flip: 0, dice: 0, invites: 0, streak: 0, stakes: 0, boosts: 0, yields: 0, stakedTotal: 0, claimed: {} };
+  const s = { welcome: 1, offers: 0, surveys: 0, ads: 0, quiz: 0, faucet: 0, spin: 0, invites: 0, streak: 0, stakes: 0, boosts: 0, yields: 0, stakedTotal: 0, claimed: {} };
   for (const p of (Array.isArray(proofs) ? proofs : [])) {
     const lb = String((p && p.label) || '');
     if (lb === 'ad-view') { s.ads++; s.boosts++; continue; }

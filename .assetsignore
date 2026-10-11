@@ -1,0 +1,8 @@
+# Files that must never be uploaded as public site assets (gitignore syntax).
+# The deploy runs `wrangler deploy` with assets.directory = "." (repo root),
+# so anything installed into the build container (notably node_modules from
+# Wrangler's own setup step) has to be excluded here, or the upload trips the
+# 25 MiB per-file Worker asset limit and the deploy fails.
+node_modules/
+.git/
+wrangler.jsonc

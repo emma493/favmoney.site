@@ -191,9 +191,10 @@ service cloud.firestore {
                // Diamonds are play-only chips: all diamond moves carry amount 0
                // (USD untouched) with a signed diamonds delta for history.
                || (request.resource.data.label.matches('diamond-.*') && request.resource.data.amount == 0)
-              )
-            )
-          )
+               )
+             )
+           )
+         )
           // Admin audit rows (manual adjust <= $100): any uid, labelled, bounded.
           || (
             isAdmin()

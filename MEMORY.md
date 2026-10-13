@@ -218,6 +218,7 @@
 
 ## 11. Fav-Admin full build (2026-10-13, BUILT — needs firestore.rules paste + live test)
 - **No login page (owner request, 2026-10-13):** login forms + TOTP removed. Auth comes from the main-site session (same origin): owner signs in on the main site, console opens straight into the shell; others see Locked + link to site sign-in, and all reads/writes still fail closed in rules. First run: one-click seat claim for an authed visitor. Sign-out in console is site-wide (shared session).
+- **Two-admin reinvention (owner request, 2026-10-13):** sign-in + sign-up back ON the Admin page, capped at exactly two admins. Rules use fixed `admin/seat1` + `admin/seat2` docs (first-come, locked shape, no third seat can exist); `isAdmin()` covers both seats so all powers extend to both. Console tries seat1 then seat2 on claim (race-safe via `!exists`); both-taken shows Locked. Requires re-pasting `firestore.rules` + redeploy.
 - **Users:** exact lookup + capped browse (100→1000) with contains-filter, per-user history CSV, credit AND debit (≤$100, balance-checked, lifetime untouched on debit), soft-ban (`users.disabled` + reason, rules-bounded to 4 fields).
 - **Payouts/Ledger:** method + text filters, show-more paging (200→1000 / 200→1000), CSV exports; decisions write audit rows.
 - **Audit view:** append-only `admin_logs` trail (credit/debit/payout-paid/payout-rejected/ban/unban/2fa-on/2fa-off), filter + show-more + CSV; Overview shows recent-10 + soft-banned count.

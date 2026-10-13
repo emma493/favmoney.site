@@ -18,8 +18,9 @@
 // proofs rows quiz-free / quiz-extra (amount 0 bookkeeping).
 // proofs rows with label diamond-* carry amount 0 (USD untouched) plus an
 // optional signed diamonds delta for history.
-// Admin model (Fav-Admin ops console): admin/owner holds the single-seat uid.
-// isAdmin() unlocks cross-user list/get on users/wallets/proofs/cashouts/
+// Admin model (Fav-Admin ops console): admin/seat1 + admin/seat2 hold the
+// two owner uids (first-come, forever, max two admins). isAdmin() unlocks
+// cross-user list/get on users/wallets/proofs/cashouts/
 // referrals/commissions, bounded wallet adjusts (shape-checked), audit proofs
 // (any uid, amount <= 100, labelled), and cashout decisions review ->
 // paid|rejected with nothing else changing. PASTE THIS FILE after editing.
@@ -34,14 +35,17 @@ service cloud.firestore {
     function authed() {
       return request.auth != null;
     }
-    // Single-seat admin: the uid recorded in admin/owner. Powers below are
+    // Two-seat admin: admin/seat1 + admin/seat2 hold the only two owner
+    // uids. Each seat is first-come, forever. Powers below are
     // read-mostly; writes are tightly bounded (adjust <= $100 with a full
     // audit proof, cashouts review -> paid|rejected only). Full authority
     // still needs a backend; these rules only unlock an ops console.
+    function seatOwns(seatId) {
+      return exists(/databases/$(database)/documents/admin/$(seatId))
+        && get(/databases/$(database)/documents/admin/$(seatId)).data.uid == request.auth.uid;
+    }
     function isAdmin() {
-      return authed()
-        && exists(/databases/$(database)/documents/admin/owner)
-        && get(/databases/$(database)/documents/admin/owner).data.uid == request.auth.uid;
+      return authed() && (seatOwns('seat1') || seatOwns('seat2'));
     }
     function isCode(s) {
       return s is string && s.matches('^[A-Z]{6}$');
@@ -234,20 +238,21 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // Single-seat admin: the first authed user to claim admin/owner owns it
-    // forever. Only the recorded owner uid can read it or set the TOTP secret.
-    match /admin/owner {
-      allow get: if authed() && resource.data.uid == request.auth.uid;
+    // Two admin seats, first-come, forever. A signed-in user claims a free
+    // seat with their own uid; owned seats are read-only to their owner and
+    // locked to everyone else. No third seat can exist — only seat1/seat2.
+    match /admin/{seatId} {
+      allow get: if authed()
+        && seatId in ['seat1', 'seat2']
+        && resource.data.uid == request.auth.uid;
       allow create: if authed()
-        && !exists(/databases/$(database)/documents/admin/owner)
+        && seatId in ['seat1', 'seat2']
+        && !exists(/databases/$(database)/documents/admin/$(seatId))
         && request.resource.data.keys().hasOnly(['uid', 'email', 'createdAt', 'totpSecret'])
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.email is string
         && (request.resource.data.totpSecret == null || request.resource.data.totpSecret is string);
-      allow update: if authed()
-        && resource.data.uid == request.auth.uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totpSecret']);
-      allow delete: if false;
+      allow update, delete: if false;
       allow list: if false;
     }
 

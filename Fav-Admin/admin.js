@@ -1,15 +1,14 @@
-// Fav-Admin ops console (single seat, full build). Requires the firestore.rules
+// Fav-Admin ops console (two seats, full build). Requires the firestore.rules
 // in this repo to be pasted in Console: isAdmin() unlocks cross-user reads,
 // bounded wallet adjusts (credit AND debit <= $100 + audit proof), cashout
 // review -> paid|rejected, soft-ban flags on users/*, and the append-only
-// admin_logs trail. No login page here by design: auth comes from the main
-// site session (same origin). Owners sign in on the main site, then open this
-// console; everyone else sees a locked message and every read/write still
-// fails closed in the rules. First run: an authed visitor can claim the
-// single seat with one click; the seat is then theirs forever.
+// admin_logs trail. Two admin seats, first-come, max two, forever: this
+// console carries its own email/password sign-in + one-click claim. Owners
+// sign in here; everyone else sees Locked/Denied and every read/write still
+// fails closed in the rules.
 // NOTE: amounts are still client-enforced; full server authority needs a
 // Cloud Function when backend lands.
-import { auth, db, onAuthStateChanged, signOut } from '../js/firebase.js';
+import { auth, db, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from '../js/firebase.js';
 import {
   FAUCET_AMOUNT, FAUCET_INTERVAL_MS, FAUCET_DAILY_CAP,
   PTC_DAILY_CAP, PTC_MIN_PAY, PTC_MAX_PAY,
@@ -55,11 +54,11 @@ if (window.FavLoader) FavLoader.hold();
     e.textContent = msg; e.classList.add('show');
   }
   function gateView(id) {
-    ['view-claim', 'view-denied'].forEach(function (v) {
+    ['view-signin', 'view-claim', 'view-denied'].forEach(function (v) {
       var el = document.getElementById(v);
       if (el) el.style.display = v === id ? '' : 'none';
     });
-    document.title = 'Fav-Admin · ' + (id === 'view-claim' ? 'Claim seat' : 'Locked');
+    document.title = 'Fav-Admin · ' + (id === 'view-claim' ? 'Claim seat' : id === 'view-denied' ? 'Locked' : 'Sign in');
   }
 
   /* ---------- CSV export ---------- */
@@ -95,18 +94,24 @@ if (window.FavLoader) FavLoader.hold();
     } catch (_) {}
   }
 
-  /* ---------- gate ---------- */
-  async function seatOf() {
-    try {
-      var s = await getDoc(doc(db, 'admin', 'owner'));
-      return s.exists() ? s.data() : null;
-    } catch (_) { return { __unreadable: true }; }
+  /* ---------- gate (two admin seats, first-come, max two) ---------- */
+  // Reads fail closed for non-owners, so a seat we cannot read is either
+  // taken by the other admin or (pre-rules-paste) unreadable. Seat
+  // availability is therefore decided by attempting the create, in order.
+  async function mySeatId(uid) {
+    for (const id of ['seat1', 'seat2']) {
+      try {
+        const s = await getDoc(doc(db, 'admin', id));
+        if (s.exists() && s.data() && s.data().uid === uid) return id;
+      } catch (_) {}
+    }
+    return null;
   }
-  async function enter(user) {
+  async function enter(user, seatId) {
     me = user;
     document.body.classList.add('authed');
     document.title = 'Fav-Admin · Overview';
-    document.getElementById('ad-me').textContent = (user.email || user.uid) + ' · seat owner';
+    document.getElementById('ad-me').textContent = (user.email || user.uid) + ' · admin (' + seatId + ' of 2)';
     showView('overview');
     ready();
   }
@@ -117,45 +122,83 @@ if (window.FavLoader) FavLoader.hold();
     document.getElementById('denied-sub').textContent = msg;
     ready();
   }
+  function showClaim(user) {
+    me = null;
+    document.body.classList.remove('authed');
+    var who = document.getElementById('claim-who');
+    var one = document.getElementById('claim-oneclick');
+    var form = document.getElementById('claim-form');
+    if (user) {
+      who.textContent = user.email || user.uid;
+      one.style.display = '';
+      form.style.display = 'none';
+    } else {
+      one.style.display = 'none';
+      form.style.display = '';
+    }
+    err('claim-err'); err('su-err'); err('si-err');
+    gateView('view-claim');
+    ready();
+  }
   try {
     onAuthStateChanged(auth, async function (user) {
-      if (!user) {
-        locked('Sign in on the main site first, then reopen this console. No sign-in here by design.');
-        return;
-      }
-      var seat = await seatOf();
-      if (seat && seat.__unreadable) {
-        // Rules not pasted yet (or not owner): owner get fails closed.
-        locked('Cannot verify the seat. Paste the repo firestore.rules, then reopen this console signed in as the owner.');
-        return;
-      }
-      if (!seat) {
-        me = null;
-        document.body.classList.remove('authed');
-        document.getElementById('claim-who').textContent = user.email || user.uid;
-        gateView('view-claim');
-        ready();
-        return;
-      }
-      if (seat.uid === user.uid) { enter(user); return; }
-      locked('This account does not own the admin seat. Open this console in the owner’s browser session.');
+      if (!user) { gateView('view-signin'); ready(); return; }
+      var seat = await mySeatId(user.uid);
+      if (seat) { enter(user, seat); return; }
+      showClaim(user);
     });
   } catch (_) { locked('Console failed to start. Reload and try again.'); }
 
+  // Claim loop: try seat1, then seat2. Rules enforce !exists, so a simultaneous
+  // race still yields at most one winner per seat — max two admins, forever.
+  async function claimSeatsFor(user) {
+    for (const id of ['seat1', 'seat2']) {
+      try {
+        await setDoc(doc(db, 'admin', id), { uid: user.uid, email: user.email || '', createdAt: serverTimestamp(), totpSecret: null });
+        return id;
+      } catch (_) {}
+    }
+    return null;
+  }
   async function doClaimSeat() {
     err('claim-err');
     var user = null;
     try { user = auth.currentUser; } catch (_) { user = null; }
-    if (!user) { err('claim-err', 'No session — sign in on the main site first.'); return; }
-    try {
-      await setDoc(doc(db, 'admin', 'owner'), { uid: user.uid, email: user.email || '', createdAt: serverTimestamp(), totpSecret: null });
-      show('Seat claimed.');
-      enter(user);
-    } catch (e) { err('claim-err', 'Claim failed — seat may already be taken.'); }
+    if (!user) { err('claim-err', 'No session — sign in below first.'); return; }
+    var owned = await mySeatId(user.uid);
+    if (owned) { enter(user, owned); return; }
+    var seat = await claimSeatsFor(user);
+    if (seat) { show('Admin seat claimed (' + seat + ' of 2).'); enter(user, seat); return; }
+    err('claim-err', 'Claim failed — both seats may be taken, or the latest firestore.rules is not published yet.');
   }
+  async function doSignin() {
+    err('si-err');
+    var em = document.getElementById('si-email').value.trim(), pw = document.getElementById('si-pass').value;
+    if (!em || !pw) { err('si-err', 'Enter email and password.'); return; }
+    try { await signInWithEmailAndPassword(auth, em, pw); }
+    catch (e) { err('si-err', 'Sign-in failed — check credentials.'); }
+  }
+  async function doSignupClaim() {
+    err('su-err');
+    var em = document.getElementById('su-email').value.trim(), pw = document.getElementById('su-pass').value;
+    if (!em || pw.length < 8) { err('su-err', 'Email + 8-character password required.'); return; }
+    try {
+      var cred = await createUserWithEmailAndPassword(auth, em, pw);
+      var seat = await claimSeatsFor(cred.user);
+      if (seat) { show('Admin seat claimed (' + seat + ' of 2).'); enter(cred.user, seat); return; }
+      err('su-err', 'Account created, but both admin seats are taken. This account has no admin access.');
+    } catch (e) { err('su-err', 'Sign-up failed — email may already be registered. Try signing in.'); }
+  }
+  document.getElementById('si-go').addEventListener('click', doSignin);
+  document.getElementById('su-go').addEventListener('click', doSignupClaim);
   document.getElementById('claim-go').addEventListener('click', doClaimSeat);
+  document.getElementById('to-claim').addEventListener('click', function () { showClaim(auth.currentUser || null); });
+  document.getElementById('to-signin').addEventListener('click', function () { err('su-err'); err('claim-err'); gateView('view-signin'); });
   document.getElementById('denied-out').addEventListener('click', function () { location.reload(); });
   document.getElementById('ad-logout').addEventListener('click', function () { try { signOut(auth); } catch (_) {} });
+  [['si-email', doSignin], ['si-pass', doSignin], ['su-email', doSignupClaim], ['su-pass', doSignupClaim]].forEach(function (t) {
+    document.getElementById(t[0]).addEventListener('keydown', function (e) { if (e.key === 'Enter') t[1](); });
+  });
 
   /* ---------- router ---------- */
   var VIEW_LOADERS = { overview: loadOverview, users: initUsers, payouts: loadPayouts, ledger: loadLedger, earn: loadEarn, system: loadSystem, audit: loadAudit };
@@ -569,14 +612,12 @@ if (window.FavLoader) FavLoader.hold();
 
   /* ---------- system ---------- */
   async function loadSystem() {
-    var seat = null;
-    try { var s = await getDoc(doc(db, 'admin', 'owner')); seat = s.exists() ? s.data() : null; } catch (_) {}
+    var seatId = me ? await mySeatId(me.uid) : null;
     document.getElementById('s-out').innerHTML =
       '<div class="ad-panel"><h2>Session</h2><dl class="kv">' +
       '<dt>Signed in</dt><dd>' + esc(me ? (me.email || me.uid) : '—') + '</dd>' +
-      '<dt>Seat UID</dt><dd class="mono">' + esc(seat && seat.uid ? seat.uid : '—') + '</dd>' +
-      '<dt>Seat since</dt><dd>' + (seat && seat.createdAt ? rel(tsMs(seat.createdAt)) : '—') + '</dd>' +
-      '<dt>Auth source</dt><dd>Main-site session (no login page here by design)</dd></dl>' +
+      '<dt>My seat</dt><dd class="mono">' + esc(seatId ? seatId + ' of 2' : '—') + '</dd>' +
+      '<dt>Seat UID</dt><dd class="mono">' + esc(me ? me.uid : '—') + '</dd></dl>' +
       '<div class="ad-row"><button class="ad-btn ghost" id="sys-out">Sign out (site-wide)</button></div>' +
       '<p class="psub">Signing out here signs the owner out of the whole site (shared session).</p></div>' +
       '<div class="ad-panel"><h2>Rules checklist</h2><p class="psub">' +
@@ -585,7 +626,7 @@ if (window.FavLoader) FavLoader.hold();
       '3. <span class="mono">robots.txt</span> already blocks <span class="mono">/Fav-Admin</span> from crawlers.<br />' +
       '4. Banned users carry <span class="mono">users/{uid}.disabled == true</span> — app pages should block earning for flagged accounts.</p></div>' +
       '<div class="ad-panel"><h2>Hardening follow-ups</h2><p class="psub">' +
-      '· No login or second factor on this console by owner request — anyone opening the URL sees the locked message, and every read/write still fails closed in the rules for non-owners.<br />' +
+      '· Two admin seats, first-come, max two — enforced in firestore.rules, no third seat can exist.<br />' +
       '· Amounts are client-enforced; full server authority needs a Cloud Function.<br />' +
       '· Admin reads bill per document — keep sample caps where they are.</p></div>';
     document.getElementById('sys-out').addEventListener('click', function () { try { signOut(auth); } catch (_) {} });

@@ -5,6 +5,7 @@
 # 25 MiB per-file Worker asset limit and the deploy fails.
 node_modules/
 .git/
+.wrangler/
 wrangler.jsonc
 VAULT.local.md
 .agents/

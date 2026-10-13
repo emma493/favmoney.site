@@ -11,8 +11,11 @@
 // Diamond model (play-only, never withdrawable): wallets/{uid} holds diamonds
 // (integer chips) + lastDiamondAdAt / lastDiamondPassiveAt (ms epoch cooldowns).
 // Spin model: users/{uid} holds lastSpinDay (UTC YYYY-MM-DD), spinTickets,
-// spinCount, spinWon. proofs rows spin-win (cash 0.02-1.00) + spin-diamond /
+// spinCount, spinWon. Quiz model: users/{uid} holds lastQuizDay (UTC YYYY-MM-DD)
+// for 1 free 30Q session/day; extra sessions cost diamonds.
+// proofs rows spin-win (cash 0.02-1.00) + spin-diamond /
 // spin-ticket / spin-free / spin-extra (amount 0 bookkeeping).
+// proofs rows quiz-free / quiz-extra (amount 0 bookkeeping).
 // proofs rows with label diamond-* carry amount 0 (USD untouched) plus an
 // optional signed diamonds delta for history.
 // Admin model (Fav-Admin ops console): admin/owner holds the single-seat uid.
@@ -48,7 +51,7 @@ service cloud.firestore {
       allow read: if self(userId);
       allow list, get: if isAdmin();
       allow create: if self(userId)
-        && request.resource.data.keys().hasOnly(['email', 'provider', 'createdAt', 'updatedAt', 'streak', 'started', 'claimedQuests', 'refcode', 'referredBy', 'myCode', 'taskEarned', 'investedUser', 'activeDays', 'lastSpinDay', 'spinTickets', 'spinCount', 'spinWon'])
+        && request.resource.data.keys().hasOnly(['email', 'provider', 'createdAt', 'updatedAt', 'streak', 'started', 'claimedQuests', 'refcode', 'referredBy', 'myCode', 'taskEarned', 'investedUser', 'activeDays', 'lastSpinDay', 'lastQuizDay', 'spinTickets', 'spinCount', 'spinWon'])
         && (request.resource.data.email is string || request.resource.data.email == null)
         && (!('refcode' in request.resource.data) || request.resource.data.refcode == null || isCode(request.resource.data.refcode))
         && (!('myCode' in request.resource.data) || request.resource.data.myCode == null || isCode(request.resource.data.myCode))
@@ -56,12 +59,13 @@ service cloud.firestore {
         && (!('taskEarned' in request.resource.data) || (request.resource.data.taskEarned is number && request.resource.data.taskEarned >= 0))
         && (!('investedUser' in request.resource.data) || (request.resource.data.investedUser is number && request.resource.data.investedUser >= 0))
         && (!('lastSpinDay' in request.resource.data) || (request.resource.data.lastSpinDay is string))
+        && (!('lastQuizDay' in request.resource.data) || (request.resource.data.lastQuizDay is string))
         && (!('spinTickets' in request.resource.data) || (request.resource.data.spinTickets is number && request.resource.data.spinTickets >= 0))
         && (!('spinCount' in request.resource.data) || (request.resource.data.spinCount is number && request.resource.data.spinCount >= 0))
         && (!('spinWon' in request.resource.data) || (request.resource.data.spinWon is number && request.resource.data.spinWon >= 0))
         && (!('activeDays' in request.resource.data) || (request.resource.data.activeDays is list && request.resource.data.activeDays.size() <= 90));
       allow update: if self(userId)
-        && request.resource.data.keys().hasOnly(['email', 'provider', 'createdAt', 'updatedAt', 'streak', 'started', 'claimedQuests', 'refcode', 'referredBy', 'myCode', 'taskEarned', 'investedUser', 'activeDays', 'lastSpinDay', 'spinTickets', 'spinCount', 'spinWon'])
+        && request.resource.data.keys().hasOnly(['email', 'provider', 'createdAt', 'updatedAt', 'streak', 'started', 'claimedQuests', 'refcode', 'referredBy', 'myCode', 'taskEarned', 'investedUser', 'activeDays', 'lastSpinDay', 'lastQuizDay', 'spinTickets', 'spinCount', 'spinWon'])
         && (!('streak' in request.resource.data) || (request.resource.data.streak is map
           && request.resource.data.streak.days is number
           && request.resource.data.streak.last is string))
@@ -188,6 +192,8 @@ service cloud.firestore {
                 || (request.resource.data.label == 'spin-ticket' && request.resource.data.amount == 0)
                 || (request.resource.data.label == 'spin-free' && request.resource.data.amount == 0)
                 || (request.resource.data.label == 'spin-extra' && request.resource.data.amount == 0)
+                || (request.resource.data.label == 'quiz-free' && request.resource.data.amount == 0)
+                || (request.resource.data.label == 'quiz-extra' && request.resource.data.amount == 0)
                // Diamonds are play-only chips: all diamond moves carry amount 0
                // (USD untouched) with a signed diamonds delta for history.
                || (request.resource.data.label.matches('diamond-.*') && request.resource.data.amount == 0)

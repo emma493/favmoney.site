@@ -131,6 +131,7 @@ export async function getUserDoc(uid) {
     investedUser: Number(d.investedUser || 0),
     activeDays: Array.isArray(d.activeDays) ? d.activeDays : [],
     lastSpinDay: d.lastSpinDay || '',
+    lastQuizDay: d.lastQuizDay || '',
     spinTickets: Math.max(0, Math.floor(Number(d.spinTickets || 0))),
     spinCount: Math.max(0, Math.floor(Number(d.spinCount || 0))),
     spinWon: Number(d.spinWon || 0),
@@ -607,8 +608,9 @@ export async function claimFaucet(uid) {
   return { ok: true, amount: FAUCET_AMOUNT, remainingToday: st.remainingToday - 1 };
 }
 
-// ---- Quiz & Earn math arcade: 10-diamond entry, 30-question sessions ----
-// Loop: deposit 10 diamonds -> pick + - x / -> answer generated questions
+// ---- Quiz & Earn math arcade: 1 free session/day, extras at 10 diamonds ----
+ // Loop: free daily 30Q session (lastQuizDay) or deposit 10 diamonds ->
+ // pick + - x / -> answer generated questions
 // (4 options, 10s each). Correct pays $0.10 to main balance via creditReward
 // (label 'play:quiz': Rewards track + 25% commission + Grow gate, no rules
 // change — status 'pending' passes with any label). One rescue life per
@@ -699,19 +701,21 @@ export function quizOptions(answer, rand) {
 }
 
 // Pure session fold over proof rows — no Firestore. The session is anchored
-// on the latest diamond-spend:quiz entry; answers at the same-or-later
-// timestamp belong to it (server stamps have 1s resolution, so >= keeps a
-// same-second first answer inside the session — the safe direction).
-// Returns { entries, lastEntryMs, hasSession, active, answered, correct, lifeUsed, earned, remaining }.
+// on the latest entry row (diamond-spend:quiz for paid sessions, quiz-free
+// for the daily free session); answers at the same-or-later timestamp belong
+// to it (server stamps have 1s resolution, so >= keeps a same-second first
+// answer inside the session — the safe direction).
+// Returns { entries, lastEntryMs, hasSession, active, answered, correct, lifeUsed, earned, remaining, freeEntry }.
 export function quizSession(proofs, nowMs) {
   const now = Number(nowMs || Date.now());
   const rows = Array.isArray(proofs) ? proofs : [];
-  let lastEntryMs = 0, entries = 0;
+  let lastEntryMs = 0, entries = 0, freeEntry = false;
   for (const p of rows) {
-    if (String((p && p.label) || '') !== 'diamond-spend:quiz') continue;
+    const lb = String((p && p.label) || '');
+    if (lb !== 'diamond-spend:quiz' && lb !== 'quiz-free') continue;
     entries++;
     const ms = proofMs(p, now);
-    if (ms > lastEntryMs) lastEntryMs = ms;
+    if (ms >= lastEntryMs) { lastEntryMs = ms; freeEntry = lb === 'quiz-free'; }
   }
   let answered = 0, correct = 0, lifeUsed = false, earned = 0;
   if (entries > 0) {
@@ -727,19 +731,48 @@ export function quizSession(proofs, nowMs) {
   const remaining = Math.max(0, QUIZ_SESSION_SIZE - answered);
   return {
     entries, lastEntryMs, hasSession: entries > 0, active: entries > 0 && remaining > 0,
-    answered, correct, lifeUsed, earned, remaining
+    answered, correct, lifeUsed, earned, remaining, freeEntry
   };
 }
 
-// Open a session: spends 10 diamonds. Fails if a session is already active
-// or diamonds are short. Returns { ok } or { ok:false, reason }.
-export async function startQuizSession(uid) {
+// Pure free-day state — no Firestore beyond the user doc row.
+// Mirrors getSpinState: 1 free 30Q session per UTC day, extras cost diamonds.
+export async function getQuizState(uid, nowMs) {
+  const now = Number(nowMs || Date.now());
+  const [w, u] = await Promise.all([getWallet(uid), getUserDoc(uid)]);
+  const today = utcDayStr(now);
+  return {
+    today, pending: Number(w.pending || 0), diamonds: w.diamonds,
+    freeLeft: u.lastQuizDay === today ? 0 : 1,
+    resetMs: spinResetMs(now)
+  };
+}
+
+// Open a session. mode: 'free' (daily, no diamond cost) | 'extra' (10 diamonds).
+// Fails if a session is already active. Returns { ok, mode } or { ok:false, reason }.
+export async function startQuizSession(uid, mode) {
+  const m = mode === 'free' ? 'free' : 'extra';
   let proofs = null;
   try { proofs = await fetchUserDocs(uid, 'proofs', 100); } catch (_) { return { ok: false, reason: 'write' }; }
   if (quizSession(proofs, Date.now()).active) return { ok: false, reason: 'active' };
+  if (m === 'free') {
+    const now = Date.now();
+    const today = utcDayStr(now);
+    let u = null;
+    try { u = await getUserDoc(uid); } catch (_) { return { ok: false, reason: 'write' }; }
+    if (u.lastQuizDay === today) return { ok: false, reason: 'nofree' };
+    try {
+      await setDoc(doc(db, 'users', uid), { lastQuizDay: today, updatedAt: serverTimestamp() }, { merge: true });
+      await addDoc(collection(db, 'proofs'), { uid, amount: 0, label: 'quiz-free', status: 'done', at: serverTimestamp() });
+    } catch (_) { return { ok: false, reason: 'write' }; }
+    return { ok: true, mode: 'free' };
+  }
   const sp = await spendDiamonds(uid, QUIZ_ENTRY_COST, 'quiz');
   if (!sp.ok) return { ok: false, reason: 'funds', balance: sp.balance };
-  return { ok: true };
+  try {
+    await addDoc(collection(db, 'proofs'), { uid, amount: 0, diamonds: -QUIZ_ENTRY_COST, label: 'quiz-extra', status: 'done', at: serverTimestamp() });
+  } catch (_) {}
+  return { ok: true, mode: 'extra' };
 }
 
 // Grade one answer. q is the generated question, pickedIdx the tapped option

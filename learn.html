@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Quiz & Earn · Favmoney</title>
-<meta name="description" content="Deposit 10 diamonds, solve 30 math sprints against a 10-second timer, earn $0.10 per correct answer." />
+<meta name="description" content="One free Quiz & Earn session every day, extra sessions for diamonds. Solve 30 math sprints against a 10-second timer, earn $0.10 per correct answer." />
 <meta name="robots" content="noindex, nofollow" />
 <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -70,12 +70,12 @@
 <main>
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
 <h1 class="dash-title">Quiz & Earn</h1>
-<p>Deposit <b>10 diamonds</b>, pick an operator, solve <b>30 math sprints</b> against a 10-second timer — <b>$0.10</b> per correct answer. One rescue life per session.</p>
+<p>One <b>free session every day</b>. Extra sessions cost <b>10 diamonds</b>. Pick an operator, solve <b>30 math sprints</b> against a 10-second timer — <b>$0.10</b> per correct answer. One rescue life per session.</p>
 <div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to play Quiz & Earn.</div>
 
 <div class="bonus-card" id="guest-card" style="display:none">
 <h2 style="margin:0 0 6px;font-size:20px">Your math sprint is waiting.</h2>
-<p style="color:var(--muted);font-size:14px;margin:0 0 16px">Sign in, grab diamonds from the chest, and turn correct answers into cash.</p>
+<p style="color:var(--muted);font-size:14px;margin:0 0 16px">Sign in to play your free daily session. Extra sessions cost diamonds from the floating chest — correct answers pay cash.</p>
 <div style="display:flex;gap:10px;flex-wrap:wrap">
 <a class="btn btn-green" href="signup.html" style="min-height:48px">Create free account</a>
 <a class="btn btn-ghost" href="signin.html" style="min-height:48px">Sign in</a>
@@ -85,9 +85,14 @@
 <div id="member-zone" style="display:none">
 <div class="bonus-card" id="quiz-entry" style="display:none">
 <h2 style="margin:0 0 6px;font-size:20px">Start a session</h2>
-<p style="color:var(--muted);font-size:14px;margin:0 0 16px">10 diamonds buys 30 questions. Correct answers pay $0.10 each to your main balance — up to $3.00 a session. Wrong twice and the session ends.</p>
+<p style="color:var(--muted);font-size:14px;margin:0 0 16px">One free 30-question session per day. Correct answers pay $0.10 each to your main balance — up to $3.00 a session. Wrong twice and the session ends.</p>
+<p id="quiz-status" aria-live="polite" style="font-size:14px;font-weight:700;color:#8ff0bd;margin:0 0 12px">Loading your sessions…</p>
 <p style="font-size:14px;margin:0 0 14px">Your diamonds: <b id="quiz-diamonds" style="color:#7dd3fc">0</b></p>
-<button class="btn btn-green" id="deposit-btn" style="min-height:48px;min-width:220px">Deposit 10 diamonds</button>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button class="btn btn-green" id="free-btn" style="min-height:48px;min-width:220px;flex:1">Start free quiz</button>
+<button class="btn btn-ghost" id="deposit-btn" style="min-height:48px;min-width:220px;flex:1">Extra session · 10 diamonds</button>
+</div>
+<p class="hint" id="quiz-hint" style="text-align:center;margin:10px 0 0">Free session resets at midnight UTC. Diamonds come from the floating chest.</p>
 </div>
 
 <div class="bonus-card" id="quiz-ops" style="display:none">
@@ -116,8 +121,24 @@
 <h2 style="margin:0 0 6px;font-size:20px" id="over-title">Session complete</h2>
 <div class="big" id="over-earned" style="font-size:clamp(36px,8vw,52px);font-weight:800;color:var(--green)">+$0.00</div>
 <p style="color:var(--muted);font-size:14px;margin:8px 0 16px" id="over-sub">0 correct out of 0.</p>
-<button class="btn btn-green" id="again-btn" style="min-height:48px;min-width:220px">Play again · 10 diamonds</button>
+<p id="over-status" style="font-size:13px;font-weight:700;color:var(--muted);margin:0 0 12px"></p>
+<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+<button class="btn btn-green" id="free-again-btn" style="min-height:48px;min-width:220px;display:none">Play free session</button>
+<button class="btn btn-ghost" id="again-btn" style="min-height:48px;min-width:220px">Play again · 10 diamonds</button>
 </div>
+</div>
+</div>
+
+<h2 style="font-size:20px;margin:26px 0 0">How it works</h2>
+<div class="quest-row"><div class="qico">1</div><div class="qmid"><b>Take your free session</b><div style="font-size:13px;color:var(--muted)">One free 30-question session per UTC day. The entry card counts down to midnight when used.</div></div></div>
+<div class="quest-row"><div class="qico">2</div><div class="qmid"><b>Want more? Spend diamonds</b><div style="font-size:13px;color:var(--muted)">Extra sessions cost 10 diamonds from the floating chest. Free and paid sessions pay the same $0.10 per correct answer.</div></div></div>
+<div class="quest-row"><div class="qico">3</div><div class="qmid"><b>Answers credit instantly</b><div style="font-size:13px;color:var(--muted)">Cash lands in available. Wrong twice and the session ends — one rescue life per session via a 20-second view.</div></div></div>
+
+<h2 style="font-size:20px;margin:30px 0 0">Good to know</h2>
+<div class="faq" style="margin-top:14px">
+<div class="faq-item"><button>When does my free session reset?<span class="plus">+</span></button><div class="a"><div><p>At midnight UTC. The countdown on the entry card shows exactly how long until the next free session.</p></div></div></div>
+<div class="faq-item"><button>Do free answers pay the same?<span class="plus">+</span></button><div class="a"><div><p>Yes. Free and diamond sessions both pay $0.10 per correct answer, up to $3.00 for a perfect 30.</p></div></div></div>
+<div class="faq-item"><button>Can I lose diamonds or cash playing?<span class="plus">+</span></button><div class="a"><div><p>No. Wrong answers just end the session after the second miss. The only cost is the 10-diamond extra-session fee; free sessions cost nothing.</p></div></div></div>
 </div>
 
 <h2 style="font-size:20px;margin:26px 0 0">Recent correct answers</h2>
@@ -149,12 +170,12 @@
 
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet, fetchUserDocs, quizSession, genQuizQuestion, quizOptions, startQuizSession, answerQuiz, useQuizLife, getUnclaimedRewards, track, QUIZ_ENTRY_COST, QUIZ_SESSION_SIZE, QUIZ_PAY, QUIZ_TIME_MS } from './js/firebase.js';
+import { auth, onAuthStateChanged, getWallet, fetchUserDocs, quizSession, genQuizQuestion, quizOptions, startQuizSession, getQuizState, answerQuiz, useQuizLife, getUnclaimedRewards, track, QUIZ_ENTRY_COST, QUIZ_SESSION_SIZE, QUIZ_PAY, QUIZ_TIME_MS } from './js/firebase.js';
 import { paintDualChip, startDiamondChest } from './js/diamonds.js';
 import { coinPour, softThud, isMuted, toggleMute } from './js/sfx.js';
 if (window.FavLoader) FavLoader.hold();
 (function () {
-  var uid=null, stopChest=null, proofs=[], diamonds=0;
+  var uid=null, stopChest=null, proofs=[], diamonds=0, quizState=null;
   var curOp=null, cur=null, busy=false, qTimer=null, qLeft=QUIZ_TIME_MS;
   var RING_C=113.1;
   var toast=document.getElementById('toast'), tm=null;
@@ -188,6 +209,39 @@ if (window.FavLoader) FavLoader.hold();
   }
   function paintMute(){document.getElementById('mute-btn').textContent=isMuted()?'Sound: off':'Sound: on';}
   document.getElementById('mute-btn').addEventListener('click',function(){toggleMute();paintMute();});
+  document.querySelectorAll('.faq-item button').forEach(function(b){
+    b.addEventListener('click',function(){b.closest('.faq-item').classList.toggle('open');});
+  });
+  function msToClock(ms){
+    ms=Math.max(0,ms);var s=Math.ceil(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),ss=s%60;
+    function p(x){return (x<10?'0':'')+x;}
+    return p(h)+':'+p(m)+':'+p(ss);
+  }
+  function paintQuizState(){
+    if(!quizState)return;
+    var st=document.getElementById('quiz-status'), fb=document.getElementById('free-btn'),
+        eb=document.getElementById('deposit-btn'), hint=document.getElementById('quiz-hint');
+    if(!st||!fb||!eb)return;
+    if(quizState.freeLeft>0){
+      st.textContent='1 free session ready — good luck';
+      st.style.color='#8ff0bd';
+      fb.textContent='Start free quiz';
+      fb.disabled=false;
+    }else{
+      st.textContent='Next free in '+msToClock(quizState.resetMs);
+      st.style.color='#ffd75e';
+      fb.textContent='Free used today';
+      fb.disabled=true;
+    }
+    eb.textContent='Extra session · '+QUIZ_ENTRY_COST+' diamonds ('+diamonds+')';
+    eb.disabled=diamonds<QUIZ_ENTRY_COST;
+    if(hint)hint.textContent=quizState.freeLeft>0
+      ?'Free session resets at midnight UTC. Diamonds come from the floating chest.'
+      :('Free session back in '+msToClock(quizState.resetMs)+' · extra sessions always available for diamonds.');
+  }
+  setInterval(function(){
+    if(quizState&&quizState.freeLeft<=0){quizState.resetMs=Math.max(0,quizState.resetMs-1000);paintQuizState();}
+  },1000);
 
   function paintRows(){
     var body=document.getElementById('q-rows');
@@ -208,6 +262,8 @@ if (window.FavLoader) FavLoader.hold();
       document.getElementById('quiz-diamonds').textContent=String(diamonds);
       if(repaintChip)paintDualChip(w.pending,w.diamonds);
     }catch(e){}
+    try{quizState=await getQuizState(uid);}catch(e){}
+    paintQuizState();
     paintRows();
     return st;
   }
@@ -271,7 +327,7 @@ if (window.FavLoader) FavLoader.hold();
     try{r=await answerQuiz(uid,cur,idx);}
     catch(e){r={ok:false,reason:'write'};}
     if(!r.ok){
-      show(r.reason==='session'?'Session ended — deposit again to play.':'Could not save — check connection and try again.');
+      show(r.reason==='session'?'Session ended — start a new session to play.':'Could not save — check connection and try again.');
       busy=false;
       await refresh(false).then(function(st){if(st&&!st.active)gameOver(st);else if(cur){for(var i=0;i<btns.length;i++)btns[i].disabled=false;startTimer();}});
       return;
@@ -307,7 +363,17 @@ if (window.FavLoader) FavLoader.hold();
     var done=st&&st.remaining===0;
     document.getElementById('over-title').textContent=done?'Session complete':'Game over';
     document.getElementById('over-earned').textContent='+'+money(st?st.earned:0);
-    document.getElementById('over-sub').textContent=(st?st.correct:0)+' correct out of '+(st?st.answered:0)+'.'+(done?'':' Unanswered questions are lost — deposit to go again.');
+    document.getElementById('over-sub').textContent=(st?st.correct:0)+' correct out of '+(st?st.answered:0)+'.'+(done?'':' Unanswered questions are lost — play again below.');
+    var fab=document.getElementById('free-again-btn'), ab=document.getElementById('again-btn'), os=document.getElementById('over-status');
+    if(quizState&&quizState.freeLeft>0){
+      if(fab)fab.style.display='';
+      if(os)os.textContent='Your free session is still available.';
+    }else{
+      if(fab)fab.style.display='none';
+      if(os&&quizState)os.textContent='Next free in '+msToClock(quizState.resetMs)+' · extras always available.';
+      else if(os)os.textContent='';
+    }
+    if(ab)ab.textContent='Play again · '+QUIZ_ENTRY_COST+' diamonds';
     clearOp();
     showZone('quiz-over');
   }
@@ -372,27 +438,37 @@ if (window.FavLoader) FavLoader.hold();
     ask(st);
   });
 
+  async function doStart(mode){
+    var r;
+    try{r=await startQuizSession(uid,mode);}catch(e){r={ok:false,reason:'write'};}
+    if(!r.ok){
+      if(r.reason==='funds')show('Need 10 diamonds — tap the floating chest to earn them free.');
+      else if(r.reason==='nofree')show('Free session used — next one at midnight UTC.');
+      else if(r.reason==='active'){var st=await refresh(false);route(st);return;}
+      else show('Could not start — check connection and try again.');
+      await refresh(false);
+      return;
+    }
+    try{track('quiz_start_mode',{mode:r.mode||mode});}catch(_){}
+    try{var w=await getWallet(uid);paintDualChip(w.pending,w.diamonds);}catch(e){}
+    var st2=await refresh(false);
+    route(st2);
+  }
+  document.getElementById('free-btn').addEventListener('click',function(){
+    var b=this;
+    if(window.FavLoader){return FavLoader.withButton(b,function(){return doStart('free');});}
+    return doStart('free');
+  });
   document.getElementById('deposit-btn').addEventListener('click',function(){
     var b=this;
-    if(window.FavLoader){return FavLoader.withButton(b,doDeposit);}
-    return doDeposit();
-    async function doDeposit(){
-      var r;
-      try{r=await startQuizSession(uid);}catch(e){r={ok:false,reason:'write'};}
-      if(!r.ok){
-        if(r.reason==='funds')show('Need 10 diamonds — tap the floating chest to earn them free.');
-        else if(r.reason==='active'){var st=await refresh(false);route(st);return;}
-        else show('Could not start — check connection and try again.');
-        return;
-      }
-      try{var w=await getWallet(uid);paintDualChip(w.pending,w.diamonds);}catch(e){}
-      document.getElementById('quiz-diamonds').textContent=String(diamonds-QUIZ_ENTRY_COST>=0?diamonds-QUIZ_ENTRY_COST:diamonds);
-      var st2=await refresh(false);
-      route(st2);
-    }
+    if(window.FavLoader){return FavLoader.withButton(b,function(){return doStart('extra');});}
+    return doStart('extra');
   });
   document.getElementById('again-btn').addEventListener('click',function(){
     document.getElementById('deposit-btn').click();
+  });
+  document.getElementById('free-again-btn').addEventListener('click',function(){
+    document.getElementById('free-btn').click();
   });
   var opBtns=document.querySelectorAll('.quiz-op');
   for(var k=0;k<opBtns.length;k++){
@@ -435,7 +511,7 @@ if (window.FavLoader) FavLoader.hold();
         var w=await getWallet(uid);
         paintDualChip(w.pending,w.diamonds);
         if(stopChest){try{stopChest();}catch(_){}}
-        stopChest=startDiamondChest(uid,{onBalance:function(w2){paintDualChip(w2.pending,w2.diamonds);}});
+        stopChest=startDiamondChest(uid,{onBalance:function(w2){paintDualChip(w2.pending,w2.diamonds);diamonds=w2.diamonds;try{document.getElementById('quiz-diamonds').textContent=String(diamonds);}catch(_){}paintQuizState();}});
         try{await getUnclaimedRewards(uid);}catch(_){}
       }catch(e){}
       var st=await refresh(false);

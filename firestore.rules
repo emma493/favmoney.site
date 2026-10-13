@@ -251,6 +251,13 @@ service cloud.firestore {
       allow list: if false;
     }
 
+    // Golden Goose postback ledger: server-only. The Worker writes via Admin
+    // SDK (bypasses rules); clients can neither file nor read conversions,
+    // so users cannot forge offer credits. Admin console can audit.
+    match /gg_events/{eventId} {
+      allow create, read, update, delete: if isAdmin();
+    }
+
     match /cashouts/{docId} {
       allow create: if authed()
         && request.resource.data.uid == request.auth.uid

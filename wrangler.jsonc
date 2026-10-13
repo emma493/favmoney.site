@@ -2,8 +2,15 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "favmoney",
   "compatibility_date": "2026-10-11",
+  "main": "worker.js",
   "observability": {
     "enabled": true
+  },
+  "vars": {
+    "FIREBASE_PROJECT_ID": "favmoney",
+    "GG_SHARE": "0.7",
+    "GG_MAX_PAYOUT": "20",
+    "GG_CREDIT_EVENTS": "redeem,iclick"
   },
   "assets": {
     "directory": ".",

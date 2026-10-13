@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Grow · Favmoney</title>
-  <meta name="description" content="Grow your Favmoney earnings: invest task rewards at 3,000% APR, boost to 4,500% by watching ads, claim when the boost ends." />
+  <meta name="description" content="Grow your Favmoney earnings: invest task rewards at 10,000% APR, boost to 15,000% by watching ads, claim when the boost ends." />
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
@@ -78,12 +78,12 @@
 <main>
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
 <h1 class="dash-title">Grow</h1>
-<p>Invest what you earn. Base 3,000% APR around the clock — watch an ad to boost to 4,500% for an hour. Claim unlocks when the boost ends.</p>
+<p>Invest what you earn. Base 10,000% APR around the clock — watch an ad to boost to 15,000% for an hour. Claim unlocks when the boost ends.</p>
 <div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to start your $1.00 grower.</div>
 
 <div class="bonus-card" id="guest-card" style="display:none">
 <h2 style="margin:0 0 6px;font-size:20px">Every account starts with a $1.00 grower.</h2>
-<p style="color:var(--muted);font-size:14px;margin:0 0 16px">It grows live for your first 72 hours, then keeps growing on every day you complete a task. Stake your earnings beside it, boost it with ads. The $1 seed itself stays invested — its yield is yours to claim.</p>
+<p style="color:var(--muted);font-size:14px;margin:0 0 16px">It grows live around the clock, never stopping. Stake your earnings beside it, boost it with ads. The $1 seed itself stays invested — its yield is yours to claim.</p>
 <div style="display:flex;gap:10px;flex-wrap:wrap">
 <a class="btn btn-green" href="signup.html" style="min-height:48px">Create free account</a>
 <a class="btn btn-ghost" href="signin.html" style="min-height:48px">Sign in</a>
@@ -94,14 +94,14 @@
 <div class="bonus-card">
 <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
 <span style="font-size:12px;font-weight:800;letter-spacing:.1em;color:var(--muted)">GROWING BALANCE</span>
-<span class="apr-badge" id="apr-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></svg><span id="apr-text">3,000% APR</span></span>
+<span class="apr-badge" id="apr-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></svg><span id="apr-text">10,000% APR</span></span>
 </div>
 <div class="tick" id="tick">0.0000000 <small>USD</small></div>
 <p class="tick-sub" id="tick-sub">Warming up…</p>
 <div class="boost-wrap">
 <button class="btn btn-green boost-pill" id="boost-btn" type="button"><span class="fill" id="boost-fill" aria-hidden="true"></span><span class="label"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5-11-6.5z"/></svg><span id="boost-text">Watch ad · boost 1 hour</span></span></button>
 </div>
-<p class="hint" id="boost-hint" style="text-align:center">One ad lights a full hour at 4,500%.</p>
+<p class="hint" id="boost-hint" style="text-align:center">One ad lights a full hour at 15,000%.</p>
 </div>
 
 <div class="bonus-card">
@@ -123,14 +123,14 @@
 <div class="stat-strip">
 <div class="stat-cell"><b id="s-invested">$0.00</b><span>Invested</span></div>
 <div class="stat-cell"><b id="s-yield">$0.00</b><span>Yield claimed</span></div>
-<div class="stat-cell"><b id="s-apr">3,000%</b><span>Current rate</span></div>
-<div class="stat-cell"><b id="s-days">0</b><span>Active days</span></div>
+<div class="stat-cell"><b id="s-apr">10,000%</b><span>Current rate</span></div>
+<div class="stat-cell"><b id="s-days">0</b><span>Task days</span></div>
 </div>
 
 <h2 style="font-size:20px;margin:30px 0 0">How it works</h2>
-<div class="quest-row"><div class="qico">1</div><div class="qmid"><b>Earn, then invest it</b><div style="font-size:13px;color:var(--muted)">Do tasks on Earn. Move up to $100 of those earnings into Grow. Yield accrues on days you earn.</div></div></div>
-<div class="quest-row"><div class="qico">2</div><div class="qmid"><b>Watch it tick at 3,000% APR</b><div style="font-size:13px;color:var(--muted)">Base rate runs around the clock on active days. Close the app — the math waits for you and settles on return.</div></div></div>
-<div class="quest-row"><div class="qico">3</div><div class="qmid"><b>Boost to 4,500% with an ad</b><div style="font-size:13px;color:var(--muted)">One verified view lights a full hour. The boost button drains as fuel burns, then claim and rewatch. Unstake anytime — no lockups.</div></div></div>
+<div class="quest-row"><div class="qico">1</div><div class="qmid"><b>Earn, then invest it</b><div style="font-size:13px;color:var(--muted)">Do tasks on Earn. Move up to $100 of those earnings into Grow. Yield never stops once invested.</div></div></div>
+<div class="quest-row"><div class="qico">2</div><div class="qmid"><b>Watch it tick at 10,000% APR</b><div style="font-size:13px;color:var(--muted)">Base rate runs around the clock, even with the app closed — the math waits for you and settles on return.</div></div></div>
+<div class="quest-row"><div class="qico">3</div><div class="qmid"><b>Boost to 15,000% with an ad</b><div style="font-size:13px;color:var(--muted)">One verified view lights a full hour. The boost button drains as fuel burns, then claim and rewatch. Unstake anytime — no lockups.</div></div></div>
 
 <h2 style="font-size:20px;margin:30px 0 0">Grow history</h2>
 <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Action</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody id="inv-rows"><tr class="skel"><td colspan="4"><span class="skeleton" style="width:90%"></span></td></tr><tr class="skel"><td colspan="4"><span class="skeleton" style="width:75%"></span></td></tr><tr class="skel"><td colspan="4"><span class="skeleton" style="width:82%"></span></td></tr></tbody></table></div>
@@ -138,7 +138,7 @@
 <h2 style="font-size:20px;margin:30px 0 0">Good to know</h2>
 <div class="faq" style="margin-top:14px">
 <div class="faq-item"><button>Can I withdraw the $1 seed?<span class="plus">+</span></button><div class="a"><div><p>No. The $1 starter is invest-only: its principal stays growing forever, but every cent of yield it earns is yours to claim and cash out from $5 like any earning.</p></div></div></div>
-<div class="faq-item"><button>Why do only active days earn?<span class="plus">+</span></button><div class="a"><div><p>So the rate stays real. After your first 72 hours — during which the $1 seed grows live no matter what — yield accrues on UTC days where you complete at least one rewarded action. Earn something, however small, and that whole day's growth counts.</p></div></div></div>
+<div class="faq-item"><button>Does mining ever stop?<span class="plus">+</span></button><div class="a"><div><p>No. Once invested, your balance grows around the clock at 10,000% APR base, 15,000% while boosted. No task needed to keep it ticking.</p></div></div></div>
 <div class="faq-item"><button>What if I close the app mid-boost?<span class="plus">+</span></button><div class="a"><div><p>Nothing is lost. Boost time is stored as a timestamp, not a live process: return three hours later and exactly one boosted hour plus two base hours settle into your balance.</p></div></div></div>
 <div class="faq-item"><button>Can I lose principal?<span class="plus">+</span></button><div class="a"><div><p>No. There is no downside mechanic — invested funds only move by your own stake, unstake, and accrued yield. Never any loss, fee, or lockup.</p></div></div></div>
 </div>
@@ -202,21 +202,16 @@ import { SPONSOR_URL, openSponsor } from './js/ptc-catalog.js';
   function paintLive(){
     if(!state)return;
     var now=Date.now();
-    var grace=state.graceUntilMs>now?{seed:INVEST_SEED,graceUntilMs:state.graceUntilMs}:null;
-    var r=computeYield(state.invested, investAnchor, now, state.boostUntilMs, state.activeDays, grace);
+    var r=computeYield(state.invested, investAnchor, now, state.boostUntilMs);
     var totalYield=anchorAccrued+r.yield;
     var shown=state.invested+totalYield;
     document.getElementById('tick').innerHTML=shown.toFixed(7)+' <small>USD</small>';
     var boosted=state.boostUntilMs>now;
     var perDay=dayYield(state.invested,boosted?INVEST_BOOST_APR:INVEST_BASE_APR);
-    var sub='Growing <b>'+money(perDay,4)+'/day</b> at current rate · unclaimed <b>'+money(totalYield,6)+'</b>';
-    if(grace){
-      var gl=grace.graceUntilMs-now,gh=Math.floor(gl/3600000),gm=Math.floor(gl%3600000/60000);
-      sub+=' · Welcome ignition: seed grows live for <b>'+gh+'h '+gm+'m</b> — do any task to keep it growing after';
-    }
+    var sub='Growing <b>'+money(perDay,4)+'/day</b> at current rate · unclaimed <b>'+money(totalYield,6)+'</b> · never stops';
     document.getElementById('tick-sub').innerHTML=sub;
     var badge=document.getElementById('apr-badge');
-    document.getElementById('apr-text').textContent=(boosted?'4,500% BOOSTED':'3,000% APR');
+    document.getElementById('apr-text').textContent=(boosted?'15,000% BOOSTED':'10,000% APR');
     badge.classList.toggle('boost',boosted);
     var boostBtn=document.getElementById('boost-btn');
     var claimBtn=document.getElementById('claim-btn');
@@ -237,9 +232,9 @@ import { SPONSOR_URL, openSponsor } from './js/ptc-catalog.js';
       boostBtn.disabled=false;boostBtn.removeAttribute('aria-disabled');boostBtn.removeAttribute('aria-label');
       if(claimBtn){claimBtn.disabled=false;claimBtn.removeAttribute('aria-disabled');claimBtn.removeAttribute('title');}
     }
-    document.getElementById('s-apr').textContent=(boosted?'4,500%':'3,000%');
+    document.getElementById('s-apr').textContent=(boosted?'15,000%':'10,000%');
     var hint=document.getElementById('boost-hint');
-    if(hint)hint.textContent=boosted?'Boost draining — claim unlocks when the timer ends.':'One ad lights a full hour at 4,500%.';
+    if(hint)hint.textContent=boosted?'Boost draining — claim unlocks when the timer ends.':'One ad lights a full hour at 15,000%.';
   }
   function paintBadges(n){
     unclaimedN=n;
@@ -324,7 +319,7 @@ import { SPONSOR_URL, openSponsor } from './js/ptc-catalog.js';
   document.getElementById('claim-btn').addEventListener('click',function(){var __b=this;if(window.FavLoader){return FavLoader.withButton(__b,function(){return __claimWork();});}return __claimWork();async function __claimWork(){
     var r=await settleInvest(uid);
     if(r.yield>0){show('Claimed '+money(r.yield,6)+' to available.');try{track('invest_claim',{amount:r.yield});}catch(_){}}
-    else show('Nothing to claim yet — earn a task today to ignite growth.');
+    else show('Nothing to claim yet — give it a minute to grow.');
     await refresh();
   }});
   document.getElementById('unstake-btn').addEventListener('click',function(){var __b=this;if(window.FavLoader){return FavLoader.withButton(__b,function(){return __unstakeWork();});}return __unstakeWork();async function __unstakeWork(){
@@ -342,7 +337,7 @@ import { SPONSOR_URL, openSponsor } from './js/ptc-catalog.js';
   var ADS=[
     ['Invite pays both ways','Invite friends: they get $1.00 instantly, you get $0.50 instantly. Your link lives on the Invite page.'],
     ['Cash out from $5','PayPal, Visa prepaid and crypto. Reviewed promptly, tracked in My Withdrawals.'],
-    ['Streaks ignite growth','Grow yield accrues on days you complete a rewarded action. One task a day keeps the ticker climbing.']
+    ['Streaks grow earnings','Grow ticks around the clock at 10,000% APR. Boost to 15,000% with an ad.']
   ];
   var adIdx=0;
   function openAd(){
@@ -390,7 +385,7 @@ import { SPONSOR_URL, openSponsor } from './js/ptc-catalog.js';
       return;
     }
     try{track('invest_boost');}catch(_){}
-    show('Boost lit — 4,500% APR for 1 hour.');
+    show('Boost lit — 15,000% APR for 1 hour.');
     await refresh();
   }});
   document.querySelectorAll('.faq-item button').forEach(function(b){

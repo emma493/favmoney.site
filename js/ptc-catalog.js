@@ -24,18 +24,46 @@ export const PTC_TIERS = [
 export const PTC_MIN_PAY = 0.10;
 export const PTC_MAX_PAY = 0.30;
 
-export const PTC_CATALOG = [
-  {
-    id: 'adsterra-01',
-    title: 'Sponsored partner',
-    text: 'Visit our partner in a new tab, keep this page visible for 40 seconds, then claim $0.20.',
-    url: SPONSOR_URL,
-    secs: 40,
-    pay: 0.20,
-    intervalHrs: 24,
-    slots: [0, 1, 2, 3, 4, 5, 6, 7]
+// How many ready ads the Watch page shows at once. The rest unlock
+// 1-for-1 as the user claims (see ptc.html paint()).
+export const PTC_VISIBLE_COUNT = 30;
+
+function tierForIndex(i) {
+  // Weighted mix to bound daily exposure (50 ads, ~$6.50 max):
+  // 20x 10s/$0.10, 12x 15s/$0.11, 10x 30s/$0.13, 5x 40s/$0.20, 3x 60s/$0.30.
+  if (i < 20) return { secs: 10, pay: 0.10 };
+  if (i < 32) return { secs: 15, pay: 0.11 };
+  if (i < 42) return { secs: 30, pay: 0.13 };
+  if (i < 47) return { secs: 40, pay: 0.20 };
+  return { secs: 60, pay: 0.30 };
+}
+
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
+
+export const PTC_CATALOG = (function buildCatalog() {
+  var out = [];
+  for (var i = 0; i < 50; i++) {
+    var t = tierForIndex(i);
+    var n = i + 1;
+    var id = n === 1 ? 'adsterra-01' : 'ptc-' + pad2(n);
+    out.push({
+      id: id,
+      title: 'Sponsored partner ' + pad2(n),
+      text: 'Visit our partner in a new tab, keep this page visible for ' + t.secs + ' seconds, then claim $' + t.pay.toFixed(2) + '.',
+      url: SPONSOR_URL,
+      secs: t.secs,
+      pay: t.pay,
+      intervalHrs: 24,
+      slots: [0, 1, 2, 3, 4, 5, 6, 7]
+    });
   }
-];
+  // Keep the legacy first title stable for existing users.
+  out[0].title = 'Sponsored partner';
+  out[0].secs = 40;
+  out[0].pay = 0.20;
+  out[0].text = 'Visit our partner in a new tab, keep this page visible for 40 seconds, then claim $0.20.';
+  return out;
+})();
 
 // Rotation: 3-hour UTC slots, 8 batches/day. Pure function of time.
 export const PTC_SLOT_MS = 3 * 3600000;

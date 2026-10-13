@@ -7,7 +7,7 @@
 // Grow model: wallets/{uid} holds invested principal (incl. locked $1 seed),
 // investedAt (ms epoch), boostUntil (ms epoch, 0 = inactive). users/{uid} holds
 // taskEarned (stakeable ceiling source), investedUser (user principal, excl. seed),
-// activeDays (UTC-day strings with rewarded activity, max 90 — yield gate).
+// activeDays (UTC-day strings with rewarded activity, max 90 — stats only, mining never stops).
 // Diamond model (play-only, never withdrawable): wallets/{uid} holds diamonds
 // (integer chips) + lastDiamondAdAt / lastDiamondPassiveAt (ms epoch cooldowns).
 // Spin model: users/{uid} holds lastSpinDay (UTC YYYY-MM-DD), spinTickets,
@@ -81,6 +81,11 @@ service cloud.firestore {
         && (!('myCode' in resource.data) || !('myCode' in request.resource.data) || request.resource.data.myCode == resource.data.myCode)
         && (!('myCode' in request.resource.data) || request.resource.data.myCode == null || isCode(request.resource.data.myCode));
       allow delete: if false;
+      // Admin moderation (soft-ban): owner can flip disabled + reason only.
+      // App pages should treat users/{uid}.disabled == true as blocked.
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['disabled', 'disabledAt', 'disabledReason', 'disabledBy'])
+        && (!('disabled' in request.resource.data) || request.resource.data.disabled is bool);
     }
 
     // Public code directory: CODE (doc id) -> owner uid. First-come ownership.
@@ -201,16 +206,30 @@ service cloud.firestore {
              )
            )
          )
-          // Admin audit rows (manual adjust <= $100): any uid, labelled, bounded.
+          // Admin audit rows (manual adjust, credit or debit <= $100):
+          // any uid, labelled, bounded both directions.
           || (
             isAdmin()
             && request.resource.data.uid is string
-            && request.resource.data.label is string
+            && request.resource.data.label in ['admin-adjust', 'admin-credit', 'admin-debit']
+            && request.resource.data.amount is number
+            && request.resource.data.amount >= -100
             && request.resource.data.amount <= 100
             && (request.resource.data.status == 'pending' || request.resource.data.status == 'done')
           )
         );
       allow read: if authed() && resource.data.uid == request.auth.uid;
+      allow read: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // Admin action audit trail: every credit/debit/decision/ban writes one row.
+    // Read + write owner-only. No updates or deletes — history is append-only.
+    match /admin_logs/{docId} {
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly(['by', 'action', 'target', 'amount', 'note', 'at'])
+        && request.resource.data.by is string
+        && request.resource.data.action is string;
       allow read: if isAdmin();
       allow update, delete: if false;
     }

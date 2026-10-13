@@ -455,7 +455,7 @@ export async function creditDiamonds(uid, n, label) {
 
 // ---- Spin the Wheel: 1 free UTC-day spin, extras @10 diamonds, every spin wins ----
 // Locked 2026-10-10: mixed prizes, cash EV ~$0.069/spin, jackpot $1.00 @2%.
-// Cash wins flow through creditReward (instant-available + activeDay gate +
+// Cash wins flow through creditReward (instant-available +
 // tiny referrer commission, like all quests). Diamond wins use creditDiamonds.
 // Ticket wins bump users.spinTickets for an instant re-spin (no diamond cost).
 // Each spin writes exactly one win row (spin-win/diamond/ticket) so the
@@ -549,7 +549,7 @@ export async function playSpin(uid, mode, rand) {
 // re-read of the user's own proofs before every pay (same pattern as
 // claimMilestone), so double-taps and stale tabs cannot double-pay. Claims
 // flow through creditReward(uid, 0.15, 'play:faucet') so the Rewards faucet
-// track, Grow taskEarned/activeDays gate, and referral commission all pick
+// track, Grow taskEarned/stakeable ceiling, and referral commission all pick
 // them up with no rules change (status 'pending' passes with any label).
 // Max exposure is bounded: 10 x $0.15 = $1.50/user/day.
 export const FAUCET_AMOUNT = 0.15;
@@ -818,14 +818,14 @@ export async function useQuizLife(uid) {
   return { ok: true };
 }
 
-// ---- Paid PTC: per-link catalog views, 5 paid views per UTC day ----
+// ---- Paid PTC: per-link catalog views, 50 paid views per UTC day ----
 // Same timer-only, re-read-before-pay pattern as the faucet. Each catalog
 // entry carries its own secs/pay/intervalHrs; the pay is re-validated here
 // against PTC_MIN_PAY..PTC_MAX_PAY and the catalog row, so tampered clients
 // cannot invent amounts. Proofs use label 'ptc-view' (status 'pending'
 // passes rules with any label) and count toward the Rewards ads track.
-// Max exposure at launch: 5 x $0.20 = $1.00/user/day.
-export const PTC_DAILY_CAP = 5;
+// Max exposure: 50 mixed-tier views ≈ $6.50/user/day (20x$0.10 + 12x$0.11 + 10x$0.13 + 5x$0.20 + 3x$0.30, first slot is $0.20).
+export const PTC_DAILY_CAP = 50;
 export const PTC_MIN_PAY = 0.10;
 export const PTC_MAX_PAY = 0.30;
 
@@ -983,20 +983,19 @@ export async function claimMilestone(uid, trackId, tierIdx) {
 }
 
 // ---- Grow engine: invest task earnings, live ticker, hourly ad booster ----
-// Base 3000% APR always on. Watching an ad sets boostUntil = now + 1h, during
-// which 4500% APR applies. Yield accrues only on UTC days with rewarded activity
-// (activeDays gate). The $1 seed is invest-only: it accrues yield but its
+// Base 10000% APR always on. Watching an ad sets boostUntil = now + 1h, during
+// which 15000% APR applies. Yield accrues around the clock — mining never
+// stops. The $1 seed is invest-only: it accrues yield but its
 // principal can never move to available. Referral bonuses never compound here.
-export const INVEST_BASE_APR = 3000;
-export const INVEST_BOOST_APR = 4500;
+export const INVEST_BASE_APR = 10000;
+export const INVEST_BOOST_APR = 15000;
 export const INVEST_BOOST_MS = 3600000;
 export const INVEST_SEED = 1;
 export const INVEST_MAX_STAKE = 100;
 export const INVEST_MIN_STAKE = 0.10;
 export const INVEST_SETTLE_WINDOW_MS = 90 * 86400000;
-// Welcome ignition: the $1 seed accrues at base rate for 72h after signup even
-// with no rewarded activity yet, so the ticker is alive from the first visit.
-// Bounded: at most ~$0.25 per account, then the activity gate takes over.
+// Legacy constant (kept for compatibility): mining never stops now, so the
+// 72h grace no longer gates anything.
 export const INVEST_SEED_GRACE_MS = 72 * 3600000;
 const SECONDS_PER_YEAR = 31536000;
 
@@ -1006,48 +1005,21 @@ export function utcDayStr(ms) {
 
 // Pure yield math — no Firestore, fully unit-testable.
 // Returns { yield, boostedSec, baseSec } for principal over [fromMs, toMs).
-// seedGrace ({ seed, graceUntilMs }, optional): on days WITHOUT activity, the
-// seed portion still accrues while segFrom < graceUntilMs. Bounds farmability
-// to a small welcome drip instead of a frozen-at-zero first impression.
+// Mining never stops: the full principal accrues around the clock, split
+// between base and boosted rate by boostUntilMs. activeDays / seedGrace args
+// are kept for call compatibility but no longer gate anything.
 export function computeYield(principal, fromMs, toMs, boostUntilMs, activeDays, seedGrace) {
   const p = Number(principal || 0);
   if (!(p > 0)) return { yield: 0, boostedSec: 0, baseSec: 0 };
   let from = Number(fromMs || 0), to = Number(toMs || 0);
   if (!(to > from)) return { yield: 0, boostedSec: 0, baseSec: 0 };
   if (to - from > INVEST_SETTLE_WINDOW_MS) from = to - INVEST_SETTLE_WINDOW_MS;
-  const active = new Set(Array.isArray(activeDays) ? activeDays : []);
   const boostUntil = Number(boostUntilMs || 0);
-  const graceSeed = seedGrace ? Math.min(Number(seedGrace.seed || 0), p) : 0;
-  const graceUntil = seedGrace ? Number(seedGrace.graceUntilMs || 0) : 0;
-  const boostSplit = (a, b) => {
-    const bTo = Math.min(b, boostUntil);
-    const boosted = bTo > a ? (bTo - a) / 1000 : 0;
-    return [boosted, (b - a) / 1000 - boosted];
-  };
-  let y = 0, bSec = 0, baseSec = 0;
-  // Walk UTC-day segments so the activity gate applies per calendar day.
-  let dayStart = Math.floor(from / 86400000) * 86400000;
-  let guard = 0;
-  while (dayStart < to && guard < 100) {
-    guard++;
-    const segFrom = Math.max(from, dayStart), segTo = Math.min(to, dayStart + 86400000);
-    dayStart += 86400000;
-    if (!(segTo > segFrom)) continue;
-    if (active.has(utcDayStr(segFrom))) {
-      const [boosted, base] = boostSplit(segFrom, segTo);
-      bSec += boosted; baseSec += base;
-      y += p * (base * (INVEST_BASE_APR / 100) + boosted * (INVEST_BOOST_APR / 100)) / SECONDS_PER_YEAR;
-      continue;
-    }
-    // Inactive day: only the seed drip, only inside the welcome grace.
-    if (graceSeed > 0 && segFrom < graceUntil) {
-      const gTo = Math.min(segTo, graceUntil);
-      const [boosted, base] = boostSplit(segFrom, gTo);
-      bSec += boosted; baseSec += base;
-      y += graceSeed * (base * (INVEST_BASE_APR / 100) + boosted * (INVEST_BOOST_APR / 100)) / SECONDS_PER_YEAR;
-    }
-  }
-  return { yield: y, boostedSec: bSec, baseSec: baseSec };
+  const bTo = Math.min(to, boostUntil);
+  const boostedSec = bTo > from ? (bTo - from) / 1000 : 0;
+  const baseSec = (to - from) / 1000 - boostedSec;
+  const y = p * (baseSec * (INVEST_BASE_APR / 100) + boostedSec * (INVEST_BOOST_APR / 100)) / SECONDS_PER_YEAR;
+  return { yield: y, boostedSec, baseSec };
 }
 
 async function readInvestState(uid) {
@@ -1209,8 +1181,8 @@ export async function creditReward(uid, amount, label, extra) {
     status: 'pending', at: serverTimestamp(), ...(extra || {})
   });
   try { recordCommission(uid, amount, label); } catch (_) {}
-  // Grow gate bookkeeping: task earnings raise the stakeable ceiling and mark
-  // today active for yield accrual. Referral/invest labels are excluded.
+  // Grow bookkeeping: task earnings raise the stakeable ceiling and mark
+  // today active (stats only — mining never stops). Referral/invest labels are excluded.
   try {
     const ll = (label || '').toLowerCase();
     if (!/^(referral-|invest-|ad-|diamond-)/.test(ll) && Number(amount) > 0) {

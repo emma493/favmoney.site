@@ -153,10 +153,11 @@
 <h3 id="ad-title">Favmoney booster break</h3>
 <p id="ad-text">Invite friends: they get $1.00 instantly, you get $0.50 instantly. Your link lives on the Invite page.</p>
 </div>
-<div class="ad-foot">
 <div class="ad-timer"><span id="ad-msg">Keep this view visible…</span><b id="ad-count">20s</b></div>
 <div class="prog" style="margin:0 0 8px"><i id="ad-bar" style="width:0%"></i></div>
-<p style="font-size:11px;color:var(--faint);margin:0 0 12px;text-align:center">Sponsored · Continue opens our partner in a new tab and lights your boost.</p>
+<div style="margin:0 0 8px;border-radius:12px;overflow:hidden;background:#0d0e1d"><iframe id="ad-frame" title="Sponsored view" loading="lazy" style="display:block;width:100%;height:260px;border:0;background:#0d0e1d"></iframe></div>
+<p style="font-size:11px;color:var(--faint);margin:0 0 12px;text-align:center">Sponsored view above · blank? <a id="ad-anchor" href="https://www.profitableratecpmnetwork.com/ahct9uhb?key=f4da12d7aaa67cd61f6a1196381da654" target="_blank" rel="noopener sponsored nofollow" style="color:#8ff0bd;font-weight:700">Open in new tab</a></p>
+<div class="ad-foot">
 <button class="btn btn-green btn-block" id="ad-go" style="display:none">Continue · light my boost</button>
 <button class="btn btn-ghost btn-block" id="ad-close" style="margin-top:8px">Close</button>
 </div>
@@ -169,7 +170,7 @@
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveState, settleInvest, stakeInvest, unstakeAll, activateBoost, fetchUserDocs, computeYield, utcDayStr, track, getUnclaimedRewards, INVEST_BASE_APR, INVEST_BOOST_APR, INVEST_BOOST_MS, INVEST_SEED } from './js/firebase.js';
 import { paintDualChip, startDiamondChest } from './js/diamonds.js';
-import { SPONSOR_URL, openSponsor } from './js/ptc-catalog.js';
+import { embedSponsor, clearSponsor } from './js/ptc-catalog.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
   setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
@@ -348,6 +349,7 @@ import { SPONSOR_URL, openSponsor } from './js/ptc-catalog.js';
     document.getElementById('ad-text').textContent=ADS[adIdx][1];
     document.getElementById('ad-modal').classList.add('open');
     document.getElementById('ad-go').style.display='none';
+    try{embedSponsor(document.getElementById('ad-frame'));}catch(_){}
     adLeft=AD_MS;adOpen=true;paintAd();
     if(adTimer)clearInterval(adTimer);
     adTimer=setInterval(function(){
@@ -367,15 +369,14 @@ import { SPONSOR_URL, openSponsor } from './js/ptc-catalog.js';
   function closeAd(){
     adOpen=false;
     if(adTimer){clearInterval(adTimer);adTimer=null;}
+    try{clearSponsor(document.getElementById('ad-frame'));}catch(_){}
     document.getElementById('ad-modal').classList.remove('open');
   }
   document.getElementById('boost-btn').addEventListener('click',openAd);
   document.getElementById('ad-close').addEventListener('click',closeAd);
   document.getElementById('ad-go').addEventListener('click',function(){var __b=this;
-    // Safe sponsor open, synchronous in the click gesture: full new tab only.
-    // Never iframed/prefetched; the 20s view was already verified by timer.
-    try{openSponsor(SPONSOR_URL);}catch(_){}
-    try{track('grow_sponsor_open');}catch(_){}
+    // The 20s in-page view was already verified by timer; the sponsor ran
+    // in the sandboxed frame above, so Continue just lights the boost.
     if(window.FavLoader){return FavLoader.withButton(__b,function(){return __boostWork();});}return __boostWork();async function __boostWork(){
     closeAd();
     var r=await activateBoost(uid);

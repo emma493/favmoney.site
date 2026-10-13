@@ -55,7 +55,7 @@
 <main>
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
 <h1 class="dash-title">Watch Ads</h1>
-<p>Visit sponsored links in a new tab and earn <b>$0.10–$0.30</b> per verified view — up to <b>50 times a day</b>. We show <b>30</b> at a time; new ones unlock as you claim.</p>
+<p>Watch sponsored views right on this page and earn <b>$0.10–$0.30</b> per verified view — up to <b>50 times a day</b>. We show <b>30</b> at a time; new ones unlock as you claim.</p>
 <div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to watch and earn.</div>
 <div id="member-zone" style="display:none">
 <div class="bonus-card" id="ptc-batch">
@@ -65,7 +65,7 @@
 </div>
 </div>
 <div id="ptc-list"></div>
-<p class="hint" id="ptc-hint" style="font-size:12px;color:var(--faint);margin:12px 0 0">Sponsored links open in a new tab. Keep this page visible while the timer runs — background tabs don't count.</p>
+<p class="hint" id="ptc-hint" style="font-size:12px;color:var(--faint);margin:12px 0 0">Sponsored views play on this page. Keep it visible while the timer runs — background tabs don't count.</p>
 </div>
 </div></section>
 </main>
@@ -73,12 +73,13 @@
 <div class="ptc-box">
 <div class="ptc-stage">
 <h3 id="ptc-title">Sponsored view</h3>
-<p id="ptc-text">Your link opened in a new tab.</p>
-<p id="ptc-fallback" style="display:none;margin-top:10px">Popup blocked? <a id="ptc-anchor" href="#" target="_blank" rel="noopener sponsored nofollow" style="color:#8ff0bd;font-weight:700">Tap here to open it</a></p>
+<p id="ptc-text">Your sponsored view plays below.</p>
 </div>
 <div class="ptc-foot">
 <div class="ptc-timer"><span id="ptc-msg">Keep this view visible…</span><b id="ptc-count">40s</b></div>
-<div class="prog" style="margin:0 0 14px"><i id="ptc-bar" style="width:0%"></i></div>
+<div class="prog" style="margin:0 0 8px"><i id="ptc-bar" style="width:0%"></i></div>
+<div style="margin:0 0 8px;border-radius:12px;overflow:hidden;background:#0d0e1d"><iframe id="ptc-frame" title="Sponsored view" loading="lazy" style="display:block;width:100%;height:260px;border:0;background:#0d0e1d"></iframe></div>
+<p id="ptc-fallback" style="font-size:11px;color:var(--faint);margin:0 0 12px;text-align:center">Blank? <a id="ptc-anchor" href="#" target="_blank" rel="noopener sponsored nofollow" style="color:#8ff0bd;font-weight:700">Open in new tab</a></p>
 <button class="btn btn-green btn-block" id="ptc-claim" style="display:none">Claim</button>
 <button class="btn btn-ghost btn-block" id="ptc-close" style="margin-top:8px">Close</button>
 </div>
@@ -88,7 +89,7 @@
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, fetchUserDocs, ptcState, claimPtcView, getUnclaimedRewards, track, PTC_DAILY_CAP } from './js/firebase.js';
-import { adsForSlot, slotResetMs, getAd, openSponsor, PTC_VISIBLE_COUNT } from './js/ptc-catalog.js';
+import { adsForSlot, slotResetMs, getAd, embedSponsor, clearSponsor, PTC_VISIBLE_COUNT } from './js/ptc-catalog.js';
 import { paintDualChip, startDiamondChest } from './js/diamonds.js';
 if (window.FavLoader) FavLoader.hold();
 (function () {
@@ -144,12 +145,15 @@ if (window.FavLoader) FavLoader.hold();
   function closeView(){
     viewOpen=false;activeAd=null;
     if(viewTimer){clearInterval(viewTimer);viewTimer=null;}
+    try{clearSponsor(document.getElementById('ptc-frame'));}catch(_){}
     document.getElementById('ptc-modal').classList.remove('open');
   }
   function openView(ad){
     activeAd=ad;viewLeft=ad.secs*1000;viewOpen=true;
     document.getElementById('ptc-title').textContent=ad.title;
-    document.getElementById('ptc-text').textContent='Your link opened in a new tab — keep this page visible for '+ad.secs+'s, then claim '+money(ad.pay)+'.';
+    document.getElementById('ptc-text').textContent='Keep this page visible for '+ad.secs+'s while the sponsored view plays, then claim '+money(ad.pay)+'.';
+    try{embedSponsor(document.getElementById('ptc-frame'),ad.url);}catch(_){}
+    try{document.getElementById('ptc-anchor').href=ad.url;}catch(_){}
     document.getElementById('ptc-claim').style.display='none';
     document.getElementById('ptc-claim').textContent='Claim '+money(ad.pay);
     document.getElementById('ptc-modal').classList.add('open');
@@ -171,13 +175,9 @@ if (window.FavLoader) FavLoader.hold();
     if(!b||b.disabled||!uid)return;
     var ad=getAd(b.getAttribute('data-visit'));
     if(!ad)return;
-    // The ONLY touch of the sponsor URL: real click -> full new tab.
-    var ok=false;
-    try{ok=openSponsor(ad.url);}catch(_){ok=false;}
+    // Same-page view: the sponsor loads in the modal iframe. The fallback
+    // anchor under the frame covers framing-blocked networks.
     try{track('ptc_view',{ad:ad.id});}catch(_){}
-    var fb=document.getElementById('ptc-fallback');
-    if(!ok&&fb){fb.style.display='';document.getElementById('ptc-anchor').href=ad.url;}
-    else if(fb){fb.style.display='none';}
     openView(ad);
   });
   document.getElementById('ptc-close').addEventListener('click',closeView);

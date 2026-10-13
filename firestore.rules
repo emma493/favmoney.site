@@ -55,7 +55,7 @@ service cloud.firestore {
       allow read: if self(userId);
       allow list, get: if isAdmin();
       allow create: if self(userId)
-        && request.resource.data.keys().hasOnly(['email', 'provider', 'createdAt', 'updatedAt', 'streak', 'started', 'claimedQuests', 'refcode', 'referredBy', 'myCode', 'taskEarned', 'investedUser', 'activeDays', 'lastSpinDay', 'lastQuizDay', 'spinTickets', 'spinCount', 'spinWon'])
+        && request.resource.data.keys().hasOnly(['email', 'provider', 'createdAt', 'updatedAt', 'streak', 'started', 'claimedQuests', 'refcode', 'referredBy', 'myCode', 'taskEarned', 'investedUser', 'activeDays', 'lastSpinDay', 'lastQuizDay', 'spinTickets', 'spinCount', 'spinWon', 'country', 'currency', 'countryName'])
         && (request.resource.data.email is string || request.resource.data.email == null)
         && (!('refcode' in request.resource.data) || request.resource.data.refcode == null || isCode(request.resource.data.refcode))
         && (!('myCode' in request.resource.data) || request.resource.data.myCode == null || isCode(request.resource.data.myCode))
@@ -67,9 +67,12 @@ service cloud.firestore {
         && (!('spinTickets' in request.resource.data) || (request.resource.data.spinTickets is number && request.resource.data.spinTickets >= 0))
         && (!('spinCount' in request.resource.data) || (request.resource.data.spinCount is number && request.resource.data.spinCount >= 0))
         && (!('spinWon' in request.resource.data) || (request.resource.data.spinWon is number && request.resource.data.spinWon >= 0))
+        && (!('country' in request.resource.data) || request.resource.data.country == null || (request.resource.data.country is string && request.resource.data.country.matches('^[A-Z]{2}$')))
+        && (!('currency' in request.resource.data) || request.resource.data.currency == null || (request.resource.data.currency is string && request.resource.data.currency.matches('^[A-Z]{3}$')))
+        && (!('countryName' in request.resource.data) || request.resource.data.countryName == null || (request.resource.data.countryName is string && request.resource.data.countryName.size() <= 80))
         && (!('activeDays' in request.resource.data) || (request.resource.data.activeDays is list && request.resource.data.activeDays.size() <= 90));
       allow update: if self(userId)
-        && request.resource.data.keys().hasOnly(['email', 'provider', 'createdAt', 'updatedAt', 'streak', 'started', 'claimedQuests', 'refcode', 'referredBy', 'myCode', 'taskEarned', 'investedUser', 'activeDays', 'lastSpinDay', 'lastQuizDay', 'spinTickets', 'spinCount', 'spinWon'])
+        && request.resource.data.keys().hasOnly(['email', 'provider', 'createdAt', 'updatedAt', 'streak', 'started', 'claimedQuests', 'refcode', 'referredBy', 'myCode', 'taskEarned', 'investedUser', 'activeDays', 'lastSpinDay', 'lastQuizDay', 'spinTickets', 'spinCount', 'spinWon', 'country', 'currency', 'countryName'])
         && (!('streak' in request.resource.data) || (request.resource.data.streak is map
           && request.resource.data.streak.days is number
           && request.resource.data.streak.last is string))
@@ -79,6 +82,9 @@ service cloud.firestore {
         && (!('taskEarned' in request.resource.data) || (request.resource.data.taskEarned is number && request.resource.data.taskEarned >= 0))
         && (!('investedUser' in request.resource.data) || (request.resource.data.investedUser is number && request.resource.data.investedUser >= 0))
         && (!('activeDays' in request.resource.data) || (request.resource.data.activeDays is list && request.resource.data.activeDays.size() <= 90))
+        && (!('country' in request.resource.data) || request.resource.data.country == null || (request.resource.data.country is string && request.resource.data.country.matches('^[A-Z]{2}$')))
+        && (!('currency' in request.resource.data) || request.resource.data.currency == null || (request.resource.data.currency is string && request.resource.data.currency.matches('^[A-Z]{3}$')))
+        && (!('countryName' in request.resource.data) || request.resource.data.countryName == null || (request.resource.data.countryName is string && request.resource.data.countryName.size() <= 80))
         // refcode + referredBy + myCode are write-once: once set, never change.
         && (!('refcode' in resource.data) || !('refcode' in request.resource.data) || request.resource.data.refcode == resource.data.refcode)
         && (!('referredBy' in resource.data) || !('referredBy' in request.resource.data) || request.resource.data.referredBy == resource.data.referredBy)

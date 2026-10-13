@@ -37,36 +37,76 @@
 <main>
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
 <h1 class="dash-title">Offers & Apps</h1>
-<p>Download games and hit milestones for big rewards. This quest opens next. Your balance stays safe.</p>
-<div class="bonus-card" id="faucet-card">
-<h2 style="margin:0 0 6px;font-size:20px">Offers & Apps opening soon</h2>
-<p style="color:var(--muted);font-size:14px;margin:0 0 16px">We are wiring do offers. Meanwhile, earn on live quests.</p>
-<p><span class="skeleton" style="width:70%"></span></p>
-<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-<a class="btn btn-green" href="earn.html" style="min-height:48px">Back to Earn</a>
-<a class="btn btn-ghost" href="surveys.html" style="min-height:48px">Try Surveys instead</a>
+<p>Pick a provider, complete mobile offers in a new tab, and keep 70% of each approved payout. Conversions credit automatically after approval.</p>
+<div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> so offer payouts land on your account.</div>
+<div class="bonus-card" id="gg-setup" style="display:none">
+<h2 style="margin:0 0 6px;font-size:20px">Provider link needed</h2>
+<p style="color:var(--muted);font-size:14px;margin:0">Owner: paste your Golden Goose SmartLink into <b>js/gg.js → GG_PROMO_BASE</b>, then redeploy. Cards unlock automatically.</p>
 </div>
-</div>
+<div class="task-grid oc-list" id="provider-list" style="margin-top:12px"></div>
+<p class="hint" style="font-size:12px;color:var(--faint);margin:12px 0 0">Offers open in a new tab on the provider site. Only approved conversions credit — subscriptions and cancelled events never auto-credit.</p>
 </div></section>
 </main>
 <footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="earn.html">Earn</a></span></div></div></footer>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet } from './js/firebase.js';
+import { auth, onAuthStateChanged, getWallet, track } from './js/firebase.js';
+import { OFFER_PROVIDERS, providerClickUrl } from './js/gg.js';
 if (window.FavLoader) FavLoader.hold();
 (function () {
+  var uid = null;
+  var toast = document.getElementById('toast'), tm = null;
+  function show(m){ toast.textContent = m; toast.classList.add('show'); clearTimeout(tm); tm = setTimeout(function(){ toast.classList.remove('show'); }, 3400); }
+  function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function paintProviders(){
+    var list = document.getElementById('provider-list');
+    if(!list) return;
+    var missing = OFFER_PROVIDERS.filter(function(p){ return !p.base; });
+    var setup = document.getElementById('gg-setup');
+    if(setup) setup.style.display = missing.length ? '' : 'none';
+    list.innerHTML = OFFER_PROVIDERS.map(function(p){
+      var ready = !!p.base && !!uid;
+      var btn = ready
+        ? '<button class="btn btn-green" data-provider="' + esc(p.id) + '" style="min-height:48px">Visit · 70%</button>'
+        : '<button class="btn btn-ghost" disabled style="min-height:48px">' + (p.base ? 'Sign in to earn' : 'Coming soon') + '</button>';
+      return '<div class="oc-card"><div class="oc-body"><div class="oc-head"><div class="oc-title"><h2>' + esc(p.name) + '</h2></div><div class="oc-pay">70% payout</div></div>'
+        + '<p class="oc-desc">' + esc(p.desc || p.tag || '') + '</p>'
+        + '<div class="oc-base"><div class="oc-time"><small>Provider</small><b>' + esc(p.tag || '') + '</b></div>' + btn + '</div></div></div>';
+    }).join('');
+  }
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('[data-provider]');
+    if(!b || b.disabled) return;
+    if(!uid){ show('Sign in so offer payouts land on your account.'); return; }
+    var pid = b.getAttribute('data-provider');
+    var prov = null;
+    for(var i = 0; i < OFFER_PROVIDERS.length; i++){ if(OFFER_PROVIDERS[i].id === pid) prov = OFFER_PROVIDERS[i]; }
+    if(!prov || !prov.base) return;
+    var url = providerClickUrl(prov, uid);
+    if(!url) return;
+    try{ track('offer_open', { provider: pid }); }catch(_){}
+    try{ window.open(url, '_blank', 'noopener,noreferrer'); }
+    catch(_){ location.href = url; }
+  });
   function ready() { if (window.FavLoader) FavLoader.pageReady(); }
   try {
     onAuthStateChanged(auth, async function (user) {
-      if (!user) { document.getElementById('chip-bal').textContent='\u2014'; document.getElementById('chip-name').textContent='Sign in'; ready(); return; }
+      if (!user) { document.getElementById('chip-bal').textContent='\u2014'; document.getElementById('chip-name').textContent='Sign in';
+        uid = null;
+        document.getElementById('auth-wall').style.display='';
+        paintProviders(); ready(); return; }
       try {
-        var w = await getWallet(user.uid);
+        uid = user.uid;
+        document.getElementById('auth-wall').style.display='none';
+        var w = await getWallet(uid);
         document.getElementById('chip-bal').textContent = '$' + Number(w.pending).toFixed(2);
         document.getElementById('chip-name').textContent = (user.email || 'Member').split('@')[0];
       } catch (e) {}
+      paintProviders();
       ready();
     });
   } catch (e) { ready(); }
+  paintProviders();
   setTimeout(ready, 6000);
 })();
 </script>

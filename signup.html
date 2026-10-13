@@ -9,6 +9,23 @@
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <style>
+  .fav-country{position:relative}
+  .fav-country-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#0d0e1d;border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:12px;padding:12px 14px;font:inherit;cursor:pointer;min-height:48px}
+  .fav-country-btn img{width:22px;height:16px;object-fit:cover;border-radius:3px;vertical-align:-3px;margin-right:8px}
+  .fav-country-ph{color:var(--faint,#8a8fa8)}
+  .fav-country-chev{color:var(--faint,#8a8fa8)}
+  .fav-country-btn.fav-country-error{border-color:#ff6b7a;box-shadow:0 0 0 1px #ff6b7a}
+  .fav-country-pop{position:absolute;z-index:50;top:calc(100% + 6px);left:0;right:0;background:#171830;border:1px solid rgba(255,255,255,.14);border-radius:12px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.5)}
+  .fav-country-search{width:100%;box-sizing:border-box;background:#0d0e1d;border:0;border-bottom:1px solid rgba(255,255,255,.1);color:#fff;padding:12px 14px;font:inherit;outline:none}
+  .fav-country-list{max-height:260px;overflow:auto;padding:6px}
+  .fav-country-row{width:100%;display:flex;align-items:center;gap:10px;background:transparent;border:0;color:#fff;padding:9px 10px;border-radius:9px;cursor:pointer;font:inherit;text-align:left}
+  .fav-country-row:hover,.fav-country-row.sel{background:rgba(1,214,118,.12)}
+  .fav-country-row img{width:24px;height:17px;object-fit:cover;border-radius:3px}
+  .fav-country-name{flex:1}
+  .fav-country-cur{color:var(--faint,#8a8fa8);font-size:12px}
+  .fav-country-empty{padding:14px;color:var(--muted,#aab);font-size:13px}
+  </style>
   <style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(20,21,35,.35);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#01D676;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#01D676;border:0;cursor:pointer;align-items:center;justify-content:center;color:#0d1a13;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
   <script src="js/loader.js"></script>
 </head>
@@ -35,6 +52,10 @@
 <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
 <label for="pass">Password</label>
 <input id="pass" type="password" placeholder="••••••••" autocomplete="new-password" />
+<label for="country-picker">Country <span style="color:#ff9aa2">*</span></label>
+<div id="country-picker"></div>
+<p class="tiny" data-country-error style="display:none;color:#ff9aa2;text-align:left;margin:6px 0 0">Please choose your country.</p>
+<p class="tiny" id="currency-hint" style="text-align:left;margin:6px 0 0"></p>
 <label for="refcode">Referral code <span style="color:#8ff0bd">— get $1.00 instantly</span></label>
 <input id="refcode" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="6" style="text-transform:uppercase;letter-spacing:.12em" />
 <p class="tiny" id="ref-hint" style="text-align:left;margin:6px 0 0">Have a friend's code? Enter it for a $1.00 instant bonus. Your friend gets $0.50 instantly.</p>
@@ -46,9 +67,28 @@
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
 import { auth, ensureUserDoc, redeemReferral, track, createUserWithEmailAndPassword } from './js/firebase.js';
+import { COUNTRY_MAP } from './js/countries.js';
+import { mountCountryPicker } from './js/country-picker.js';
+import { setStoredCountry, formatUSD } from './js/currency.js';
 (function(){
   if(window.FavLoader){FavLoader.hold();setTimeout(function(){FavLoader.pageReady();},2500);}
   var toast=document.getElementById('toast'),tm=null;function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
+  // REQUIRED country picker — default is "Choose country" (value '').
+  var countryCode='';
+  var picker=null;
+  var hint=document.getElementById('currency-hint');
+  function paintHint(){
+    var c=COUNTRY_MAP[countryCode];
+    if(!c){hint.textContent='';return;}
+    hint.textContent='Balances will show in '+c.currency+'. $1.00 bonus ≈ '+formatUSD(1,c.currency)+'.';
+  }
+  try{
+    picker=mountCountryPicker(document.getElementById('country-picker'),{
+      value:'',
+      placeholder:'Choose country',
+      onSelect:function(v){countryCode=v;setStoredCountry(v);paintHint();}
+    });
+  }catch(_){}
   function friendly(code){
     if(code==='auth/email-already-in-use')return 'Email already registered. Try Sign In instead.';
     if(code==='auth/weak-password')return 'Password too weak (min 6 characters).';
@@ -77,12 +117,15 @@ import { auth, ensureUserDoc, redeemReferral, track, createUserWithEmailAndPassw
   document.getElementById('go').addEventListener('click',function(){var __b=this;if(window.FavLoader){return FavLoader.withButton(__b,function(){return __goWork();});}return __goWork();async function __goWork(){
     var e=document.getElementById('email').value.trim(),p=document.getElementById('pass').value;
     var ref=cleanRef(refInput ? refInput.value : '');
+    if(!countryCode||!COUNTRY_MAP[countryCode]){if(picker)picker.markError();show('Please choose your country.');return;}
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)){show('Enter a valid email.');return;}
     if(p.length<6){show('Password min 6 characters.');return;}
     if(refInput && refInput.value && ref.length!==6){show('Referral code must be 6 letters (A-Z), or leave it empty.');return;}
     try{
       var cred=await createUserWithEmailAndPassword(auth,e,p);
-      await ensureUserDoc(cred.user,'email');
+      var cc=COUNTRY_MAP[countryCode];
+      try{setStoredCountry(countryCode);}catch(_){}
+      await ensureUserDoc(cred.user,'email',{country:countryCode,currency:cc.currency,countryName:cc.name});
       var refMsg='';
       if(ref){
         try{

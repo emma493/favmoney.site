@@ -162,7 +162,9 @@
 <div class="quiz-box" style="text-align:left">
 <div style="text-align:center"><h3 id="quiz-ad-title">Quiz break</h3><p id="quiz-ad-text"></p></div>
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--muted);margin:14px 0 8px"><span id="quiz-ad-msg">Keep this view visible…</span><b id="quiz-ad-count" style="color:#7dd3fc">20s</b></div>
-<div class="prog" style="margin:0 0 14px"><i id="quiz-ad-bar" style="width:0%"></i></div>
+<div class="prog" style="margin:0 0 8px"><i id="quiz-ad-bar" style="width:0%"></i></div>
+<div style="margin:0 0 8px;border-radius:12px;overflow:hidden;background:#0d0e1d"><iframe id="quiz-ad-frame" title="Sponsored view" loading="lazy" style="display:block;width:100%;height:260px;border:0;background:#0d0e1d"></iframe></div>
+<p style="font-size:11px;color:var(--faint);margin:0 0 12px;text-align:center">Sponsored view above · blank? <a id="quiz-ad-anchor" href="https://www.profitableratecpmnetwork.com/ahct9uhb?key=f4da12d7aaa67cd61f6a1196381da654" target="_blank" rel="noopener sponsored nofollow" style="color:#8ff0bd;font-weight:700">Open in new tab</a></p>
 <button class="btn btn-green btn-block" id="quiz-ad-go" style="display:none">Continue · rescue me</button>
 <button class="btn btn-ghost btn-block" id="quiz-ad-close" style="margin-top:8px">Close</button>
 </div>
@@ -172,6 +174,7 @@
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, fetchUserDocs, quizSession, genQuizQuestion, quizOptions, startQuizSession, getQuizState, answerQuiz, useQuizLife, getUnclaimedRewards, track, QUIZ_ENTRY_COST, QUIZ_SESSION_SIZE, QUIZ_PAY, QUIZ_TIME_MS } from './js/firebase.js';
 import { paintDualChip, startDiamondChest } from './js/diamonds.js';
+import { embedSponsor, clearSponsor } from './js/ptc-catalog.js';
 import { coinPour, softThud, isMuted, toggleMute } from './js/sfx.js';
 if (window.FavLoader) FavLoader.hold();
 (function () {
@@ -402,13 +405,14 @@ if (window.FavLoader) FavLoader.hold();
     document.getElementById('quiz-ad-bar').style.width=Math.min(100,(AD_MS-adLeft)/AD_MS*100)+'%';
     document.getElementById('quiz-ad-msg').textContent=document.hidden?'Paused — keep this view visible…':(adLeft>0?'Keep this view visible…':'View verified.');
   }
-  function closeAd(){adOpen=false;if(adTimer){clearInterval(adTimer);adTimer=null;}document.getElementById('quiz-ad-modal').classList.remove('open');}
+  function closeAd(){adOpen=false;if(adTimer){clearInterval(adTimer);adTimer=null;}try{clearSponsor(document.getElementById('quiz-ad-frame'));}catch(_){}document.getElementById('quiz-ad-modal').classList.remove('open');}
   function openAd(){
     adIdx=(adIdx+1)%ADS.length;
     document.getElementById('quiz-ad-title').textContent=ADS[adIdx][0];
     document.getElementById('quiz-ad-text').textContent=ADS[adIdx][1];
     document.getElementById('quiz-ad-modal').classList.add('open');
     document.getElementById('quiz-ad-go').style.display='none';
+    try{embedSponsor(document.getElementById('quiz-ad-frame'));}catch(_){}
     adLeft=AD_MS;adOpen=true;paintAd();
     if(adTimer)clearInterval(adTimer);
     adTimer=setInterval(function(){

@@ -70,6 +70,7 @@
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, requestCashout, track, getUnclaimedRewards } from './js/firebase.js';
+import { formatUSD, currentCountry, refreshRates } from './js/currency.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
   setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
@@ -87,13 +88,14 @@ import { auth, onAuthStateChanged, getWallet, requestCashout, track, getUnclaime
     var nd=document.getElementById('navdot-rewards');
     if(nd){if(n>0){nd.textContent=n>9?'9+':n;nd.style.display='flex';}else{nd.style.display='none';}}
   }
+  function cur(){ return currentCountry().currency || 'USD'; }
   function paintHero(){
-    document.getElementById('avail').textContent='$'+avail.toFixed(2);
-    document.getElementById('chip-bal').textContent=uid?('$'+avail.toFixed(2)):'—';
+    document.getElementById('avail').textContent=formatUSD(avail,cur());
+    document.getElementById('chip-bal').textContent=uid?(formatUSD(avail,cur())):'—';
   }
   function card(m){
     var pct=Math.min(100,Math.round(avail/m.min*100));
-    return '<button class="method-card'+(sel===m.id?' sel':'')+'" data-m="'+m.id+'"><h3>'+m.id+'</h3><div class="mart"><img src="'+m.img+'" alt="'+m.id+'" loading="lazy" /></div><div class="minline"><small>Minimum $'+m.min.toFixed(2)+'</small><div class="prog" style="margin:0"><i style="width:'+pct+'%"></i></div><small>$'+avail.toFixed(2)+' / $'+m.min.toFixed(2)+'</small></div></button>';
+    return '<button class="method-card'+(sel===m.id?' sel':'')+'" data-m="'+m.id+'"><h3>'+m.id+'</h3><div class="mart"><img src="'+m.img+'" alt="'+m.id+'" loading="lazy" /></div><div class="minline"><small>Minimum '+formatUSD(m.min,cur())+'</small><div class="prog" style="margin:0"><i style="width:'+pct+'%"></i></div><small>'+formatUSD(avail,cur())+' / '+formatUSD(m.min,cur())+'</small></div></button>';
   }
   function renderMethods(){
     document.getElementById('grid-pop').innerHTML=METHODS.filter(function(m){return m.sec==='pop';}).map(card).join('');
@@ -106,8 +108,8 @@ import { auth, onAuthStateChanged, getWallet, requestCashout, track, getUnclaime
     document.getElementById('denoms').innerHTML=m.denoms.map(function(d){
       var locked=!uid||d>avail,cls='denom'+(denom===d?' sel':'')+(locked?' locked':'');
       var fee=d>=50?'<span class="fee">Lower fees</span>':'';
-      var sub=!uid?'Sign in to unlock':(locked?'Earn $'+(d-avail).toFixed(2)+' more':'$'+avail.toFixed(2)+' / $'+d);
-      return '<button class="'+cls+'" data-d="'+d+'" '+(locked?'disabled':'')+'>$'+d+'<small>'+sub+'</small>'+fee+'</button>';
+      var sub=!uid?'Sign in to unlock':(locked?'Earn '+formatUSD(d-avail,cur())+' more':formatUSD(avail,cur())+' / '+formatUSD(d,cur()));
+      return '<button class="'+cls+'" data-d="'+d+'" '+(locked?'disabled':'')+'>'+formatUSD(d,cur())+'<small>'+sub+'</small>'+fee+'</button>';
     }).join('');
   }
   document.addEventListener('click',function(e){
@@ -124,12 +126,12 @@ import { auth, onAuthStateChanged, getWallet, requestCashout, track, getUnclaime
     if(dest.length<4){show('Add a destination: email or wallet address.');return;}
     try{
       var fw=await getWallet(uid);
-      if(denom>Number(fw.pending)){show('Insufficient balance ($'+Number(fw.pending).toFixed(2)+').');return;}
+      if(denom>Number(fw.pending)){show('Insufficient balance ('+formatUSD(Number(fw.pending),cur())+').');return;}
       await requestCashout(uid,{method:sel,amount:denom,dest:dest});
       try{track('cashout_request',{method:sel});}catch(_){}
       avail=Math.round((Number(fw.pending)-denom)*100)/100;
       paintHero();renderMethods();renderDenoms();
-      show('Cashout requested: $'+denom.toFixed(2)+' via '+sel+'.');
+      show('Cashout requested: '+formatUSD(denom,cur())+' via '+sel+'.');
     }catch(err){show('Request failed — check connection and Firestore rules.');}
   }});
   try{
@@ -155,6 +157,8 @@ import { auth, onAuthStateChanged, getWallet, requestCashout, track, getUnclaime
     });
   }catch(e){paintHero();renderMethods();if(window.FavLoader)FavLoader.pageReady();}
   paintHero();renderMethods();
+  try{refreshRates().then(function(){paintHero();renderMethods();renderDenoms();});}catch(_){}
+  document.addEventListener('fav-rates',function(){paintHero();renderMethods();});
   var root=document.documentElement;function onS(){if(scrollY>0)root.setAttribute('data-top-nav-scrolled','true');else root.removeAttribute('data-top-nav-scrolled');}addEventListener('scroll',onS,{passive:true});onS();
 })();
 </script>

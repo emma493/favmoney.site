@@ -79,7 +79,9 @@ function pemToDer(pem) {
 async function googleAccessToken(saJson) {
   const now = Math.floor(Date.now() / 1000);
   if (tokenCache.token && tokenCache.exp - 60 > now) return tokenCache.token;
-  const sa = JSON.parse(saJson);
+  let sa;
+  try { sa = JSON.parse(saJson); }
+  catch (_) { throw new Error('sa-json invalid (re-upload secret from file, do not hand-paste)'); }
   const header = { alg: 'RS256', typ: 'JWT' };
   const claim = {
     iss: sa.client_email,
@@ -101,7 +103,7 @@ async function googleAccessToken(saJson) {
     body: 'grant_type=' + encodeURIComponent('urn:ietf:params:oauth:grant-type:jwt-bearer') + '&assertion=' + encodeURIComponent(jwt)
   });
   if (!res.ok) throw new Error('oauth ' + res.status);
-  const data = await res.json();
+  const data = await resJson(res, 'oauth');
   tokenCache = { token: data.access_token, exp: now + (data.expires_in || 3600) };
   return tokenCache.token;
 }
@@ -110,11 +112,17 @@ function fsBase(projectId) {
   return 'https://firestore.googleapis.com/v1/projects/' + projectId + '/databases/(default)/documents';
 }
 
+async function resJson(res, what) {
+  const t = await res.text();
+  try { return JSON.parse(t); }
+  catch (_) { throw new Error(what + ' non-json ' + res.status + ': ' + t.slice(0, 80)); }
+}
+
 async function fsGet(projectId, token, path) {
   const res = await fetch(fsBase(projectId) + '/' + path, { headers: { Authorization: 'Bearer ' + token } });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error('fsGet ' + res.status);
-  return res.json();
+  return resJson(res, 'fsGet');
 }
 
 async function fsCreate(projectId, token, collection, docId, fields) {
@@ -126,7 +134,7 @@ async function fsCreate(projectId, token, collection, docId, fields) {
   });
   if (res.status === 409) return { conflict: true };
   if (!res.ok) throw new Error('fsCreate ' + res.status);
-  return res.json();
+  return resJson(res, 'fsCreate');
 }
 
 async function fsPatch(projectId, token, path, fields, mask) {
@@ -138,7 +146,7 @@ async function fsPatch(projectId, token, path, fields, mask) {
     body: JSON.stringify({ fields })
   });
   if (!res.ok) throw new Error('fsPatch ' + res.status);
-  return res.json();
+  return resJson(res, 'fsPatch');
 }
 
 const S = (v) => ({ stringValue: String(v == null ? '' : v) });
@@ -153,7 +161,7 @@ export default {
       try {
         if (env && env.ASSETS) return await env.ASSETS.fetch(request);
       } catch (_) {}
-      return fetch(request);
+      return new Response('Not found', { status: 404 });
     }
     if (request.method !== 'GET' && request.method !== 'POST') {
       return json({ ok: false, reason: 'method' }, 405);
@@ -197,18 +205,27 @@ export default {
       const created = await fsCreate(projectId, token, 'gg_events', p.eventId, { ...baseFields, status: S('processing') });
       if (created && created.conflict) return text('OK');
       // Wallet read-modify-write (offerwall volume is low; race window acceptable).
+      // Creates the wallet if the uid never signed in (mirrors client ensureUserDoc).
       const wallet = await fsGet(projectId, token, 'wallets/' + encodeURIComponent(p.p1));
       const wf = (wallet && wallet.fields) || {};
       const pending = Number((wf.pending && (wf.pending.doubleValue || wf.pending.integerValue)) || 0);
       const lifetime = Number((wf.lifetime && (wf.lifetime.doubleValue || wf.lifetime.integerValue)) || 0);
       const invested = wf.invested || { doubleValue: 1 };
-      await fsPatch(projectId, token, 'wallets/' + encodeURIComponent(p.p1), {
+      const walletFields = {
         pending: N(Math.round((pending + amount) * 100) / 100),
         lifetime: N(Math.round((lifetime + amount) * 100) / 100),
         invested,
         lastLabel: S('play:offers'),
         updatedAt: T()
-      }, ['pending', 'lifetime', 'invested', 'lastLabel', 'updatedAt']);
+      };
+      if (wallet) {
+        await fsPatch(projectId, token, 'wallets/' + encodeURIComponent(p.p1), walletFields, ['pending', 'lifetime', 'invested', 'lastLabel', 'updatedAt']);
+      } else {
+        await fsCreate(projectId, token, 'wallets', p.p1, {
+          ...walletFields, investedAt: N(Date.now()), boostUntil: N(0),
+          diamonds: N(0), lastDiamondAdAt: N(0), lastDiamondPassiveAt: N(Date.now())
+        });
+      }
       await fsCreate(projectId, token, 'proofs', '', {
         uid: S(p.p1), amount: N(amount), label: S('play:offers'), status: S('pending'), at: T(),
         provider: S('gg'), eventId: S(p.eventId), event: S(p.event),

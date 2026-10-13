@@ -6,7 +6,7 @@
 // TODO(owner): paste your Golden Goose SmartLink / promo base URL here.
 // Find it in gg.agency dashboard -> Promo / SmartLink. Keep any existing
 // query params; uid/source/site are appended automatically.
-export const GG_PROMO_BASE = '';
+export const GG_PROMO_BASE = 'https://jhuweq.com/cl/8e606e488b499750';
 
 export const OFFER_PROVIDERS = [
   {

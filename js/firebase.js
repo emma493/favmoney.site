@@ -41,15 +41,29 @@ export function track(name, params) {
   try { if (analytics) logEvent(analytics, name, params || {}); } catch (e) {}
 }
 
-export async function ensureUserDoc(user, provider) {
+export async function ensureUserDoc(user, provider, extra) {
   const ref = doc(db, 'users', user.uid);
   const snap = await getDoc(ref);
+  const ex = (extra && typeof extra === 'object') ? extra : {};
+  const cc = typeof ex.country === 'string' && /^[A-Z]{2}$/.test(ex.country) ? ex.country : null;
+  const cu = typeof ex.currency === 'string' && /^[A-Z]{3}$/.test(ex.currency) ? ex.currency : null;
   if (!snap.exists()) {
     await setDoc(ref, {
       email: user.email || null, provider: provider || 'email',
       taskEarned: 0, investedUser: 0, activeDays: [],
+      country: cc, currency: cu, countryName: typeof ex.countryName === 'string' ? ex.countryName.slice(0, 80) : null,
       createdAt: serverTimestamp()
     });
+  } else {
+    // Heal country fields for accounts created before the picker (never touch balances).
+    try {
+      const d = snap.data() || {};
+      const heal = {};
+      if (!('country' in d) && cc) heal.country = cc;
+      if (!('currency' in d) && cu) heal.currency = cu;
+      if (!('countryName' in d) && ex.countryName) heal.countryName = String(ex.countryName).slice(0, 80);
+      if (Object.keys(heal).length) { heal.updatedAt = serverTimestamp(); await setDoc(ref, heal, { merge: true }); }
+    } catch (_) {}
   }
   const wref = doc(db, 'wallets', user.uid);
   const w = await getDoc(wref);
@@ -135,6 +149,9 @@ export async function getUserDoc(uid) {
     spinTickets: Math.max(0, Math.floor(Number(d.spinTickets || 0))),
     spinCount: Math.max(0, Math.floor(Number(d.spinCount || 0))),
     spinWon: Number(d.spinWon || 0),
+    country: (typeof d.country === 'string' && /^[A-Z]{2}$/.test(d.country)) ? d.country : null,
+    currency: (typeof d.currency === 'string' && /^[A-Z]{3}$/.test(d.currency)) ? d.currency : 'USD',
+    countryName: typeof d.countryName === 'string' ? d.countryName : null,
     createdAtMs: (d.createdAt && typeof d.createdAt.toMillis === 'function') ? d.createdAt.toMillis() : (Number(d.createdAt) || 0)
   };
 }

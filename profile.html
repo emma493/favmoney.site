@@ -10,6 +10,22 @@
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <style>
+  .fav-country{position:relative}
+  .fav-country-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#0d0e1d;border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:12px;padding:12px 14px;font:inherit;cursor:pointer;min-height:48px}
+  .fav-country-btn img{width:22px;height:16px;object-fit:cover;border-radius:3px;vertical-align:-3px;margin-right:8px}
+  .fav-country-ph{color:var(--faint,#8a8fa8)}
+  .fav-country-chev{color:var(--faint,#8a8fa8)}
+  .fav-country-pop{position:absolute;z-index:50;top:calc(100% + 6px);left:0;right:0;background:#171830;border:1px solid rgba(255,255,255,.14);border-radius:12px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.5)}
+  .fav-country-search{width:100%;box-sizing:border-box;background:#0d0e1d;border:0;border-bottom:1px solid rgba(255,255,255,.1);color:#fff;padding:12px 14px;font:inherit;outline:none}
+  .fav-country-list{max-height:260px;overflow:auto;padding:6px}
+  .fav-country-row{width:100%;display:flex;align-items:center;gap:10px;background:transparent;border:0;color:#fff;padding:9px 10px;border-radius:9px;cursor:pointer;font:inherit;text-align:left}
+  .fav-country-row:hover,.fav-country-row.sel{background:rgba(1,214,118,.12)}
+  .fav-country-row img{width:24px;height:17px;object-fit:cover;border-radius:3px}
+  .fav-country-name{flex:1}
+  .fav-country-cur{color:var(--faint,#8a8fa8);font-size:12px}
+  .fav-country-empty{padding:14px;color:var(--muted,#aab);font-size:13px}
+  </style>
   <style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(20,21,35,.35);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#01D676;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#01D676;border:0;cursor:pointer;align-items:center;justify-content:center;color:#0d1a13;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
   <script src="js/loader.js"></script>
 </head>
@@ -54,6 +70,15 @@
 <div class="level-bar"><i id="p-levelbar" style="width:0%"></i></div>
 <p style="font-size:12px;color:var(--faint);margin:6px 0 0" id="p-next">$10.00 to level up</p>
 </div>
+<div class="auth-card" style="max-width:none;margin-top:14px" id="country-card">
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+<img id="p-flag" src="https://flagcdn.com/w40/us.png" alt="" width="26" height="19" style="border-radius:4px;object-fit:cover" />
+<div style="flex:1;min-width:140px"><b id="p-country">United States</b><div style="font-size:12px;color:var(--faint)" id="p-currency">Balances in USD</div></div>
+</div>
+<div style="margin-top:12px"><label for="country-picker" style="font-size:13px">Change country</label><div id="country-picker"></div></div>
+<button class="btn btn-green btn-block" id="save-country" style="margin-top:12px">Save country</button>
+<p class="tiny" id="country-msg" style="text-align:left;margin:6px 0 0"></p>
+</div>
 <div class="stat-strip">
 <div class="stat-cell"><b id="p-done2">0</b><span>Completed offers</span></div>
 <div class="stat-cell"><b>0</b><span>Users referred</span></div>
@@ -76,12 +101,15 @@
 <nav class="mobilenav" aria-label="Mobile"><a href="earn.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="grow.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Grow</a><a href="invite.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M18 8v6M15 11h6"/></svg>Invite</a><a href="rewards.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="12" rx="1.5"/><path d="M4 13h16M12 9v12M12 9S7.5 9 6 7.5 5.5 4.8 7 4.5 12 9 12 9Zm0 0s4.5 0 6-1.5S18.5 4.8 17 4.5 12 9 12 9Z"/></svg>Rewards<span class="navdot" id="navdot-rewards" style="display:none"></span></a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet, fetchUserDocs, getUnclaimedRewards } from './js/firebase.js';
+import { auth, onAuthStateChanged, getWallet, fetchUserDocs, getUnclaimedRewards, getUserDoc, updateUserDoc } from './js/firebase.js';
 import { paintDualChip, startDiamondChest } from './js/diamonds.js';
+import { COUNTRY_MAP, flagUrl } from './js/countries.js';
+import { mountCountryPicker } from './js/country-picker.js';
+import { formatUSD, setStoredCountry, setMemoryCountry, currentCountry, refreshRates } from './js/currency.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
   setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
-  var cat='all', proofs=[], earn=0, diaBal=0, userEmail='', joinedLabel='—', stopChest=null;
+  var cat='all', proofs=[], earn=0, diaBal=0, userEmail='', joinedLabel='—', stopChest=null, activeCur='USD', currentUid=null, pickedCountry='';
   function relDate(ts){
     if(!ts)return 'recently';
     var ms=ts.seconds?ts.seconds*1000:new Date(ts).getTime();
@@ -112,8 +140,9 @@ import { paintDualChip, startDiamondChest } from './js/diamonds.js';
       if(d<0)return d+' DIA';
       return '—';
     }
-    return '$'+Number(p.amount||0).toFixed(2);
+    return formatUSD(Number(p.amount||0), activeCur);
   }
+  function fmtUsd(v){ return formatUSD(Number(v||0), activeCur); }
   function matchCat(p){
     if(cat==='all')return true;
     var l=((p.label||p.title||'')+'').toLowerCase();
@@ -141,16 +170,16 @@ import { paintDualChip, startDiamondChest } from './js/diamonds.js';
   function paintStats(){
     var done=proofs.filter(function(p){return /paid|done|approved/i.test(p.status||'');}).length;
     var lvl=Math.floor(earn/10)+1,next=(lvl*10-earn);
-    document.getElementById('p-earn').textContent='$'+earn.toFixed(2);
+    document.getElementById('p-earn').textContent=formatUSD(earn,activeCur);
     document.getElementById('p-dia').textContent=diaBal;
     document.getElementById('p-done').textContent=done;
     document.getElementById('p-done2').textContent=done;
     document.getElementById('p-started').textContent=proofs.length;
     document.getElementById('p-level').textContent='Level '+lvl;
     document.getElementById('p-levelbar').style.width=Math.min(100,(earn%10)*10)+'%';
-    document.getElementById('p-next').textContent='$'+next.toFixed(2)+' to level up';
+    document.getElementById('p-next').textContent=formatUSD(next,activeCur)+' to level up';
     var cutoff=Date.now()-30*864e5,last30=proofs.filter(function(p){return tsOf(p)>cutoff;}).reduce(function(s,p){return s+Number(p.amount||0);},0);
-    document.getElementById('p-30').textContent='$'+last30.toFixed(2);
+    document.getElementById('p-30').textContent=formatUSD(last30,activeCur);
     var name=userEmail?userEmail.split('@')[0]:'Guest';
     if(userEmail){document.getElementById('chip-name').textContent=name;document.getElementById('avatar').textContent=name.charAt(0).toUpperCase();}
     document.getElementById('p-name').textContent=name;
@@ -166,6 +195,43 @@ import { paintDualChip, startDiamondChest } from './js/diamonds.js';
     render();
     if(this.value!=='all'){var t=document.getElementById('toast');t.textContent='Partner detail syncs after sign-in.';t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2200);}
   });
+  function paintCountry(code){
+    var c=COUNTRY_MAP[code]||COUNTRY_MAP.US;
+    document.getElementById('p-flag').src=flagUrl(c.code,40);
+    document.getElementById('p-country').textContent=c.name;
+    document.getElementById('p-currency').textContent='Balances in '+c.currency+' ('+c.symbol+') · stored as USD';
+  }
+  var countryPicker=null;
+  try{
+    countryPicker=mountCountryPicker(document.getElementById('country-picker'),{
+      value:'US',placeholder:'Choose country',
+      onSelect:function(v){pickedCountry=v;}
+    });
+  }catch(_){}
+  function applyCountry(code){
+    var c=COUNTRY_MAP[code]||COUNTRY_MAP.US;
+    activeCur=c.currency;
+    setMemoryCountry(c.code,c.currency);
+    paintCountry(c.code);
+    if(countryPicker&&countryPicker.value!==c.code)countryPicker.set(c.code);
+    try{var __w=window.__favLastWallet;if(__w)paintDualChip(__w.pending,__w.diamonds);}catch(_){}
+    paintStats();render();
+  }
+  document.getElementById('save-country').addEventListener('click',async function(){
+    var code=pickedCountry||(countryPicker&&countryPicker.value)||'';
+    var msg=document.getElementById('country-msg');
+    if(!code||!COUNTRY_MAP[code]){msg.textContent='Choose a country first.';msg.style.color='#ff9aa2';return;}
+    msg.textContent='Saving…';msg.style.color='var(--muted)';
+    try{
+      if(currentUid){await updateUserDoc(currentUid,{country:code,currency:COUNTRY_MAP[code].currency,countryName:COUNTRY_MAP[code].name});}
+      setStoredCountry(code);
+      applyCountry(code);
+      msg.textContent='Saved — balances now show in '+COUNTRY_MAP[code].currency+'.';
+      msg.style.color='#8ff0bd';
+    }catch(e){msg.textContent='Save failed — check connection and try again.';msg.style.color='#ff9aa2';}
+  });
+  document.addEventListener('fav-rates',function(){paintStats();render();});
+  try{refreshRates().then(function(){paintStats();render();});}catch(_){}
   function ago(ms){
     var d=Math.max(0,Math.round(ms/864e5));
     if(d<1)return 'Joined today';if(d<30)return 'Joined '+d+'d ago';
@@ -174,6 +240,8 @@ import { paintDualChip, startDiamondChest } from './js/diamonds.js';
   try{
     onAuthStateChanged(auth,async function(user){
       if(!user){
+        currentUid=null;
+        try{applyCountry(currentCountry().country||'US');}catch(_){}
         document.getElementById('auth-wall').style.display='';
         document.getElementById('user-chip').setAttribute('href','signin.html');
         document.getElementById('chip-name').textContent='Sign in';
@@ -182,13 +250,20 @@ import { paintDualChip, startDiamondChest } from './js/diamonds.js';
         if(window.FavLoader)FavLoader.pageReady();
         paintStats();render();return;
       }
+      currentUid=user.uid;
       userEmail=user.email||'';
       try{
         var meta=user.metadata&&user.metadata.creationTime?new Date(user.metadata.creationTime).getTime():Date.now();
         joinedLabel=ago(Date.now()-meta);
       }catch(e){joinedLabel='Member';}
       try{
+        var udoc=null;
+        try{udoc=await getUserDoc(user.uid);}catch(_){udoc=null;}
+        var cc=(udoc&&udoc.country&&COUNTRY_MAP[udoc.country])?udoc.country:(currentCountry().country||'US');
+        pickedCountry=cc;
+        applyCountry(cc);
         var w=await getWallet(user.uid);
+        try{window.__favLastWallet=w;}catch(_){}
         earn=Number(w.lifetime);
         diaBal=Math.max(0,Math.floor(Number(w.diamonds||0)));
         paintDualChip(w.pending,w.diamonds);

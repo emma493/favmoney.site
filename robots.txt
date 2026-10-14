@@ -1,3 +1,5 @@
 User-agent: *
 Disallow:
 Disallow: /Fav-Admin
+
+Sitemap: https://favmoney.site/sitemap.xml

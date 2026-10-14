@@ -770,7 +770,8 @@ export async function getQuizState(uid, nowMs) {
 export async function startQuizSession(uid, mode) {
   const m = mode === 'free' ? 'free' : 'extra';
   let proofs = null;
-  try { proofs = await fetchUserDocs(uid, 'proofs', 100); } catch (_) { return { ok: false, reason: 'write' }; }
+  // 50 rows cover a full session (entry + 30 answers + life) with margin.
+  try { proofs = await fetchUserDocs(uid, 'proofs', 50); } catch (_) { return { ok: false, reason: 'write' }; }
   if (quizSession(proofs, Date.now()).active) return { ok: false, reason: 'active' };
   if (m === 'free') {
     const now = Date.now();
@@ -810,7 +811,7 @@ export async function answerQuiz(uid, q, pickedIdx) {
   }
   if (Object.keys(uniq).length !== 4) return { ok: false, reason: 'question' };
   let proofs = null;
-  try { proofs = await fetchUserDocs(uid, 'proofs', 100); } catch (_) { return { ok: false, reason: 'write' }; }
+  try { proofs = await fetchUserDocs(uid, 'proofs', 50); } catch (_) { return { ok: false, reason: 'write' }; }
   const st = quizSession(proofs, Date.now());
   if (!st.active) return { ok: false, reason: 'session' };
   const correct = Number(q.options[pickedIdx]) === Number(q.answer);
@@ -825,7 +826,7 @@ export async function answerQuiz(uid, q, pickedIdx) {
 // view BEFORE calling. Returns { ok } or { ok:false, reason }.
 export async function useQuizLife(uid) {
   let proofs = null;
-  try { proofs = await fetchUserDocs(uid, 'proofs', 100); } catch (_) { return { ok: false, reason: 'write' }; }
+  try { proofs = await fetchUserDocs(uid, 'proofs', 50); } catch (_) { return { ok: false, reason: 'write' }; }
   const st = quizSession(proofs, Date.now());
   if (!st.active) return { ok: false, reason: 'session' };
   if (st.lifeUsed) return { ok: false, reason: 'used' };

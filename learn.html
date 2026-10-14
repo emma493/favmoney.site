@@ -258,7 +258,9 @@ if (window.FavLoader) FavLoader.hold();
 
   async function refresh(repaintChip){
     if(!uid)return null;
-    try{proofs=await fetchUserDocs(uid,'proofs',100);}catch(e){return null;}
+    // 50 rows cover a full session (1 entry + 30 answers + life rows) with
+    // margin, at half the read cost/latency of the old 100.
+    try{proofs=await fetchUserDocs(uid,'proofs',50);}catch(e){return null;}
     var st=quizSession(proofs,Date.now());
     try{
       var w=await getWallet(uid);
@@ -299,16 +301,44 @@ if (window.FavLoader) FavLoader.hold();
     },100);
   }
 
+  // --- fast-answer path: correctness is decided locally the instant you tap
+  // (the question + options were generated on this device), so feedback paints
+  // with zero network wait. Server re-verification (anti-tamper) runs behind
+  // the feedback; a quiet refresh reconciles balance/history afterwards.
+  var snap={answered:0,correct:0,earned:0,lifeUsed:false}, delta={a:0,c:0,e:0,miss:0};
+  var saving=0, refreshing=false, refreshQueued=false;
+  function effSt(){
+    var a=snap.answered+delta.a;
+    return {answered:a,correct:snap.correct+delta.c,
+      earned:Math.round((snap.earned+delta.e)*100)/100,
+      lifeUsed:snap.lifeUsed,remaining:Math.max(0,QUIZ_SESSION_SIZE-a)};
+  }
+  function paintScore(){
+    var e=effSt();
+    document.getElementById('quiz-progress').textContent='Q '+Math.min(QUIZ_SESSION_SIZE,e.answered+1)+'/'+QUIZ_SESSION_SIZE;
+    document.getElementById('quiz-score').textContent=e.correct+' correct · +'+money(e.earned);
+    var life=document.getElementById('quiz-life');
+    if(e.lifeUsed){life.textContent='Rescue life used';life.classList.add('used');}
+    else{life.textContent='1 rescue life left';life.classList.remove('used');}
+  }
+  function silentRefresh(){
+    if(refreshing){refreshQueued=true;return;}
+    refreshing=true;
+    refresh(true).then(function(st){
+      refreshing=false;
+      if(refreshQueued){refreshQueued=false;silentRefresh();return;}
+      // Server truth wins: if the session truly died, end it now.
+      if(st&&!st.active&&cur){gameOver(st);}
+    });
+  }
+
   function ask(st){
-    var answered=st?st.answered:0;
-    cur=genQuizQuestion(curOp,answered);
+    snap={answered:st?st.answered:0,correct:st?st.correct:0,earned:st?st.earned:0,lifeUsed:!!(st&&st.lifeUsed)};
+    delta={a:0,c:0,e:0,miss:0};
+    cur=genQuizQuestion(curOp,snap.answered);
     cur.options=quizOptions(cur.answer);
     showZone('quiz-arena');
-    document.getElementById('quiz-progress').textContent='Q '+(answered+1)+'/'+QUIZ_SESSION_SIZE;
-    document.getElementById('quiz-score').textContent=(st?st.correct:0)+' correct · +'+money(st?st.earned:0);
-    var life=document.getElementById('quiz-life');
-    if(st&&st.lifeUsed){life.textContent='Rescue life used';life.classList.add('used');}
-    else{life.textContent='1 rescue life left';life.classList.remove('used');}
+    paintScore();
     document.getElementById('quiz-q').textContent=cur.text;
     var grid=document.getElementById('quiz-grid');
     grid.innerHTML='';
@@ -327,39 +357,47 @@ if (window.FavLoader) FavLoader.hold();
     busy=true;stopTimer();
     var btns=document.getElementById('quiz-grid').children;
     for(var i=0;i<btns.length;i++)btns[i].disabled=true;
-    var r;
-    try{r=await answerQuiz(uid,cur,idx);}
-    catch(e){r={ok:false,reason:'write'};}
-    if(!r.ok){
-      show(r.reason==='session'?'Session ended — start a new session to play.':'Could not save — check connection and try again.');
-      busy=false;
-      await refresh(false).then(function(st){if(st&&!st.active)gameOver(st);else if(cur){for(var i=0;i<btns.length;i++)btns[i].disabled=false;startTimer();}});
-      return;
-    }
+    // Instant local verdict — no network in this path.
+    var correct=idx>=0&&cur.options&&Number(cur.options[idx])===Number(cur.answer);
     for(var j=0;j<btns.length;j++){
       if(Number(cur.options[j])===Number(cur.answer))btns[j].classList.add('right');
       else if(j===idx)btns[j].classList.add('wrong');
     }
-    var st=await refresh(false);
-    if(r.correct){
-      try{var w=await getWallet(uid);paintDualChip(w.pending,w.diamonds,{flip:'usd',glow:true});}catch(e){}
+    delta.a++;
+    if(correct){delta.c++;delta.e=Math.round((delta.e+QUIZ_PAY)*100)/100;}
+    else{delta.miss++;}
+    paintScore();
+    if(correct){
       coinPour();
       try{track('quiz_correct',{amount:QUIZ_PAY});}catch(_){}
       show('+$0.10 — nice.');
     }else{
       softThud();
     }
+    // Server grading runs behind the feedback — never blocks the next question.
+    saving++;
+    (function(q,qi){
+      answerQuiz(uid,q,qi).then(function(r){
+        saving--;
+        if(!r||!r.ok)show('Could not save that answer — reconnecting…');
+        silentRefresh();
+      }).catch(function(){
+        saving--;
+        show('Could not save that answer — reconnecting…');
+        silentRefresh();
+      });
+    })(cur,idx);
     setTimeout(function(){
       busy=false;
-      st=st||quizSession(proofs,Date.now());
-      if(!st.active){gameOver(st);return;}
-      if(!r.correct){
-        if(!st.lifeUsed){showLife();}
-        else{gameOver(st);}
+      var e=effSt();
+      if(e.remaining<=0){silentRefresh();gameOver(e);return;}
+      if(!correct){
+        if(e.lifeUsed){silentRefresh();gameOver(e);}
+        else{showLife();}
         return;
       }
-      ask(st);
-    },r.correct?650:900);
+      ask(e);
+    },correct?450:700);
   }
 
   function gameOver(st){
@@ -396,7 +434,7 @@ if (window.FavLoader) FavLoader.hold();
   // ads plug into the Continue callback later, same as chest/Grow) ---
   var ADS=[
     ['Invite pays both ways','Friends get $1.00 instantly, you get $0.50 instantly. Your link lives on the Invite page.'],
-    ['Cash out from $5','PayPal, Visa prepaid and crypto. Diamonds stay in games — cash stays withdrawable.'],
+    ['Cash out from $20','PayPal, Visa prepaid and crypto. Diamonds stay in games — cash stays withdrawable.'],
     ['Grow your earnings','Stake task earnings on the Grow page and watch the ticker climb, boosted by ad views.']
   ];
   var adIdx=0, AD_MS=20000, adLeft=AD_MS, adTimer=null, adOpen=false, adBusy=false;

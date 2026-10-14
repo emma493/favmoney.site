@@ -56,7 +56,7 @@
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
 <div class="back-row"><a class="back-btn" href="earn.html" aria-label="Back to Earn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg><span>Earn</span></a></div>
 <h1 class="dash-title">Watch Ads</h1>
-<p>Watch sponsored views right on this page and earn <b>$0.10–$0.30</b> per verified view — up to <b>50 times a day</b>. We show <b>30</b> at a time; new ones unlock as you claim.</p>
+<p>Watch sponsored views right on this page and earn <b><span data-usd="0.10">$0.10</span>–<span data-usd="0.30">$0.30</span></b> per verified view — up to <b>50 times a day</b>. We show <b>30</b> at a time; new ones unlock as you claim.</p>
 <div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to watch and earn.</div>
 <div id="member-zone" style="display:none">
 <div class="bonus-card" id="ptc-batch">
@@ -89,16 +89,17 @@
 <footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="earn.html">Earn</a></span></div></div></footer>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet, fetchUserDocs, ptcState, claimPtcView, getUnclaimedRewards, track, PTC_DAILY_CAP } from './js/firebase.js';
+import { auth, onAuthStateChanged, getWallet, getUserDoc, fetchUserDocs, ptcState, claimPtcView, getUnclaimedRewards, track, PTC_DAILY_CAP } from './js/firebase.js';
 import { adsForSlot, slotResetMs, getAd, embedSponsor, clearSponsor, PTC_VISIBLE_COUNT } from './js/ptc-catalog.js';
 import { paintDualChip, startDiamondChest } from './js/diamonds.js';
+import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 if (window.FavLoader) FavLoader.hold();
 (function () {
   var uid=null, stopChest=null, proofs=[], tickTimer=null, pollTimer=null;
   var activeAd=null, viewLeft=0, viewTimer=null, viewOpen=false;
   var toast=document.getElementById('toast'), tm=null;
   function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
-  function money(n,d){return '$'+Number(n||0).toFixed(d==null?2:d);}
+  function money(n,d){return formatUSD(Number(n||0));}
   function msToClock(ms){
     ms=Math.max(0,ms);var s=Math.ceil(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),ss=s%60;
     function p(x){return (x<10?'0':'')+x;}
@@ -238,6 +239,8 @@ if (window.FavLoader) FavLoader.hold();
       try{
         var w=await getWallet(uid);
         paintDualChip(w.pending,w.diamonds);
+        try{adoptUserCountry(await getUserDoc(uid));}catch(_){}
+        paint();paintMoney();
         if(stopChest){try{stopChest();}catch(_){}}
         stopChest=startDiamondChest(uid,{onBalance:function(w2){paintDualChip(w2.pending,w2.diamonds);}});
         try{await getUnclaimedRewards(uid);}catch(_){}
@@ -251,6 +254,8 @@ if (window.FavLoader) FavLoader.hold();
     });
   }catch(e){ready();}
   setTimeout(ready,6000);
+  try{refreshRates().then(function(){paint();paintMoney();});}catch(_){}
+  document.addEventListener('fav-rates',function(){paint();paintMoney();});
 })();
 </script>
 </body>

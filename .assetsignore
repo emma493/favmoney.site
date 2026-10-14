@@ -7,9 +7,21 @@ node_modules/
 .git/
 .wrangler/
 wrangler.jsonc
-VAULT.local.md
+worker.js
+.gitignore
+package.json
+package-lock.json
+skills-lock.json
+firestore.rules
+# Secrets / private notes — never deploy, never commit.
+*-adminsdk-*.json
+og-api.txt
+*-api.txt
+*.local.md
+VAULT*
+USERCHATS.md
+MEMORY.md
+# Local tooling / reference dumps — not part of the site.
 .agents/
 .claude/
 inspo/
-skills-lock.json
-USERCHATS.md

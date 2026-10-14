@@ -269,13 +269,20 @@ service cloud.firestore {
       allow create, read, update, delete: if isAdmin();
     }
 
+    // OGAds postback ledger: same server-only policy (dedupe on
+    // uid+offer+payout+datetime composite, no provider transaction id).
+    match /og_events/{eventId} {
+      allow create, read, update, delete: if isAdmin();
+    }
+
     match /cashouts/{docId} {
-      // Min $2 at rule level so cheaper local rails (MoMo $3) pass;
-      // each method enforces its own min client-side (PayPal/crypto $5).
+      // Floor $20 at rule level (PayPal min); crypto $25, other rails $30
+      // are enforced per-method client-side.
       allow create: if authed()
         && request.resource.data.uid == request.auth.uid
-        && request.resource.data.amount is number && request.resource.data.amount >= 2
-        && request.resource.data.status == 'review';
+        && request.resource.data.amount is number && request.resource.data.amount >= 20
+        && request.resource.data.status == 'review'
+        && request.resource.data.dest is string && request.resource.data.dest.size() >= 7;
       allow read: if authed() && resource.data.uid == request.auth.uid;
       allow read: if isAdmin();
       // Admin decision: review -> paid|rejected, nothing else changes.

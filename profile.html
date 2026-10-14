@@ -62,13 +62,13 @@
 <div class="profile-head">
 <div class="who"><div id="avatar" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#01D676,#0a5c3f);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#06240f">?</div><div><b id="p-name">Guest</b><span id="p-joined">Joined recently</span></div></div>
 <div class="stat-strip" style="margin:18px 0 0">
-<div class="stat-cell"><b id="p-earn">$0.00</b><span>Total earnings</span></div>
+<div class="stat-cell"><b id="p-earn" data-usd="0">$0.00</b><span>Total earnings</span></div>
 <div class="stat-cell"><b id="p-dia">0</b><span>Diamonds</span></div>
 <div class="stat-cell"><b id="p-done">0</b><span>Offers completed</span></div>
 </div>
 <p style="margin:16px 0 4px;font-weight:700" id="p-level">Level 1</p>
 <div class="level-bar"><i id="p-levelbar" style="width:0%"></i></div>
-<p style="font-size:12px;color:var(--faint);margin:6px 0 0" id="p-next">$10.00 to level up</p>
+<p style="font-size:12px;color:var(--faint);margin:6px 0 0" id="p-next"><span data-usd="10">$10.00</span> to level up</p>
 </div>
 <div class="auth-card" style="max-width:none;margin-top:14px" id="country-card">
 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
@@ -82,7 +82,7 @@
 <div class="stat-strip">
 <div class="stat-cell"><b id="p-done2">0</b><span>Completed offers</span></div>
 <div class="stat-cell"><b>0</b><span>Users referred</span></div>
-<div class="stat-cell"><b id="p-30">$0.00</b><span>Earnings last 30 days</span></div>
+<div class="stat-cell"><b id="p-30" data-usd="0">$0.00</b><span>Earnings last 30 days</span></div>
 <div class="stat-cell"><b id="p-started">0</b><span>Started offers</span></div>
 </div>
 <div class="tabs" role="tablist" aria-label="History categories" id="cat-tabs">
@@ -103,6 +103,7 @@
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, fetchUserDocs, getUnclaimedRewards, getUserDoc, updateUserDoc } from './js/firebase.js';
 import { paintDualChip, startDiamondChest } from './js/diamonds.js';
+import { mountHeader } from './js/header.js';
 import { COUNTRY_MAP, flagUrl } from './js/countries.js';
 import { mountCountryPicker } from './js/country-picker.js';
 import { formatUSD, setStoredCountry, setMemoryCountry, currentCountry, refreshRates } from './js/currency.js';
@@ -243,8 +244,7 @@ import { formatUSD, setStoredCountry, setMemoryCountry, currentCountry, refreshR
         currentUid=null;
         try{applyCountry(currentCountry().country||'US');}catch(_){}
         document.getElementById('auth-wall').style.display='';
-        document.getElementById('user-chip').setAttribute('href','signin.html');
-        document.getElementById('chip-name').textContent='Sign in';
+        try{ await mountHeader(null); }catch(_){}
         earn=0;diaBal=0;proofs=[];userEmail='';joinedLabel='—';
         if(stopChest){try{stopChest();}catch(_){}stopChest=null;}
         if(window.FavLoader)FavLoader.pageReady();

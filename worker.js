@@ -153,10 +153,168 @@ const S = (v) => ({ stringValue: String(v == null ? '' : v) });
 const N = (v) => ({ doubleValue: Number(v || 0) });
 const T = () => ({ timestampValue: new Date().toISOString() });
 
+// ---------- OGAds offer feed (API v2, key in OGADS_API_KEY secret) ----------
+async function handleOgadsOffers(request, env) {
+  const key = (env && env.OGADS_API_KEY) || '';
+  if (!key) {
+    console.log('ogads-offers: OGADS_API_KEY not configured');
+    return json({ ok: false, reason: 'setup' }, 500);
+  }
+  const fwd = request.headers.get('X-Forwarded-For') || '';
+  const ip = request.headers.get('CF-Connecting-IP') || fwd.split(',')[0].trim();
+  const ua = request.headers.get('User-Agent') || '';
+  const lang = request.headers.get('Accept-Language') || '';
+  if (!ip || !ua) return json({ ok: false, reason: 'client' }, 400);
+  const share = Number((env && env.OGADS_SHARE) || (env && env.GG_SHARE) || 0.7);
+  const cap = Number((env && env.OGADS_MAX_PAYOUT) || (env && env.GG_MAX_PAYOUT) || 20);
+  const qs = new URLSearchParams({
+    ip, user_agent: ua,
+    site: 'favmoney.site/offerwalls.html',
+    max: '25'
+  });
+  if (lang) qs.set('lang', lang.slice(0, 64));
+  const res = await fetch('https://apptrck.net/api/v2?' + qs.toString(), {
+    headers: { Authorization: 'Bearer ' + key }
+  });
+  const data = await resJson(res, 'ogads');
+  if (!data || data.success !== true || !Array.isArray(data.offers)) {
+    console.log('ogads-offers: provider error ' + (data && data.error ? data.error : res.status));
+    return json({ ok: false, reason: 'provider' }, 502);
+  }
+  const offers = data.offers.slice(0, 25).map(function (o) {
+    const payout = Math.round(Number((o && o.payout) || 0) * 100) / 100;
+    return {
+      offerid: Number((o && o.offerid) || 0),
+      name: String((o && (o.name_short || o.name)) || 'Offer').slice(0, 80),
+      adcopy: String((o && o.adcopy) || '').slice(0, 160),
+      picture: String((o && o.picture) || '').slice(0, 512),
+      payout: payout,
+      userPay: Math.min(cap, Math.round(payout * share * 100) / 100),
+      device: String((o && o.device) || '').slice(0, 64),
+      country: String((o && o.country) || '').slice(0, 128),
+      link: String((o && o.link) || '').slice(0, 512)
+    };
+  }).filter(function (o) { return o.offerid && o.link && /^https?:\/\//i.test(o.link) && o.userPay > 0; });
+  return json({ ok: true, count: offers.length, offers });
+}
+
+// ---------- OGAds postback (global postback fires on approved conversion) ----------
+// Dedupe key: OGAds exposes no transaction id, so composite uid+offer+payout
+// +datetime identifies a conversion. {ran} is excluded (random per fire).
+function ogPostbackParams(url) {
+  const u = new URL(url);
+  const q = u.searchParams;
+  // uid arrives via aff_sub4 (per OGAds PHP example); accept aff_sub/uid
+  // as fallbacks for hand-built test URLs.
+  const sub4 = (q.get('aff_sub4') || '').slice(0, 128);
+  const sub = (q.get('aff_sub') || '').slice(0, 128);
+  return {
+    uid: sub4 || sub || (q.get('uid') || '').slice(0, 128),
+    offerId: (q.get('offer_id') || '').slice(0, 64),
+    offerName: (q.get('offer_name') || '').slice(0, 128),
+    payout: Number(q.get('payout') || 0),
+    ip: (q.get('ip') || '').slice(0, 64),
+    at: (q.get('at') || '').slice(0, 64),
+    source: (q.get('source') || '').slice(0, 64),
+    key: q.get('key') || ''
+  };
+}
+
+async function handleOgadsPostback(request, env) {
+  const p = ogPostbackParams(request.url);
+  const secret = (env && env.OGADS_POSTBACK_KEY) || '';
+  if (!secret) {
+    console.log('ogads-postback: OGADS_POSTBACK_KEY not configured');
+    return json({ ok: false, reason: 'setup' }, 500);
+  }
+  if (!timingSafeEqual(p.key, secret)) return json({ ok: false, reason: 'auth' }, 401);
+  if (!isUid(p.uid)) return json({ ok: false, reason: 'uid' }, 400);
+  if (!(p.payout > 0)) return json({ ok: false, reason: 'payout' }, 400);
+  const share = Number((env && env.OGADS_SHARE) || 0.7);
+  const cap = Number((env && env.OGADS_MAX_PAYOUT) || 20);
+  const amount = Math.min(cap, Math.round(p.payout * share * 100) / 100);
+  if (!(amount > 0)) return json({ ok: false, reason: 'payout' }, 400);
+  const projectId = (env && env.FIREBASE_PROJECT_ID) || 'favmoney';
+  const saJson = (env && (env.FIREBASE_SERVICE_ACCOUNT || env.FIREBASE_SERVICE_ACCOUNT_JSON)) || '';
+  if (!saJson) {
+    console.log('ogads-postback: FIREBASE_SERVICE_ACCOUNT not configured');
+    return json({ ok: false, reason: 'setup' }, 500);
+  }
+  const stamp = (p.at || '').replace(/[^0-9A-Za-z:\- ]/g, '').slice(0, 32) || 'nodate';
+  const eventId = 'og-' + p.uid + '-' + (p.offerId || '0') + '-' + stamp + '-' + String(Math.round(p.payout * 100));
+  try {
+    const token = await googleAccessToken(saJson);
+    const seen = await fsGet(projectId, token, 'og_events/' + encodeURIComponent(eventId));
+    if (seen) return text('OK');
+    const baseFields = {
+      uid: S(p.uid), provider: S('ogads'), offerId: S(p.offerId), offerName: S(p.offerName),
+      eventId: S(eventId), profit: N(p.payout), amount: N(amount),
+      ip: S(p.ip), source: S(p.source), at: T()
+    };
+    const created = await fsCreate(projectId, token, 'og_events', eventId, { ...baseFields, status: S('processing') });
+    if (created && created.conflict) return text('OK');
+    const wallet = await fsGet(projectId, token, 'wallets/' + encodeURIComponent(p.uid));
+    const wf = (wallet && wallet.fields) || {};
+    const pending = Number((wf.pending && (wf.pending.doubleValue || wf.pending.integerValue)) || 0);
+    const lifetime = Number((wf.lifetime && (wf.lifetime.doubleValue || wf.lifetime.integerValue)) || 0);
+    const invested = wf.invested || { doubleValue: 1 };
+    const walletFields = {
+      pending: N(Math.round((pending + amount) * 100) / 100),
+      lifetime: N(Math.round((lifetime + amount) * 100) / 100),
+      invested,
+      lastLabel: S('play:offers'),
+      updatedAt: T()
+    };
+    if (wallet) {
+      await fsPatch(projectId, token, 'wallets/' + encodeURIComponent(p.uid), walletFields, ['pending', 'lifetime', 'invested', 'lastLabel', 'updatedAt']);
+    } else {
+      await fsCreate(projectId, token, 'wallets', p.uid, {
+        ...walletFields, investedAt: N(Date.now()), boostUntil: N(0),
+        diamonds: N(0), lastDiamondAdAt: N(0), lastDiamondPassiveAt: N(Date.now())
+      });
+    }
+    await fsCreate(projectId, token, 'proofs', '', {
+      uid: S(p.uid), amount: N(amount), label: S('play:offers'), status: S('pending'), at: T(),
+      provider: S('ogads'), eventId: S(eventId), offerId: S(p.offerId), profit: N(p.payout)
+    });
+    await fsPatch(projectId, token, 'og_events/' + encodeURIComponent(eventId), { status: S('credited'), amount: N(amount) }, ['status', 'amount']);
+    try {
+      const uref = 'users/' + encodeURIComponent(p.uid);
+      const u = await fsGet(projectId, token, uref);
+      const uf = (u && u.fields) || {};
+      const earned = Number((uf.taskEarned && (uf.taskEarned.doubleValue || uf.taskEarned.integerValue)) || 0);
+      await fsPatch(projectId, token, uref, {
+        taskEarned: N(Math.round((earned + amount) * 100) / 100),
+        updatedAt: T()
+      }, ['taskEarned', 'updatedAt']);
+    } catch (_) {}
+    return text('OK');
+  } catch (e) {
+    console.log('ogads-postback error: ' + (e && e.message ? e.message : e));
+    return json({ ok: false, reason: 'write' }, 502);
+  }
+}
+
 // ---------- request handler ----------
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    if (url.pathname === '/api/ogads-offers' || url.pathname === '/api/ogads-offers/') {
+      if (request.method !== 'GET') return json({ ok: false, reason: 'method' }, 405);
+      try { return await handleOgadsOffers(request, env); }
+      catch (e) {
+        console.log('ogads-offers error: ' + (e && e.message ? e.message : e));
+        return json({ ok: false, reason: 'provider' }, 502);
+      }
+    }
+    if (url.pathname === '/api/ogads-postback' || url.pathname === '/api/ogads-postback/') {
+      if (request.method !== 'GET' && request.method !== 'POST') return json({ ok: false, reason: 'method' }, 405);
+      try { return await handleOgadsPostback(request, env); }
+      catch (e) {
+        console.log('ogads-postback error: ' + (e && e.message ? e.message : e));
+        return json({ ok: false, reason: 'write' }, 502);
+      }
+    }
     if (url.pathname !== '/api/gg-postback' && url.pathname !== '/api/gg-postback/') {
       try {
         if (env && env.ASSETS) return await env.ASSETS.fetch(request);
@@ -173,6 +331,10 @@ export default {
       return json({ ok: false, reason: 'setup' }, 500);
     }
     if (!timingSafeEqual(p.key, secret)) return json({ ok: false, reason: 'auth' }, 401);
+    // Provider URL validators (GG pings the saved postback with empty
+    // placeholders). Real conversions always carry event_id + event, so an
+    // empty probe is answered OK without writing anything.
+    if (!p.eventId && !p.event) return text('OK');
     if (!p.eventId) return json({ ok: false, reason: 'event_id' }, 400);
     if (!isUid(p.p1)) return json({ ok: false, reason: 'uid' }, 400);
 

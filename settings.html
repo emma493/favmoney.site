@@ -33,7 +33,7 @@
 <a href="rewards.html">Rewards<span class="dot"></span></a>
 <a href="withdraw.html">Cashout<span class="dot"></span></a>
 </nav>
-<div class="auth"><a class="btn btn-ghost" href="earn.html">Earn</a></div>
+<div class="auth"><a class="user-chip" href="profile.html" id="user-chip" style="display:none"><span class="bal" id="chip-bal">—</span><span id="chip-name">Sign in</span></a><a class="btn btn-ghost" href="earn.html">Earn</a></div>
 </div></header>
 <main class="section" style="padding-top:130px"><div class="wrap" style="max-width:560px">
 <a href="earn.html" style="color:#9be9c4;font-size:14px;text-decoration:none">← Back to earn</a>
@@ -48,10 +48,14 @@
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
 import { auth, onAuthStateChanged, signOut } from './js/firebase.js';
+import { mountHeader } from './js/header.js';
 (function(){
   if(window.FavLoader){FavLoader.hold();setTimeout(function(){FavLoader.pageReady();},2500);}
-  try{onAuthStateChanged(auth,function(u){
+  try{onAuthStateChanged(auth,async function(u){
     document.getElementById('who').textContent=u?(u.email||'member'):'Signed out';
+    var chip=document.getElementById('user-chip');
+    if(u){ if(chip)chip.style.display=''; try{ await mountHeader(u); }catch(e){} }
+    else{ if(chip)chip.style.display='none'; try{ await mountHeader(null); }catch(e){} }
     if(window.FavLoader)FavLoader.pageReady();
   });}catch(e){}
   document.getElementById('out').addEventListener('click',async function(){try{await signOut(auth);}catch(e){}location.href='index.html';});

@@ -72,9 +72,12 @@
       <a class="brand" href="index.html" aria-label="Favmoney home">
         <span class="brand-word"><span class="g">FAV</span><span class="w">MONEY</span></span>
       </a>
-      <div class="auth">
-        <a class="btn btn-ghost" href="signin.html">Sign In</a>
-        <a class="btn btn-green" href="signup.html">Sign Up</a>
+      <div class="auth" id="landing-auth">
+        <span id="guest-cta" style="display:inline-flex;gap:10px">
+          <a class="btn btn-ghost" href="signin.html">Sign In</a>
+          <a class="btn btn-green" href="signup.html">Sign Up</a>
+        </span>
+        <a class="user-chip" href="profile.html" id="user-chip" style="display:none"><span class="bal" id="chip-bal">—</span><span id="chip-name">Sign in</span></a>
       </div>
     </div>
   </header>
@@ -225,16 +228,16 @@
         <p class="sub rv">Cash, crypto or gift cards — low minimums, fast processing, no points maze.</p>
       </div>
       <div class="marquee rv" aria-hidden="true"><div class="track" id="m1">
-        <div class="pay blue"><img src="assets/stores/paypal.webp" alt="PayPal" width="26" height="26" loading="lazy" /><span>PayPal<small>from $5.00</small></span></div><div class="pay dark"><img src="assets/stores/bitcoin.webp" alt="Bitcoin" width="26" height="26" loading="lazy" /><span>Bitcoin<small>from $10</small></span></div><div class="pay"><img src="assets/stores/litecoin.svg" alt="Litecoin" width="26" height="26" loading="lazy" /><span>Litecoin<small>from $5</small></span></div><div class="pay gold"><img src="assets/stores/visa.webp" alt="VISA" width="26" height="26" loading="lazy" /><span>VISA Prepaid<small>from $5</small></span></div><div class="pay dark"><img src="assets/stores/dogecoin.svg" alt="Dogecoin" width="26" height="26" loading="lazy" /><span>Dogecoin<small>from $5</small></span></div><div class="pay"><img src="assets/brands/amazon.svg" alt="Amazon" width="26" height="26" loading="lazy" /><span>Amazon<small>from $5</small></span></div>
-        <div class="pay blue"><img src="assets/stores/paypal.webp" alt="PayPal" width="26" height="26" loading="lazy" /><span>PayPal<small>from $5.00</small></span></div><div class="pay dark"><img src="assets/stores/bitcoin.webp" alt="Bitcoin" width="26" height="26" loading="lazy" /><span>Bitcoin<small>from $10</small></span></div><div class="pay"><img src="assets/stores/litecoin.svg" alt="Litecoin" width="26" height="26" loading="lazy" /><span>Litecoin<small>from $5</small></span></div><div class="pay gold"><img src="assets/stores/visa.webp" alt="VISA" width="26" height="26" loading="lazy" /><span>VISA Prepaid<small>from $5</small></span></div><div class="pay dark"><img src="assets/stores/dogecoin.svg" alt="Dogecoin" width="26" height="26" loading="lazy" /><span>Dogecoin<small>from $5</small></span></div><div class="pay"><img src="assets/brands/amazon.svg" alt="Amazon" width="26" height="26" loading="lazy" /><span>Amazon<small>from $5</small></span></div>
+        <div class="pay blue"><img src="assets/stores/paypal.webp" alt="PayPal" width="26" height="26" loading="lazy" /><span>PayPal<small>from $20</small></span></div><div class="pay dark"><img src="assets/stores/bitcoin.webp" alt="Bitcoin" width="26" height="26" loading="lazy" /><span>Bitcoin<small>from $25</small></span></div><div class="pay"><img src="assets/stores/litecoin.svg" alt="Litecoin" width="26" height="26" loading="lazy" /><span>Litecoin<small>from $25</small></span></div><div class="pay gold"><img src="assets/stores/visa.webp" alt="VISA" width="26" height="26" loading="lazy" /><span>VISA Prepaid<small>from $30</small></span></div><div class="pay dark"><img src="assets/stores/dogecoin.svg" alt="Dogecoin" width="26" height="26" loading="lazy" /><span>Dogecoin<small>from $25</small></span></div><div class="pay"><img src="assets/brands/amazon.svg" alt="Amazon" width="26" height="26" loading="lazy" /><span>Amazon<small>from $5</small></span></div>
+        <div class="pay blue"><img src="assets/stores/paypal.webp" alt="PayPal" width="26" height="26" loading="lazy" /><span>PayPal<small>from $20</small></span></div><div class="pay dark"><img src="assets/stores/bitcoin.webp" alt="Bitcoin" width="26" height="26" loading="lazy" /><span>Bitcoin<small>from $25</small></span></div><div class="pay"><img src="assets/stores/litecoin.svg" alt="Litecoin" width="26" height="26" loading="lazy" /><span>Litecoin<small>from $25</small></span></div><div class="pay gold"><img src="assets/stores/visa.webp" alt="VISA" width="26" height="26" loading="lazy" /><span>VISA Prepaid<small>from $30</small></span></div><div class="pay dark"><img src="assets/stores/dogecoin.svg" alt="Dogecoin" width="26" height="26" loading="lazy" /><span>Dogecoin<small>from $25</small></span></div><div class="pay"><img src="assets/brands/amazon.svg" alt="Amazon" width="26" height="26" loading="lazy" /><span>Amazon<small>from $5</small></span></div>
       </div></div>
       <div class="marquee rv" aria-hidden="true"><div class="track rev" id="m2">
         <div class="pay"><img src="assets/brands/google-play.webp" alt="Google Play" width="26" height="26" loading="lazy" /><span>Google Play<small>from $5</small></span></div><div class="pay dark"><img src="assets/brands/steam.webp" alt="Steam" width="26" height="26" loading="lazy" /><span>Steam<small>from $5</small></span></div><div class="pay gold"><img src="assets/brands/starbucks.webp" alt="Starbucks" width="26" height="26" loading="lazy" /><span>Starbucks<small>from $5</small></span></div><div class="pay blue"><img src="assets/brands/venmo.svg" alt="Venmo" width="26" height="26" loading="lazy" /><span>Venmo<small>from $5</small></span></div><div class="pay"><img src="assets/brands/ethereum.webp" alt="Ethereum" width="26" height="26" loading="lazy" /><span>Ethereum<small>from $10</small></span></div><div class="pay dark"><img src="assets/brands/netflix.webp" alt="Netflix" width="26" height="26" loading="lazy" /><span>Netflix<small>from $10</small></span></div>
         <div class="pay"><img src="assets/brands/google-play.webp" alt="Google Play" width="26" height="26" loading="lazy" /><span>Google Play<small>from $5</small></span></div><div class="pay dark"><img src="assets/brands/steam.webp" alt="Steam" width="26" height="26" loading="lazy" /><span>Steam<small>from $5</small></span></div><div class="pay gold"><img src="assets/brands/starbucks.webp" alt="Starbucks" width="26" height="26" loading="lazy" /><span>Starbucks<small>from $5</small></span></div><div class="pay blue"><img src="assets/brands/venmo.svg" alt="Venmo" width="26" height="26" loading="lazy" /><span>Venmo<small>from $5</small></span></div><div class="pay"><img src="assets/brands/ethereum.webp" alt="Ethereum" width="26" height="26" loading="lazy" /><span>Ethereum<small>from $10</small></span></div><div class="pay dark"><img src="assets/brands/netflix.webp" alt="Netflix" width="26" height="26" loading="lazy" /><span>Netflix<small>from $10</small></span></div>
       </div></div>
       <div class="marquee rv" aria-hidden="true"><div class="track" id="m3">
-        <div class="pay dark"><img src="assets/stores/dogecoin.svg" alt="Dogecoin" width="26" height="26" loading="lazy" /><span>Dogecoin<small>from $5</small></span></div><div class="pay"><img src="assets/stores/litecoin.svg" alt="Litecoin" width="26" height="26" loading="lazy" /><span>Litecoin<small>from $5</small></span></div><div class="pay blue"><img src="assets/stores/paypal.webp" alt="PayPal" width="26" height="26" loading="lazy" /><span>PayPal<small>from $5.00</small></span></div><div class="pay dark"><img src="assets/stores/bitcoin.webp" alt="Bitcoin" width="26" height="26" loading="lazy" /><span>Bitcoin<small>from $10</small></span></div><div class="pay gold"><img src="assets/stores/visa.webp" alt="VISA" width="26" height="26" loading="lazy" /><span>VISA Prepaid<small>from $5</small></span></div><div class="pay"><img src="assets/brands/amazon.svg" alt="Amazon" width="26" height="26" loading="lazy" /><span>Amazon<small>from $5</small></span></div>
-        <div class="pay dark"><img src="assets/stores/dogecoin.svg" alt="Dogecoin" width="26" height="26" loading="lazy" /><span>Dogecoin<small>from $5</small></span></div><div class="pay"><img src="assets/stores/litecoin.svg" alt="Litecoin" width="26" height="26" loading="lazy" /><span>Litecoin<small>from $5</small></span></div><div class="pay blue"><img src="assets/stores/paypal.webp" alt="PayPal" width="26" height="26" loading="lazy" /><span>PayPal<small>from $5.00</small></span></div><div class="pay dark"><img src="assets/stores/bitcoin.webp" alt="Bitcoin" width="26" height="26" loading="lazy" /><span>Bitcoin<small>from $10</small></span></div><div class="pay gold"><img src="assets/stores/visa.webp" alt="VISA" width="26" height="26" loading="lazy" /><span>VISA Prepaid<small>from $5</small></span></div><div class="pay"><img src="assets/brands/amazon.svg" alt="Amazon" width="26" height="26" loading="lazy" /><span>Amazon<small>from $5</small></span></div>
+        <div class="pay dark"><img src="assets/stores/dogecoin.svg" alt="Dogecoin" width="26" height="26" loading="lazy" /><span>Dogecoin<small>from $25</small></span></div><div class="pay"><img src="assets/stores/litecoin.svg" alt="Litecoin" width="26" height="26" loading="lazy" /><span>Litecoin<small>from $25</small></span></div><div class="pay blue"><img src="assets/stores/paypal.webp" alt="PayPal" width="26" height="26" loading="lazy" /><span>PayPal<small>from $20</small></span></div><div class="pay dark"><img src="assets/stores/bitcoin.webp" alt="Bitcoin" width="26" height="26" loading="lazy" /><span>Bitcoin<small>from $25</small></span></div><div class="pay gold"><img src="assets/stores/visa.webp" alt="VISA" width="26" height="26" loading="lazy" /><span>VISA Prepaid<small>from $30</small></span></div><div class="pay"><img src="assets/brands/amazon.svg" alt="Amazon" width="26" height="26" loading="lazy" /><span>Amazon<small>from $5</small></span></div>
+        <div class="pay dark"><img src="assets/stores/dogecoin.svg" alt="Dogecoin" width="26" height="26" loading="lazy" /><span>Dogecoin<small>from $25</small></span></div><div class="pay"><img src="assets/stores/litecoin.svg" alt="Litecoin" width="26" height="26" loading="lazy" /><span>Litecoin<small>from $25</small></span></div><div class="pay blue"><img src="assets/stores/paypal.webp" alt="PayPal" width="26" height="26" loading="lazy" /><span>PayPal<small>from $20</small></span></div><div class="pay dark"><img src="assets/stores/bitcoin.webp" alt="Bitcoin" width="26" height="26" loading="lazy" /><span>Bitcoin<small>from $25</small></span></div><div class="pay gold"><img src="assets/stores/visa.webp" alt="VISA" width="26" height="26" loading="lazy" /><span>VISA Prepaid<small>from $30</small></span></div><div class="pay"><img src="assets/brands/amazon.svg" alt="Amazon" width="26" height="26" loading="lazy" /><span>Amazon<small>from $5</small></span></div>
       </div></div>
     </section>
 
@@ -277,7 +280,7 @@
         <h2 class="sec rv">Make your everyday<br /><span class="hl">more rewarding.</span></h2>
         <p class="sub rv">$2.4M+ in rewards paid to real humans. We counted. Twice.</p>
         <div class="odometer rv" id="odometer" aria-label="$2,400,000 paid"></div>
-        <p class="sub rv" style="margin-top:0">PayPal · gift cards · crypto · low $5 minimums</p>
+        <p class="sub rv" style="margin-top:0">PayPal · gift cards · crypto · minimums from $20</p>
       </div>
     </section>
 
@@ -286,7 +289,7 @@
       <div class="wrap">
         <h2 class="sec rv">Still skeptical? Fair.<br /><span class="hl">We've got answers.</span></h2>
         <div class="faq">
-          <div class="faq-item rv"><button aria-expanded="false">Does Favmoney actually pay out?<span class="plus">+</span></button><div class="a"><div>Yes. Rewards are funded by brand partners and paid via PayPal, gift cards and crypto once you hit the minimum (usually $5). PayPal typically lands same-day after review; gift codes arrive by email within minutes to hours. Some payouts are briefly held for anti-fraud checks — that protects the pool for real earners.</div></div></div>
+          <div class="faq-item rv"><button aria-expanded="false">Does Favmoney actually pay out?<span class="plus">+</span></button><div class="a"><div>Yes. Rewards are funded by brand partners and paid via PayPal, gift cards and crypto once you hit the minimum (PayPal $20 · crypto $25 · others $30). PayPal typically lands same-day after review; gift codes arrive by email within minutes to hours. Some payouts are briefly held for anti-fraud checks — that protects the pool for real earners.</div></div></div>
           <div class="faq-item rv"><button aria-expanded="false">Will I get rich, and what's the catch?<span class="plus">+</span></button><div class="a"><div>No — and run from anyone promising that. Think coffee-and-takeaway money, not a salary. Most members earn a few dollars to ~$50/month depending on time and quests picked. The honest trade-off is time: quests take real play. Pick games you'd enjoy anyway, dip in during downtime, never feel locked in.</div></div></div>
           <div class="faq-item rv"><button aria-expanded="false">Why do some rewards get reviewed or declined?<span class="plus">+</span></button><div class="a"><div>Because the pool is shared. If we paid every claim blindly, bots would drain it. We review completions, device signals and offer callbacks. Finish quests yourself, on one account, without VPNs or manipulated installs, and you'll be fine. Reviews keep payouts flowing to real humans.</div></div></div>
           <div class="faq-item rv"><button aria-expanded="false">Is it really free, and how does Favmoney make money?<span class="plus">+</span></button><div class="a"><div>Joining is free forever — no card, no subscription. Brands pay us to bring real, engaged users; we keep a margin and return the larger share to you as rewards. The bigger Favmoney gets, the more we can give back. That's the whole model.</div></div></div>
@@ -338,5 +341,19 @@
 
   <script src="js/stats.js"></script>
   <script src="js/main.js" defer></script>
+  <script type="module">
+  import { auth, onAuthStateChanged } from './js/firebase.js';
+  import { mountHeader } from './js/header.js';
+  try{
+    onAuthStateChanged(auth,async function(user){
+      var cta=document.getElementById('guest-cta');
+      var chip=document.getElementById('user-chip');
+      if(!user){ if(cta)cta.style.display=''; if(chip)chip.style.display='none'; return; }
+      if(cta)cta.style.display='none';
+      if(chip)chip.style.display='';
+      try{ await mountHeader(user); }catch(e){}
+    });
+  }catch(e){}
+  </script>
 </body>
 </html>

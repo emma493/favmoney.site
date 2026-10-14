@@ -56,7 +56,9 @@
 <nav class="mobilenav" aria-label="Mobile"><a href="earn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="grow.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Grow</a><a href="invite.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M18 8v6M15 11h6"/></svg>Invite</a><a href="rewards.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="12" rx="1.5"/><path d="M4 13h16M12 9v12M12 9S7.5 9 6 7.5 5.5 4.8 7 4.5 12 9 12 9Zm0 0s4.5 0 6-1.5S18.5 4.8 17 4.5 12 9 12 9Z"/></svg>Rewards<span class="navdot" id="navdot-rewards" style="display:none"></span></a><a href="withdraw.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet, fetchUserDocs, getUnclaimedRewards } from './js/firebase.js';
+import { auth, onAuthStateChanged, fetchUserDocs, getUnclaimedRewards } from './js/firebase.js';
+import { mountHeader } from './js/header.js';
+import { formatUSD } from './js/currency.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
   setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
@@ -77,23 +79,19 @@ import { auth, onAuthStateChanged, getWallet, fetchUserDocs, getUnclaimedRewards
     document.getElementById('empty').style.display=empty?'':'none';
     document.getElementById('tbl-wrap').style.display=empty?'none':'';
     document.getElementById('rows').innerHTML=list.map(function(c){
-      return '<tr><td data-label="Amount">$'+Number(c.amount||0).toFixed(2)+'</td><td data-label="Method">'+(c.method||'—')+'</td><td data-label="Status">'+pill(c.status)+'</td><td data-label="Date">'+relDate(c.at)+'</td></tr>';
+      return '<tr><td data-label="Amount">'+formatUSD(Number(c.amount||0))+'</td><td data-label="Method">'+(c.method||'—')+'</td><td data-label="Status">'+pill(c.status)+'</td><td data-label="Date">'+relDate(c.at)+'</td></tr>';
     }).join('');
   }
   try{
     onAuthStateChanged(auth,async function(user){
       if(!user){
         document.getElementById('auth-wall').style.display='';
-        document.getElementById('user-chip').setAttribute('href','signin.html');
-        document.getElementById('chip-name').textContent='Sign in';
+        try{ await mountHeader(null); }catch(e){}
         render([]);if(window.FavLoader)FavLoader.pageReady();return;
       }
       document.getElementById('auth-wall').style.display='none';
-      document.getElementById('user-chip').setAttribute('href','profile.html');
-      document.getElementById('chip-name').textContent=(user.email||'Member').split('@')[0];
       try{
-        var w=await getWallet(user.uid);
-        document.getElementById('chip-bal').textContent='$'+Number(w.pending).toFixed(2);
+        await mountHeader(user);
         render(await fetchUserDocs(user.uid,'cashouts',50));
         try{
           var __n=await getUnclaimedRewards(user.uid);

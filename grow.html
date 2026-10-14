@@ -106,7 +106,7 @@
 
 <div class="bonus-card">
 <h2 style="margin:0 0 4px;font-size:20px">Invest &amp; claim</h2>
-<p style="color:var(--muted);font-size:14px;margin:0">Available: <b id="av-now" style="color:#fff">$0.00</b> · Staked by you: <b id="st-now" style="color:#fff">$0.00</b> · Stakeable: <b id="cap-now" style="color:#8ff0bd">$0.00</b></p>
+<p style="color:var(--muted);font-size:14px;margin:0">Available: <b id="av-now" data-usd="0" style="color:#fff">$0.00</b> · Staked by you: <b id="st-now" data-usd="0" style="color:#fff">$0.00</b> · Stakeable: <b id="cap-now" data-usd="0" style="color:#8ff0bd">$0.00</b></p>
 <div class="amt-row">
 <input id="amt" type="number" min="0.1" step="0.1" placeholder="Amount in USD" aria-label="Amount to invest" />
 <button class="btn btn-ghost" id="max-btn" style="min-height:48px">Max</button>
@@ -121,14 +121,14 @@
 </div>
 
 <div class="stat-strip">
-<div class="stat-cell"><b id="s-invested">$0.00</b><span>Invested</span></div>
-<div class="stat-cell"><b id="s-yield">$0.00</b><span>Yield claimed</span></div>
+<div class="stat-cell"><b id="s-invested" data-usd="0">$0.00</b><span>Invested</span></div>
+<div class="stat-cell"><b id="s-yield" data-usd="0">$0.00</b><span>Yield claimed</span></div>
 <div class="stat-cell"><b id="s-apr">10,000%</b><span>Current rate</span></div>
 <div class="stat-cell"><b id="s-days">0</b><span>Task days</span></div>
 </div>
 
 <h2 style="font-size:20px;margin:30px 0 0">How it works</h2>
-<div class="quest-row"><div class="qico">1</div><div class="qmid"><b>Earn, then invest it</b><div style="font-size:13px;color:var(--muted)">Do tasks on Earn. Move up to $100 of those earnings into Grow. Yield never stops once invested.</div></div></div>
+<div class="quest-row"><div class="qico">1</div><div class="qmid"><b>Earn, then invest it</b><div style="font-size:13px;color:var(--muted)">Do tasks on Earn. Move up to <span data-usd="100">$100</span> of those earnings into Grow. Yield never stops once invested.</div></div></div>
 <div class="quest-row"><div class="qico">2</div><div class="qmid"><b>Watch it tick at 10,000% APR</b><div style="font-size:13px;color:var(--muted)">Base rate runs around the clock, even with the app closed — the math waits for you and settles on return.</div></div></div>
 <div class="quest-row"><div class="qico">3</div><div class="qmid"><b>Boost to 15,000% with an ad</b><div style="font-size:13px;color:var(--muted)">One verified view lights a full hour. The boost button drains as fuel burns, then claim and rewatch. Unstake anytime — no lockups.</div></div></div>
 
@@ -137,7 +137,7 @@
 
 <h2 style="font-size:20px;margin:30px 0 0">Good to know</h2>
 <div class="faq" style="margin-top:14px">
-<div class="faq-item"><button>Can I withdraw the $1 seed?<span class="plus">+</span></button><div class="a"><div><p>No. The $1 starter is invest-only: its principal stays growing forever, but every cent of yield it earns is yours to claim and cash out from $5 like any earning.</p></div></div></div>
+<div class="faq-item"><button>Can I withdraw the $1 seed?<span class="plus">+</span></button><div class="a"><div><p>No. The $1 starter is invest-only: its principal stays growing forever, but every cent of yield it earns is yours to claim and cash out from $20 like any earning.</p></div></div></div>
 <div class="faq-item"><button>Does mining ever stop?<span class="plus">+</span></button><div class="a"><div><p>No. Once invested, your balance grows around the clock at 10,000% APR base, 15,000% while boosted. No task needed to keep it ticking.</p></div></div></div>
 <div class="faq-item"><button>What if I close the app mid-boost?<span class="plus">+</span></button><div class="a"><div><p>Nothing is lost. Boost time is stored as a timestamp, not a live process: return three hours later and exactly one boosted hour plus two base hours settle into your balance.</p></div></div></div>
 <div class="faq-item"><button>Can I lose principal?<span class="plus">+</span></button><div class="a"><div><p>No. There is no downside mechanic — invested funds only move by your own stake, unstake, and accrued yield. Never any loss, fee, or lockup.</p></div></div></div>
@@ -171,6 +171,7 @@
 import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveState, settleInvest, stakeInvest, unstakeAll, activateBoost, fetchUserDocs, computeYield, utcDayStr, track, getUnclaimedRewards, INVEST_BASE_APR, INVEST_BOOST_APR, INVEST_BOOST_MS, INVEST_SEED } from './js/firebase.js';
 import { paintDualChip, startDiamondChest } from './js/diamonds.js';
 import { embedSponsor, clearSponsor } from './js/ptc-catalog.js';
+import { formatUSD, convertUSD, currentCountry, symbolFor, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
   setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
@@ -179,7 +180,8 @@ import { embedSponsor, clearSponsor } from './js/ptc-catalog.js';
   try{reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}
   var toast=document.getElementById('toast'),tm=null;
   function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
-  function money(n,d){return '$'+Number(n||0).toFixed(d==null?2:d);}
+  function money(n,d){return formatUSD(Number(n||0));}
+  function moneyPrec(n,dec){var c=currentCountry().currency||'USD';var v=convertUSD(Number(n||0),c);return symbolFor(c)+v.toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec});}
   function relDate(ts){
     if(!ts)return 'recently';
     var ms=ts.seconds?ts.seconds*1000:new Date(ts).getTime();
@@ -205,11 +207,11 @@ import { embedSponsor, clearSponsor } from './js/ptc-catalog.js';
     var now=Date.now();
     var r=computeYield(state.invested, investAnchor, now, state.boostUntilMs);
     var totalYield=anchorAccrued+r.yield;
-    var shown=state.invested+totalYield;
-    document.getElementById('tick').innerHTML=shown.toFixed(7)+' <small>USD</small>';
+    var shown=convertUSD(state.invested+totalYield,currentCountry().currency);
+    document.getElementById('tick').innerHTML=shown.toFixed(7)+' <small>'+(currentCountry().currency||'USD')+'</small>';
     var boosted=state.boostUntilMs>now;
     var perDay=dayYield(state.invested,boosted?INVEST_BOOST_APR:INVEST_BASE_APR);
-    var sub='Growing <b>'+money(perDay,4)+'/day</b> at current rate · unclaimed <b>'+money(totalYield,6)+'</b> · never stops';
+    var sub='Growing <b>'+moneyPrec(perDay,4)+'/day</b> at current rate · unclaimed <b>'+moneyPrec(totalYield,6)+'</b> · never stops';
     document.getElementById('tick-sub').innerHTML=sub;
     var badge=document.getElementById('apr-badge');
     document.getElementById('apr-text').textContent=(boosted?'15,000% BOOSTED':'10,000% APR');
@@ -264,6 +266,8 @@ import { embedSponsor, clearSponsor } from './js/ptc-catalog.js';
       investAnchor=Date.now();
       anchorAccrued=Number(state.accrued||0);
       var u=await getUserDoc(uid);
+      adoptUserCountry(u);
+      paintMoney();
       state.activeDays=u.activeDays||[];
       document.getElementById('av-now').textContent=money(state.pending);
       document.getElementById('st-now').textContent=money(state.investedUser);
@@ -297,12 +301,12 @@ import { embedSponsor, clearSponsor } from './js/ptc-catalog.js';
   function flash(msg){var n=document.getElementById('grow-note');n.textContent=msg;n.style.display='';}
   document.getElementById('invest-btn').addEventListener('click',function(){var __b=this;if(window.FavLoader){return FavLoader.withButton(__b,function(){return __investWork();});}return __investWork();async function __investWork(){
     var v=parseFloat(document.getElementById('amt').value);
-    if(!(v>0)){show('Enter an amount (min $0.10).');return;}
+    if(!(v>0)){show('Enter an amount (min '+formatUSD(0.10)+').');return;}
     var r=await stakeInvest(uid,v);
     if(!r.ok){
-      if(r.reason==='min')show('Minimum stake is $0.10.');
+      if(r.reason==='min')show('Minimum stake is '+formatUSD(0.10)+'.');
       else if(r.reason==='funds')show('Not enough available balance.');
-      else if(r.reason==='cap')show('Max $100 staked per user.');
+      else if(r.reason==='cap')show('Max '+formatUSD(100)+' staked per user.');
       else if(r.reason==='task-only')show('Only task earnings can be staked. Earn more first.');
       else show('Stake failed — check connection and rules.');
       return;
@@ -326,7 +330,7 @@ import { embedSponsor, clearSponsor } from './js/ptc-catalog.js';
   document.getElementById('unstake-btn').addEventListener('click',function(){var __b=this;if(window.FavLoader){return FavLoader.withButton(__b,function(){return __unstakeWork();});}return __unstakeWork();async function __unstakeWork(){
     var r=await unstakeAll(uid);
     if(!r.ok){
-      if(r.reason==='seed-only')show('Only your $1 seed is invested — it stays growing.');
+      if(r.reason==='seed-only')show('Only your '+formatUSD(1)+' seed is invested — it stays growing.');
       else show('Unstake failed — check connection and rules.');
       return;
     }
@@ -336,8 +340,8 @@ import { embedSponsor, clearSponsor } from './js/ptc-catalog.js';
   /* ---- ad viewer: 20 visible seconds, focus-enforced, then boost ---- */
   var AD_MS=20000, adLeft=AD_MS, adTimer=null, adOpen=false;
   var ADS=[
-    ['Invite pays both ways','Invite friends: they get $1.00 instantly, you get $0.50 instantly. Your link lives on the Invite page.'],
-    ['Cash out from $5','PayPal, Visa prepaid and crypto. Reviewed promptly, tracked in My Withdrawals.'],
+    ['Invite pays both ways',function(){return 'Invite friends: they get '+formatUSD(1)+' instantly, you get '+formatUSD(0.5)+' instantly. Your link lives on the Invite page.';}],
+    ['Cash out from '+formatUSD(20),'PayPal, Visa prepaid and crypto. Reviewed promptly, tracked in My Withdrawals.'],
     ['Streaks grow earnings','Grow ticks around the clock at 10,000% APR. Boost to 15,000% with an ad.']
   ];
   var adIdx=0;
@@ -346,7 +350,8 @@ import { embedSponsor, clearSponsor } from './js/ptc-catalog.js';
     if(state&&state.boostUntilMs-Date.now()>55*60000){show('Boost tank already full.');return;}
     adIdx=(adIdx+1)%ADS.length;
     document.getElementById('ad-title').textContent=ADS[adIdx][0];
-    document.getElementById('ad-text').textContent=ADS[adIdx][1];
+    var adText=ADS[adIdx][1];
+    document.getElementById('ad-text').textContent=(typeof adText==='function')?adText():adText;
     document.getElementById('ad-modal').classList.add('open');
     document.getElementById('ad-go').style.display='none';
     try{embedSponsor(document.getElementById('ad-frame'));}catch(_){}
@@ -430,6 +435,8 @@ import { embedSponsor, clearSponsor } from './js/ptc-catalog.js';
     document.getElementById('guest-card').style.display='';
   }
   var root=document.documentElement;function onS(){if(scrollY>0)root.setAttribute('data-top-nav-scrolled','true');else root.removeAttribute('data-top-nav-scrolled');}addEventListener('scroll',onS,{passive:true});onS();
+  try{refreshRates().then(function(){paintMoney();refresh();});}catch(_){}
+  document.addEventListener('fav-rates',function(){paintMoney();refresh();});
 })();
 </script>
 </body>

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cashout · Favmoney</title>
-  <meta name="description" content="Cash out Favmoney earnings: PayPal, crypto and local payout methods. Minimums from $3." />
+  <meta name="description" content="Cash out Favmoney earnings: PayPal from $20, crypto from $25, local payout methods from $30." />
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
@@ -46,7 +46,7 @@
 <div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to cash out your earnings.</div>
 <div class="cashout-hero">
 <p class="avail">Available to withdraw</p>
-<div class="bigamt" id="avail">$0.00</div>
+<div class="bigamt" id="avail" data-usd="0">$0.00</div>
 <p style="color:var(--muted);font-size:13px;margin:8px 0 0" id="pay-to">Paying to United States · balances in USD · <a href="profile.html" style="color:#9be9c4">Change country</a></p>
 </div>
 <h2 style="font-size:20px;margin:30px 0 0">Most Popular</h2>
@@ -60,8 +60,7 @@
 <p style="color:var(--muted);font-size:14px;margin:4px 0 0">Higher amounts carry lower fees.</p>
 <div class="denom-strip" id="denoms"></div>
 <div class="auth-card" style="max-width:none">
-<label for="dest" id="dest-label">Destination (PayPal email / wallet address)</label>
-<input id="dest" type="text" placeholder="you@example.com or 0x…" autocomplete="off" />
+<div id="dest-fields"></div>
 <button class="btn btn-green btn-block" id="req" style="margin-top:14px">Request cashout</button>
 <p class="tiny">Reviewed promptly. Track status in <a href="withdrawals.html" style="color:#9be9c4">My Withdrawals</a>. Need more balance? <a href="earn.html" style="color:#9be9c4">Earn more</a>.</p>
 </div>
@@ -73,9 +72,11 @@
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getUserDoc, requestCashout, track, getUnclaimedRewards } from './js/firebase.js';
+import { mountHeader } from './js/header.js';
+import { paintDualChip } from './js/diamonds.js';
 import { formatUSD, currentCountry, setMemoryCountry, refreshRates } from './js/currency.js';
 import { COUNTRY_MAP } from './js/countries.js';
-import { methodsForCountry, methodById } from './js/payout-methods.js';
+import { methodsForCountry, methodById, validateDest, packDest } from './js/payout-methods.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
   setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
@@ -91,13 +92,12 @@ import { methodsForCountry, methodById } from './js/payout-methods.js';
   function cur(){ return currentCountry().currency || 'USD'; }
   function paintHero(){
     document.getElementById('avail').textContent=formatUSD(avail,cur());
-    document.getElementById('chip-bal').textContent=uid?(formatUSD(avail,cur())):'—';
   }
   function card(m){
     var pct=Math.min(100,Math.round(avail/m.min*100));
     var art=m.img
       ? '<div class="mart"><img src="'+m.img+'" alt="'+m.id+'" loading="lazy" /></div>'
-      : '<div class="mart"><span style="display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#01D676,#0a5c3f);font-weight:800;font-size:22px;color:#06240f">'+m.id.charAt(0)+'</span></div>';
+      : '<div class="mart"><span style="display:flex;align-items:center;justify-content:center;width:48px;height:48px;margin:0 auto;border-radius:12px;background:linear-gradient(135deg,#01D676,#0a5c3f);font-weight:800;font-size:19px;color:#06240f">'+m.id.charAt(0)+'</span></div>';
     return '<button class="method-card'+(sel===m.id?' sel':'')+'" data-m="'+m.id+'"><h3>'+m.id+'</h3>'+art+'<div class="minline"><small>Minimum '+formatUSD(m.min,cur())+'</small><div class="prog" style="margin:0"><i style="width:'+pct+'%"></i></div><small>'+formatUSD(avail,cur())+' / '+formatUSD(m.min,cur())+'</small></div></button>';
   }
   function setMethodsFor(cc){
@@ -119,8 +119,32 @@ import { methodsForCountry, methodById } from './js/payout-methods.js';
   function paintDest(){
     var m=methodById(sel);
     if(!m)return;
-    document.getElementById('dest-label').textContent=m.destLabel||'Destination';
-    document.getElementById('dest').placeholder=m.destPlaceholder||'';
+    // Preserve typed values when re-rendering (e.g. picking an amount
+    // must not wipe the destination). Method switches still clear,
+    // because renderMethods() runs first and keys differ per method.
+    var prev={};
+    try{prev=readDest();}catch(_){}
+    // Separate inputs per method — cleared on every switch so a PayPal
+    // email can never be submitted as a bank/MoMo destination.
+    var fields=Array.isArray(m.fields)&&m.fields.length?m.fields:[{key:'dest',label:m.destLabel||'Destination',placeholder:m.destPlaceholder||'',inputmode:'text'}];
+    document.getElementById('dest-fields').innerHTML=fields.map(function(f){
+      var im=f.inputmode==='email'?'email':(f.inputmode==='tel'?'tel':(f.inputmode==='numeric'?'numeric':'text'));
+      return '<label for="dest-'+f.key+'">'+f.label+'</label>' +
+        '<input id="dest-'+f.key+'" data-dest="'+f.key+'" type="'+(im==='email'?'email':'text')+'" inputmode="'+im+'" placeholder="'+(f.placeholder||'').replace(/"/g,'&quot;')+'" autocomplete="off" style="margin-bottom:10px" />';
+    }).join('');
+    try{
+      Array.prototype.forEach.call(document.querySelectorAll('#dest-fields [data-dest]'),function(el){
+        var k=el.getAttribute('data-dest');
+        if(prev[k]!==undefined)el.value=prev[k];
+      });
+    }catch(_){}
+  }
+  function readDest(){
+    var out={};
+    Array.prototype.forEach.call(document.querySelectorAll('#dest-fields [data-dest]'),function(el){
+      out[el.getAttribute('data-dest')]=el.value;
+    });
+    return out;
   }
   function renderDenoms(){
     var m=methodById(sel);
@@ -142,12 +166,15 @@ import { methodsForCountry, methodById } from './js/payout-methods.js';
     if(d&&!d.disabled){denom=parseFloat(d.dataset.d);renderDenoms();}
   });
   document.getElementById('req').addEventListener('click',function(){var __b=this;if(window.FavLoader){return FavLoader.withButton(__b,function(){return __cashoutWork();});}return __cashoutWork();async function __cashoutWork(){
-    var dest=document.getElementById('dest').value.trim();
     if(!uid){show('Sign in to request a cashout.');setTimeout(function(){location.href='signin.html';},1200);return;}
     if(!denom){show('Pick an amount first.');return;}
-    var m0=methodById(sel)||{min:5,kind:'unknown'};
+    var m0=methodById(sel)||{min:20,kind:'unknown'};
     if(denom<m0.min){show('Minimum for '+sel+' is '+formatUSD(m0.min,cur())+'.');return;}
-    if(dest.length<4){show('Add a destination: email or wallet address.');return;}
+    var vals=readDest();
+    var chk=validateDest(m0,vals);
+    if(!chk.ok){show(chk.msg||'Check the destination details.');return;}
+    var dest=packDest(m0,vals);
+    if(dest.length<4){show('Add a destination.');return;}
     try{
       var fw=await getWallet(uid);
       if(denom>Number(fw.pending)){show('Insufficient balance ('+formatUSD(Number(fw.pending),cur())+').');return;}
@@ -155,6 +182,7 @@ import { methodsForCountry, methodById } from './js/payout-methods.js';
       try{track('cashout_request',{method:sel});}catch(_){}
       avail=Math.round((Number(fw.pending)-denom)*100)/100;
       paintHero();renderMethods();renderDenoms();
+      try{var fw2=await getWallet(uid);paintDualChip(fw2.pending,fw2.diamonds);}catch(_){}
       show('Cashout requested: '+formatUSD(denom,cur())+' via '+sel+'.');
     }catch(err){show('Request failed — check connection and Firestore rules.');}
   }});
@@ -163,24 +191,24 @@ import { methodsForCountry, methodById } from './js/payout-methods.js';
       if(!user){
         uid=null;avail=0;denom=0;
         document.getElementById('auth-wall').style.display='';
-        document.getElementById('user-chip').setAttribute('href','signin.html');
-        document.getElementById('chip-name').textContent='Sign in';
+        try{ await mountHeader(null); }catch(e){}
         setMethodsFor(currentCountry().country||'US');return;
       }
       uid=user.uid;
       document.getElementById('auth-wall').style.display='none';
-      document.getElementById('user-chip').setAttribute('href','profile.html');
-      document.getElementById('chip-name').textContent=(user.email||'Member').split('@')[0];
       try{
-        var w=await getWallet(uid);
-        avail=Number(w.pending);
-        try{
-          var ud=await getUserDoc(uid);
-          var cc=(ud&&ud.country&&COUNTRY_MAP[ud.country])?ud.country:(currentCountry().country||'US');
-          setMemoryCountry(cc,(COUNTRY_MAP[cc]||{}).currency||'USD');
-          setMethodsFor(cc);
-        }catch(_){setMethodsFor(currentCountry().country||'US');}
-        try{paintBadges(await getUnclaimedRewards(uid));}catch(_){}
+        var w=await mountHeader(user);
+        if(!w){ try{ w=await getWallet(uid); }catch(_){ w=null; } }
+        if(w){
+          avail=Number(w.pending);
+          try{
+            var ud=await getUserDoc(uid);
+            var cc=(ud&&ud.country&&COUNTRY_MAP[ud.country])?ud.country:(currentCountry().country||'US');
+            setMemoryCountry(cc,(COUNTRY_MAP[cc]||{}).currency||'USD');
+            setMethodsFor(cc);
+          }catch(_){setMethodsFor(currentCountry().country||'US');}
+          try{paintBadges(await getUnclaimedRewards(uid));}catch(_){}
+        }
       }catch(e){}
       paintHero();renderMethods();
       if(window.FavLoader)FavLoader.pageReady();

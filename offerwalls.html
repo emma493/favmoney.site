@@ -8,6 +8,18 @@
 <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="css/style.css" />
+<style>
+/* OGAds compact cards: provider art is ~100px, so cap thumbs (no upscale blur) */
+#ogads-list .oc-card{gap:12px;padding:10px 12px;align-items:center}
+#ogads-list .oc-asset{width:64px;height:64px;min-height:64px;align-self:center;flex:none;border-radius:12px;background:rgba(255,255,255,.05);overflow:hidden}
+#ogads-list .oc-asset img{width:64px;height:64px;object-fit:cover;transform:none;filter:none}
+#ogads-list .oc-body{padding-left:0;min-width:0}
+@media(min-width:640px){
+#ogads-list .oc-card{gap:12px;padding:10px 12px}
+#ogads-list .oc-asset{width:64px;min-height:64px}
+#ogads-list .oc-body{padding-left:0}
+}
+</style>
 <style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(20,21,35,.35);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#01D676;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#01D676;border:0;cursor:pointer;align-items:center;justify-content:center;color:#0d1a13;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
 <script src="js/loader.js"></script>
 </head>
@@ -45,14 +57,20 @@
 <p style="color:var(--muted);font-size:14px;margin:0">Owner: paste your Golden Goose SmartLink into <b>js/gg.js → GG_PROMO_BASE</b>, then redeploy. Cards unlock automatically.</p>
 </div>
 <div class="task-grid oc-list" id="provider-list" style="margin-top:12px"></div>
+<div class="sec-head" style="margin-top:18px"><h2>Top offers</h2></div>
+<p class="hint" id="ogads-status" style="font-size:12px;color:var(--faint);margin:6px 0 0">Checking offers…</p>
+<div class="task-grid oc-list" id="ogads-list" style="margin-top:12px"></div>
 <p class="hint" style="font-size:12px;color:var(--faint);margin:12px 0 0">Offers open in a new tab on the provider site. Only approved conversions credit — subscriptions and cancelled events never auto-credit.</p>
 </div></section>
 </main>
 <footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="earn.html">Earn</a></span></div></div></footer>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet, track } from './js/firebase.js';
+import { auth, onAuthStateChanged, getUserDoc, track } from './js/firebase.js';
+import { mountHeader } from './js/header.js';
 import { OFFER_PROVIDERS, providerClickUrl } from './js/gg.js';
+import { ogadsClickUrl, OGADS_MAX_VISIBLE } from './js/ogads.js';
+import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 if (window.FavLoader) FavLoader.hold();
 (function () {
   var uid = null;
@@ -89,26 +107,75 @@ if (window.FavLoader) FavLoader.hold();
     try{ window.open(url, '_blank', 'noopener,noreferrer'); }
     catch(_){ location.href = url; }
   });
+  var ogadsCache = null, ogadsLoading = false;
+  function renderOgads(offers){
+    var list = document.getElementById('ogads-list'), st = document.getElementById('ogads-status');
+    if(!list) return;
+    var vis = (offers || []).slice(0, (OGADS_MAX_VISIBLE || 20));
+    if(!vis.length){ if(st) st.textContent = 'No offers for your region right now.'; list.innerHTML = ''; return; }
+    if(st) st.textContent = offers.length + ' offers · you keep 70% of each payout.';
+    list.innerHTML = vis.map(function(o){
+      var img = o.picture ? '<div class="oc-asset"><img src="' + esc(o.picture) + '" alt="" loading="lazy" decoding="async"></div>' : '';
+      var meta = ((o.device || '') + (o.country ? ' · ' + o.country : '')).trim();
+      return '<div class="oc-card">' + img + '<div class="oc-body"><div class="oc-head"><div class="oc-title"><h2>' + esc(o.name) + '</h2></div><div class="oc-pay">' + formatUSD(Number(o.userPay)) + '</div></div>'
+        + '<p class="oc-desc">' + esc(o.adcopy || '') + '</p>'
+        + '<div class="oc-base"><div class="oc-time"><small>Offer</small><b>' + esc(meta || ('ID ' + o.offerid)) + '</b></div><button class="btn btn-green" data-ogads="' + esc(o.link) + '" data-offer="' + o.offerid + '" style="min-height:48px">Start · ' + formatUSD(Number(o.userPay)) + '</button></div></div></div>';
+    }).join('');
+  }
+  function paintOgads(){
+    var list = document.getElementById('ogads-list'), st = document.getElementById('ogads-status');
+    if(!list) return;
+    if(!uid){ if(st) st.textContent = 'Sign in to see personalized offers.'; list.innerHTML = ''; ogadsCache = null; return; }
+    if(ogadsCache){ renderOgads(ogadsCache); return; }
+    if(ogadsLoading){ if(st) st.textContent = 'Checking offers…'; return; }
+    ogadsLoading = true;
+    if(st) st.textContent = 'Checking offers…';
+    fetch('/api/ogads-offers', { headers: { 'Accept': 'application/json' } }).then(function(r){ return r.json(); }).then(function(d){
+      ogadsLoading = false;
+      if(d && d.ok && Array.isArray(d.offers)){ ogadsCache = d.offers; renderOgads(d.offers); }
+      else if(st){ st.textContent = 'Offers unavailable right now — try Golden Goose above.'; }
+    }).catch(function(){
+      ogadsLoading = false;
+      var s2 = document.getElementById('ogads-status');
+      if(s2) s2.textContent = 'Offers unavailable right now — try Golden Goose above.';
+    });
+  }
+  document.addEventListener('click', function(e){
+    var c = e.target.closest('[data-ogads]');
+    if(!c || c.disabled) return;
+    if(!uid){ show('Sign in so offer payouts land on your account.'); return; }
+    var url = ogadsClickUrl(c.getAttribute('data-ogads'), uid);
+    if(!url) return;
+    try{ track('offer_open', { provider: 'ogads', offer: c.getAttribute('data-offer') }); }catch(_){}
+    try{ window.open(url, '_blank', 'noopener,noreferrer'); }
+    catch(_){ location.href = url; }
+  });
   function ready() { if (window.FavLoader) FavLoader.pageReady(); }
   try {
     onAuthStateChanged(auth, async function (user) {
-      if (!user) { document.getElementById('chip-bal').textContent='\u2014'; document.getElementById('chip-name').textContent='Sign in';
+      if (!user) {
         uid = null;
+        try { await mountHeader(null); } catch (e) {}
         document.getElementById('auth-wall').style.display='';
-        paintProviders(); ready(); return; }
+        paintProviders(); paintOgads(); ready(); return; }
       try {
         uid = user.uid;
         document.getElementById('auth-wall').style.display='none';
-        var w = await getWallet(uid);
-        document.getElementById('chip-bal').textContent = '$' + Number(w.pending).toFixed(2);
-        document.getElementById('chip-name').textContent = (user.email || 'Member').split('@')[0];
+        await mountHeader(user);
+        try{adoptUserCountry(await getUserDoc(uid));}catch(_){}
+        if(ogadsCache)renderOgads(ogadsCache);
+        paintMoney();
       } catch (e) {}
       paintProviders();
+      paintOgads();
       ready();
     });
   } catch (e) { ready(); }
   paintProviders();
+  paintOgads();
   setTimeout(ready, 6000);
+  try{refreshRates().then(function(){if(ogadsCache)renderOgads(ogadsCache);paintMoney();});}catch(_){}
+  document.addEventListener('fav-rates',function(){if(ogadsCache)renderOgads(ogadsCache);paintMoney();});
 })();
 </script>
 </body>

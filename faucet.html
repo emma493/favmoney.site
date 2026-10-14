@@ -39,13 +39,13 @@
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
 <div class="back-row"><a class="back-btn" href="earn.html" aria-label="Back to Earn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg><span>Earn</span></a></div>
 <h1 class="dash-title">Free Faucet</h1>
-<p>Claim a free <b>$0.15</b> drip every <b>5 minutes</b> — up to <b>10 times a day</b>. No deposit, timer-verified.</p>
+<p>Claim a free <b data-usd="0.15">$0.15</b> drip every <b>5 minutes</b> — up to <b>10 times a day</b>. No deposit, timer-verified.</p>
 <div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to claim the drip.</div>
 <div class="bonus-card" id="faucet-card">
 <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
-<div><div class="big" id="faucet-amount" style="font-size:28px;font-weight:800;color:#ffd75e;font-variant-numeric:tabular-nums">$0.15</div>
+<div><div class="big" id="faucet-amount" data-usd="0.15" style="font-size:28px;font-weight:800;color:#ffd75e;font-variant-numeric:tabular-nums">$0.15</div>
 <p id="faucet-status" style="color:var(--muted);font-size:14px;margin:2px 0 0">Checking your drip…</p></div>
-<button class="btn btn-green" id="claim-btn" style="margin-left:auto;min-height:48px;min-width:170px" disabled>Claim $0.15</button>
+<button class="btn btn-green" id="claim-btn" style="margin-left:auto;min-height:48px;min-width:170px" disabled>Claim <span data-usd="0.15">$0.15</span></button>
 </div>
 <div class="prog" style="margin:14px 0 0"><i id="faucet-bar" style="width:0%"></i></div>
 <p id="faucet-sub" style="color:var(--faint);font-size:12px;margin:8px 0 0">10 claims daily · resets UTC midnight.</p>
@@ -57,14 +57,15 @@
 <footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="earn.html">Earn</a></span></div></div></footer>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet, fetchUserDocs, faucetState, claimFaucet, getUnclaimedRewards, track, FAUCET_AMOUNT, FAUCET_INTERVAL_MS, FAUCET_DAILY_CAP } from './js/firebase.js';
+import { auth, onAuthStateChanged, getWallet, getUserDoc, fetchUserDocs, faucetState, claimFaucet, getUnclaimedRewards, track, FAUCET_AMOUNT, FAUCET_INTERVAL_MS, FAUCET_DAILY_CAP } from './js/firebase.js';
 import { paintDualChip, startDiamondChest } from './js/diamonds.js';
+import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 if (window.FavLoader) FavLoader.hold();
 (function () {
   var uid=null, stopChest=null, proofs=[], tickTimer=null;
   var toast=document.getElementById('toast'), tm=null;
   function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
-  function money(n,d){return '$'+Number(n||0).toFixed(d==null?2:d);}
+  function money(n,d){return formatUSD(Number(n||0));}
   function msToClock(ms){
     ms=Math.max(0,ms);var s=Math.ceil(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),ss=s%60;
     function p(x){return (x<10?'0':'')+x;}
@@ -111,7 +112,7 @@ if (window.FavLoader) FavLoader.hold();
   function paintRows(){
     var body=document.getElementById('f-rows');
     var rows=(proofs||[]).filter(function(p){return String((p&&p.label)||'')==='play:faucet';}).slice(0,10);
-    if(!rows.length){body.innerHTML='<tr><td colspan="2" style="color:var(--muted)">No drips yet — your first $0.15 is one tap away.</td></tr>';return;}
+    if(!rows.length){body.innerHTML='<tr><td colspan="2" style="color:var(--muted)">No drips yet — your first '+formatUSD(FAUCET_AMOUNT)+' is one tap away.</td></tr>';return;}
     body.innerHTML=rows.map(function(p){
       return '<tr><td>'+money(p.amount!=null?p.amount:FAUCET_AMOUNT)+'</td><td>'+relDate(p.at)+'</td></tr>';
     }).join('');
@@ -174,6 +175,8 @@ if (window.FavLoader) FavLoader.hold();
       try{
         var w=await getWallet(uid);
         paintDualChip(w.pending,w.diamonds);
+        try{adoptUserCountry(await getUserDoc(uid));}catch(_){}
+        paintMoney();
         if(stopChest){try{stopChest();}catch(_){}}
         stopChest=startDiamondChest(uid,{onBalance:function(w2){paintDualChip(w2.pending,w2.diamonds);}});
         try{await getUnclaimedRewards(uid);}catch(_){}
@@ -186,6 +189,8 @@ if (window.FavLoader) FavLoader.hold();
     });
   }catch(e){ready();}
   setTimeout(ready,6000);
+  try{refreshRates().then(function(){paint();paintRows();paintMoney();});}catch(_){}
+  document.addEventListener('fav-rates',function(){paint();paintRows();paintMoney();});
 })();
 </script>
 </body>

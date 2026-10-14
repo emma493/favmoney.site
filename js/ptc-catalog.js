@@ -140,13 +140,15 @@ export function poolAdvertisers(nowMs) {
   return idx.slice(0, 50).map(function (k) { return ADVERTISER_POOL[k]; });
 }
 
+import { formatUSD } from './currency.js';
+
 function decorateOne(a, p) {
   const secs = Number(a.secs || 0), pay = Number(a.pay || 0);
   const pick = p || { title: 'Sponsored view', blurb: 'Partner offer.' };
   return {
     id: a.id,
     title: pick.title,
-    text: 'Visit ' + pick.title + ' — ' + pick.blurb + ' Keep this page visible for ' + secs + 's, then claim $' + pay.toFixed(2) + '.',
+    text: 'Visit ' + pick.title + ' — ' + pick.blurb + ' Keep this page visible for ' + secs + 's, then claim ' + formatUSD(pay) + '.',
     url: a.url,
     secs: secs,
     pay: pay,
@@ -174,7 +176,7 @@ export const PTC_CATALOG = (function buildCatalog() {
     out.push({
       id: id,
       title: p.title,
-      text: 'Visit ' + p.title + ' — ' + p.blurb + ' Keep this page visible for ' + t.secs + ' seconds, then claim $' + t.pay.toFixed(2) + '.',
+      text: 'Visit ' + p.title + ' — ' + p.blurb + ' Keep this page visible for ' + t.secs + ' seconds, then claim ' + formatUSD(t.pay) + '.',
       url: SPONSOR_URL,
       secs: t.secs,
       pay: t.pay,
@@ -185,7 +187,7 @@ export const PTC_CATALOG = (function buildCatalog() {
   // First row keeps the top-tier 40s/$0.20 economics with a pool name.
   out[0].secs = 40;
   out[0].pay = 0.20;
-  out[0].text = 'Visit ' + out[0].title + ' — keep this page visible for 40 seconds, then claim $0.20.';
+  out[0].text = 'Visit ' + out[0].title + ' — keep this page visible for 40 seconds, then claim ' + formatUSD(0.20) + '.';
   return out;
 })();
 

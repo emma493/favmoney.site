@@ -131,9 +131,9 @@ export function startDiamondChest(uid, opts) {
   }
 
   const ADS = [
-    ['Spin costs diamonds, wins pay cash', 'One free spin a day. Extra spins cost diamonds — prizes land as bonus chips and small USD cents.'],
-    ['Invite pays both ways', 'Friends get $1.00 instantly, you get $0.50 instantly. Your link lives on the Invite page.'],
-    ['Cash out from $5', 'PayPal, Visa prepaid and crypto. Diamonds stay in games — cash stays withdrawable.']
+    ['Spin costs diamonds, wins pay cash', function () { return 'One free spin a day. Extra spins cost diamonds — prizes land as bonus chips and small ' + (window.__favCountry ? window.__favCountry.currency : 'USD') + ' cents.'; }],
+    ['Invite pays both ways', function () { return 'Friends get ' + formatUSD(1) + ' instantly, you get ' + formatUSD(0.5) + ' instantly. Your link lives on the Invite page.'; }],
+    ['Cash out from ' + formatUSD(20), 'PayPal, Visa prepaid and crypto. Diamonds stay in games — cash stays withdrawable.']
   ];
   let adIdx = 0;
   const AD_MS = 20000;
@@ -157,7 +157,8 @@ export function startDiamondChest(uid, opts) {
   function openAd() {
     adIdx = (adIdx + 1) % ADS.length;
     document.getElementById('dia-ad-title').textContent = ADS[adIdx][0];
-    document.getElementById('dia-ad-text').textContent = ADS[adIdx][1];
+    var adText = ADS[adIdx][1];
+    document.getElementById('dia-ad-text').textContent = (typeof adText === 'function') ? adText() : adText;
     veil.classList.add('open');
     document.getElementById('dia-ad-go').style.display = 'none';
     try { embedSponsor(document.getElementById('dia-ad-frame')); } catch (_) {}

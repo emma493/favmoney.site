@@ -10,7 +10,9 @@
     "FIREBASE_PROJECT_ID": "favmoney",
     "GG_SHARE": "0.7",
     "GG_MAX_PAYOUT": "20",
-    "GG_CREDIT_EVENTS": "redeem,iclick"
+    "GG_CREDIT_EVENTS": "redeem,iclick",
+    "OGADS_SHARE": "0.7",
+    "OGADS_MAX_PAYOUT": "20"
   },
   "assets": {
     "directory": ".",

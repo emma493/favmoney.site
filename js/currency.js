@@ -97,7 +97,54 @@ export function formatUSD(usd, currency) {
   return sym + str;
 }
 
-// Best-effort live refresh (Frankfurter, no key). Never throws; static fallback stays.
+// Symbol for a currency code (e.g. NGN -> ₦). Pure.
+export function symbolFor(currency) {
+  var cur = currency || currentCountry().currency || 'USD';
+  if (cur === 'USD') return '$';
+  for (var i = 0; i < COUNTRIES.length; i++) {
+    if (COUNTRIES[i].currency === cur) return COUNTRIES[i].symbol;
+  }
+  return cur + ' ';
+}
+
+// Adopt a Firestore user doc's country into memory + localStorage.
+// Call after auth on every page so task rates follow the profile country
+// even on a new device where localStorage is empty. Never throws.
+export function adoptUserCountry(doc) {
+  try {
+    var code = doc && doc.country && COUNTRY_MAP[doc.country] ? doc.country : (currentCountry().country || 'US');
+    var o = setMemoryCountry(code, (doc && doc.currency) || (COUNTRY_MAP[code] || {}).currency || 'USD');
+    try { localStorage.setItem(LS_KEY, JSON.stringify(o)); } catch (_) {}
+    return o;
+  } catch (_) { return currentCountry(); }
+}
+
+// Paint every [data-usd] element as converted money. Usage:
+//   <b data-usd="0.15"></b>  ->  ₵2.33 / $0.15 depending on country.
+// Re-runs automatically when the country or live rates change.
+export function paintMoney(scope) {
+  try {
+    var root = scope || document;
+    var els = root.querySelectorAll('[data-usd]');
+    for (var i = 0; i < els.length; i++) {
+      var v = Number(els[i].getAttribute('data-usd'));
+      if (!isFinite(v)) continue;
+      els[i].textContent = formatUSD(v);
+    }
+  } catch (_) {}
+}
+
+try {
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () { paintMoney(); });
+    } else {
+      paintMoney();
+    }
+    document.addEventListener('fav-country', function () { paintMoney(); });
+    document.addEventListener('fav-rates', function () { paintMoney(); });
+  }
+} catch (_) {}
 export async function refreshRates() {
   try {
     var res = await fetch('https://api.frankfurter.app/latest?from=USD');

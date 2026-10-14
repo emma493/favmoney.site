@@ -24,6 +24,10 @@ npm-debug.log*
 # Favmoney VAULT - LOCAL ONLY, repo is PUBLIC. Never commit secrets.
 VAULT.local.md
 *.local.md
+.service-account/
+*-adminsdk-*.json
+og-api.txt
+*-api.txt
 .env
 .env.*
 .dev.vars

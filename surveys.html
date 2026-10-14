@@ -38,7 +38,7 @@
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
 <div class="back-row"><a class="back-btn" href="earn.html" aria-label="Back to Earn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg><span>Earn</span></a></div>
 <h1 class="dash-title">Paid Surveys</h1>
-<p>Share opinions for $1.50-$5.00 each. This quest opens next. Your balance stays safe.</p>
+<p>Share opinions for <span data-usd="1.5">$1.50</span>-<span data-usd="5">$5.00</span> each. This quest opens next. Your balance stays safe.</p>
 <div class="bonus-card" id="faucet-card">
 <h2 style="margin:0 0 6px;font-size:20px">Paid Surveys opening soon</h2>
 <p style="color:var(--muted);font-size:14px;margin:0 0 16px">We are wiring answer surveys. Meanwhile, earn on live quests.</p>
@@ -52,18 +52,15 @@
 <footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="earn.html">Earn</a></span></div></div></footer>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet } from './js/firebase.js';
+import { auth, onAuthStateChanged } from './js/firebase.js';
+import { mountHeader } from './js/header.js';
+import './js/currency.js';
 if (window.FavLoader) FavLoader.hold();
 (function () {
   function ready() { if (window.FavLoader) FavLoader.pageReady(); }
   try {
     onAuthStateChanged(auth, async function (user) {
-      if (!user) { document.getElementById('chip-bal').textContent='\u2014'; document.getElementById('chip-name').textContent='Sign in'; ready(); return; }
-      try {
-        var w = await getWallet(user.uid);
-        document.getElementById('chip-bal').textContent = '$' + Number(w.pending).toFixed(2);
-        document.getElementById('chip-name').textContent = (user.email || 'Member').split('@')[0];
-      } catch (e) {}
+      try { await mountHeader(user); } catch (e) {}
       ready();
     });
   } catch (e) { ready(); }

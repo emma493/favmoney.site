@@ -448,6 +448,10 @@ body{padding-bottom:0}
 .icon-btn{position:relative;width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid var(--line-soft);color:#c9cce4;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .icon-btn:hover{color:#fff;border-color:rgba(1,214,118,.5)}
 .icon-btn svg{width:20px;height:20px}
+.back-row{margin:0 0 14px}
+.back-btn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px 0 10px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid var(--line-soft);color:#c9cce4;font-family:var(--font);font-size:14px;font-weight:700;text-decoration:none}
+.back-btn:hover{color:#fff;border-color:rgba(1,214,118,.5)}
+.back-btn svg{width:20px;height:20px}
 .icon-btn .ping{position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--green)}
 .dash-shell{max-width:1188px;margin:0 auto;padding:0 24px}
 .dash-title{font-size:clamp(24px,3vw,32px);margin:0 0 6px;letter-spacing:-.01em}

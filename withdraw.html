@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cashout · Favmoney</title>
-  <meta name="description" content="Cash out Favmoney earnings: PayPal, Visa prepaid, crypto. $5 minimum." />
+  <meta name="description" content="Cash out Favmoney earnings: PayPal, crypto and local payout methods. Minimums from $3." />
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
@@ -47,17 +47,20 @@
 <div class="cashout-hero">
 <p class="avail">Available to withdraw</p>
 <div class="bigamt" id="avail">$0.00</div>
+<p style="color:var(--muted);font-size:13px;margin:8px 0 0" id="pay-to">Paying to United States · balances in USD · <a href="profile.html" style="color:#9be9c4">Change country</a></p>
 </div>
 <h2 style="font-size:20px;margin:30px 0 0">Most Popular</h2>
 <div class="method-grid" id="grid-pop"></div>
 <h2 style="font-size:20px;margin:26px 0 0">Crypto</h2>
 <div class="method-grid" id="grid-crypto"></div>
+<h2 style="font-size:20px;margin:26px 0 0;display:none" id="local-title">Local</h2>
+<div class="method-grid" id="grid-local"></div>
 <div id="denom-zone" style="display:none">
 <h2 style="font-size:20px;margin:26px 0 0" id="denom-title">Select amount</h2>
 <p style="color:var(--muted);font-size:14px;margin:4px 0 0">Higher amounts carry lower fees.</p>
 <div class="denom-strip" id="denoms"></div>
 <div class="auth-card" style="max-width:none">
-<label for="dest">Destination (PayPal email / wallet address)</label>
+<label for="dest" id="dest-label">Destination (PayPal email / wallet address)</label>
 <input id="dest" type="text" placeholder="you@example.com or 0x…" autocomplete="off" />
 <button class="btn btn-green btn-block" id="req" style="margin-top:14px">Request cashout</button>
 <p class="tiny">Reviewed promptly. Track status in <a href="withdrawals.html" style="color:#9be9c4">My Withdrawals</a>. Need more balance? <a href="earn.html" style="color:#9be9c4">Earn more</a>.</p>
@@ -69,18 +72,15 @@
 <nav class="mobilenav" aria-label="Mobile"><a href="earn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="grow.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Grow</a><a href="invite.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M18 8v6M15 11h6"/></svg>Invite</a><a href="rewards.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="12" rx="1.5"/><path d="M4 13h16M12 9v12M12 9S7.5 9 6 7.5 5.5 4.8 7 4.5 12 9 12 9Zm0 0s4.5 0 6-1.5S18.5 4.8 17 4.5 12 9 12 9Z"/></svg>Rewards<span class="navdot" id="navdot-rewards" style="display:none"></span></a><a href="withdraw.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet, requestCashout, track, getUnclaimedRewards } from './js/firebase.js';
-import { formatUSD, currentCountry, refreshRates } from './js/currency.js';
+import { auth, onAuthStateChanged, getWallet, getUserDoc, requestCashout, track, getUnclaimedRewards } from './js/firebase.js';
+import { formatUSD, currentCountry, setMemoryCountry, refreshRates } from './js/currency.js';
+import { COUNTRY_MAP } from './js/countries.js';
+import { methodsForCountry, methodById } from './js/payout-methods.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
   setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
-  var METHODS=[
-    {id:'PayPal',sec:'pop',img:'assets/cashout/paypal.webp',min:5,denoms:[5,10,20,30,50,75,100,200]},
-    {id:'Visa Prepaid',sec:'pop',img:'assets/cashout/visa.webp',min:5,denoms:[5,10,25,50,75,100,150,200]},
-    {id:'Bitcoin',sec:'crypto',img:'assets/cashout/bitcoin.png',min:5,denoms:[5,10,25,50,100,200]},
-    {id:'Litecoin',sec:'crypto',img:'assets/cashout/litecoin.png',min:5,denoms:[5,10,25,50,100,200]},
-    {id:'Dogecoin',sec:'crypto',img:'assets/cashout/dogecoin.png',min:5,denoms:[5,10,25,50,100,200]}
-  ];
+  var METHODS=methodsForCountry(currentCountry().country||'US');
+  var userCountry=currentCountry().country||'US';
   var sel='PayPal',denom=0,uid=null,avail=0;
   var toast=document.getElementById('toast'),tm=null;
   function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
@@ -95,14 +95,37 @@ import { formatUSD, currentCountry, refreshRates } from './js/currency.js';
   }
   function card(m){
     var pct=Math.min(100,Math.round(avail/m.min*100));
-    return '<button class="method-card'+(sel===m.id?' sel':'')+'" data-m="'+m.id+'"><h3>'+m.id+'</h3><div class="mart"><img src="'+m.img+'" alt="'+m.id+'" loading="lazy" /></div><div class="minline"><small>Minimum '+formatUSD(m.min,cur())+'</small><div class="prog" style="margin:0"><i style="width:'+pct+'%"></i></div><small>'+formatUSD(avail,cur())+' / '+formatUSD(m.min,cur())+'</small></div></button>';
+    var art=m.img
+      ? '<div class="mart"><img src="'+m.img+'" alt="'+m.id+'" loading="lazy" /></div>'
+      : '<div class="mart"><span style="display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#01D676,#0a5c3f);font-weight:800;font-size:22px;color:#06240f">'+m.id.charAt(0)+'</span></div>';
+    return '<button class="method-card'+(sel===m.id?' sel':'')+'" data-m="'+m.id+'"><h3>'+m.id+'</h3>'+art+'<div class="minline"><small>Minimum '+formatUSD(m.min,cur())+'</small><div class="prog" style="margin:0"><i style="width:'+pct+'%"></i></div><small>'+formatUSD(avail,cur())+' / '+formatUSD(m.min,cur())+'</small></div></button>';
+  }
+  function setMethodsFor(cc){
+    userCountry=(cc&&COUNTRY_MAP[cc])?cc:'US';
+    METHODS=methodsForCountry(userCountry);
+    if(!methodById(sel))sel='PayPal';
+    denom=0;
+    var c=COUNTRY_MAP[userCountry]||COUNTRY_MAP.US;
+    document.getElementById('pay-to').innerHTML='Paying to '+c.name+' · balances in '+c.currency+' · <a href="profile.html" style="color:#9be9c4">Change country</a>';
+    paintHero();renderMethods();renderDenoms();
   }
   function renderMethods(){
     document.getElementById('grid-pop').innerHTML=METHODS.filter(function(m){return m.sec==='pop';}).map(card).join('');
     document.getElementById('grid-crypto').innerHTML=METHODS.filter(function(m){return m.sec==='crypto';}).map(card).join('');
+    var local=METHODS.filter(function(m){return m.sec==='local';});
+    document.getElementById('local-title').style.display=local.length?'':'none';
+    document.getElementById('grid-local').innerHTML=local.map(card).join('');
+  }
+  function paintDest(){
+    var m=methodById(sel);
+    if(!m)return;
+    document.getElementById('dest-label').textContent=m.destLabel||'Destination';
+    document.getElementById('dest').placeholder=m.destPlaceholder||'';
   }
   function renderDenoms(){
-    var m=METHODS.filter(function(x){return x.id===sel;})[0];
+    var m=methodById(sel);
+    if(!m)return;
+    paintDest();
     document.getElementById('denom-zone').style.display='';
     document.getElementById('denom-title').textContent=m.id+' — select amount';
     document.getElementById('denoms').innerHTML=m.denoms.map(function(d){
@@ -122,12 +145,13 @@ import { formatUSD, currentCountry, refreshRates } from './js/currency.js';
     var dest=document.getElementById('dest').value.trim();
     if(!uid){show('Sign in to request a cashout.');setTimeout(function(){location.href='signin.html';},1200);return;}
     if(!denom){show('Pick an amount first.');return;}
-    if(denom<5){show('Minimum cashout is $5.00.');return;}
+    var m0=methodById(sel)||{min:5,kind:'unknown'};
+    if(denom<m0.min){show('Minimum for '+sel+' is '+formatUSD(m0.min,cur())+'.');return;}
     if(dest.length<4){show('Add a destination: email or wallet address.');return;}
     try{
       var fw=await getWallet(uid);
       if(denom>Number(fw.pending)){show('Insufficient balance ('+formatUSD(Number(fw.pending),cur())+').');return;}
-      await requestCashout(uid,{method:sel,amount:denom,dest:dest});
+      await requestCashout(uid,{method:sel,methodKind:m0.kind||'unknown',country:userCountry,amount:denom,dest:dest});
       try{track('cashout_request',{method:sel});}catch(_){}
       avail=Math.round((Number(fw.pending)-denom)*100)/100;
       paintHero();renderMethods();renderDenoms();
@@ -141,7 +165,7 @@ import { formatUSD, currentCountry, refreshRates } from './js/currency.js';
         document.getElementById('auth-wall').style.display='';
         document.getElementById('user-chip').setAttribute('href','signin.html');
         document.getElementById('chip-name').textContent='Sign in';
-        paintHero();renderMethods();return;
+        setMethodsFor(currentCountry().country||'US');return;
       }
       uid=user.uid;
       document.getElementById('auth-wall').style.display='none';
@@ -150,13 +174,19 @@ import { formatUSD, currentCountry, refreshRates } from './js/currency.js';
       try{
         var w=await getWallet(uid);
         avail=Number(w.pending);
+        try{
+          var ud=await getUserDoc(uid);
+          var cc=(ud&&ud.country&&COUNTRY_MAP[ud.country])?ud.country:(currentCountry().country||'US');
+          setMemoryCountry(cc,(COUNTRY_MAP[cc]||{}).currency||'USD');
+          setMethodsFor(cc);
+        }catch(_){setMethodsFor(currentCountry().country||'US');}
         try{paintBadges(await getUnclaimedRewards(uid));}catch(_){}
       }catch(e){}
       paintHero();renderMethods();
       if(window.FavLoader)FavLoader.pageReady();
     });
   }catch(e){paintHero();renderMethods();if(window.FavLoader)FavLoader.pageReady();}
-  paintHero();renderMethods();
+  setMethodsFor(currentCountry().country||'US');
   try{refreshRates().then(function(){paintHero();renderMethods();renderDenoms();});}catch(_){}
   document.addEventListener('fav-rates',function(){paintHero();renderMethods();});
   var root=document.documentElement;function onS(){if(scrollY>0)root.setAttribute('data-top-nav-scrolled','true');else root.removeAttribute('data-top-nav-scrolled');}addEventListener('scroll',onS,{passive:true});onS();

@@ -270,9 +270,11 @@ service cloud.firestore {
     }
 
     match /cashouts/{docId} {
+      // Min $2 at rule level so cheaper local rails (MoMo $3) pass;
+      // each method enforces its own min client-side (PayPal/crypto $5).
       allow create: if authed()
         && request.resource.data.uid == request.auth.uid
-        && request.resource.data.amount is number && request.resource.data.amount >= 5
+        && request.resource.data.amount is number && request.resource.data.amount >= 2
         && request.resource.data.status == 'review';
       allow read: if authed() && resource.data.uid == request.auth.uid;
       allow read: if isAdmin();

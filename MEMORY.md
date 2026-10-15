@@ -5,6 +5,8 @@
 
 ## 0. Permanent User Preferences (NEVER violate)
 - **NO EMOJIS EVER.** User hates emojis. Use real icons, real SVG, real images only. No emoji in UI, code comments, or docs. This is permanent.
+- **SHIP RULE (mandatory, every session):** after every build — commit + `git push origin main` + `npx wrangler deploy`, then verify on the live site. The owner tests on the real website, never locally. No build counts as done until it is live and verified.
+- **SESSION HANDOFF (all sessions share this file):** parallel sessions work in this same tree. Before editing shared files, check `git log` + `git status`. After every build, log what changed + what is still pending in §5/§6 so the next session never repeats or clobbers work.
 - **Storage:** Firebase is now LIVE (`js/firebase.js`, project `favmoney`, Auth + Firestore + Analytics-guarded). `js/store.js` (`FavStore`) remains as synchronous offline cache. Source of truth: Firestore collections `users/`, `wallets/`, `proofs/`, `cashouts/`, `waitlist/`. No `npm install` needed — CDN ES modules (`gstatic`, v12.4.0), Pages-safe, no bundler.
 - **Stack:** Static HTML/CSS/JS, vanilla, Cloudflare Pages compatible. `main` always deployable.
 

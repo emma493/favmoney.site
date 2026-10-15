@@ -8,7 +8,7 @@
 // fails closed in the rules.
 // NOTE: amounts are still client-enforced; full server authority needs a
 // Cloud Function when backend lands.
-import { auth, db, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut } from '../js/firebase.js';
+import { auth, db, onAuthStateChanged, signOut } from '../js/firebase.js';
 import {
   FAUCET_AMOUNT, FAUCET_INTERVAL_MS, FAUCET_DAILY_CAP,
   PTC_DAILY_CAP, PTC_MIN_PAY, PTC_MAX_PAY,
@@ -54,11 +54,11 @@ if (window.FavLoader) FavLoader.hold();
     e.textContent = msg; e.classList.add('show');
   }
   function gateView(id) {
-    ['view-signin', 'view-claim', 'view-denied'].forEach(function (v) {
+    ['view-claim', 'view-denied'].forEach(function (v) {
       var el = document.getElementById(v);
       if (el) el.style.display = v === id ? '' : 'none';
     });
-    document.title = 'Fav-Admin · ' + (id === 'view-claim' ? 'Claim seat' : id === 'view-denied' ? 'Locked' : 'Sign in');
+    document.title = 'Fav-Admin · ' + (id === 'view-claim' ? 'Claim seat' : 'Locked');
   }
 
   /* ---------- CSV export ---------- */
@@ -125,24 +125,17 @@ if (window.FavLoader) FavLoader.hold();
   function showClaim(user) {
     me = null;
     document.body.classList.remove('authed');
-    var who = document.getElementById('claim-who');
-    var one = document.getElementById('claim-oneclick');
-    var form = document.getElementById('claim-form');
-    if (user) {
-      who.textContent = user.email || user.uid;
-      one.style.display = '';
-      form.style.display = 'none';
-    } else {
-      one.style.display = 'none';
-      form.style.display = '';
-    }
-    err('claim-err'); err('su-err'); err('si-err');
+    document.getElementById('claim-who').textContent = user.email || user.uid;
+    err('claim-err');
     gateView('view-claim');
     ready();
   }
   try {
     onAuthStateChanged(auth, async function (user) {
-      if (!user) { gateView('view-signin'); ready(); return; }
+      if (!user) {
+        locked('No login forms here — sign in or create an account on the main site first, then reopen this console.');
+        return;
+      }
       var seat = await mySeatId(user.uid);
       if (seat) { enter(user, seat); return; }
       showClaim(user);
@@ -164,62 +157,16 @@ if (window.FavLoader) FavLoader.hold();
     err('claim-err');
     var user = null;
     try { user = auth.currentUser; } catch (_) { user = null; }
-    if (!user) { err('claim-err', 'No session — sign in below first.'); return; }
+    if (!user) { err('claim-err', 'No session — use the main site first.'); return; }
     var owned = await mySeatId(user.uid);
     if (owned) { enter(user, owned); return; }
     var seat = await claimSeatsFor(user);
     if (seat) { show('Admin seat claimed (' + seat + ' of 2).'); enter(user, seat); return; }
     err('claim-err', 'Claim failed — both seats may be taken, or the latest firestore.rules is not published yet.');
   }
-  async function doSignin() {
-    err('si-err');
-    var em = document.getElementById('si-email').value.trim(), pw = document.getElementById('si-pass').value;
-    if (!em || !pw) { err('si-err', 'Enter email and password.'); return; }
-    try { await signInWithEmailAndPassword(auth, em, pw); }
-    catch (e) {
-      var msg = 'Sign-in failed — check credentials.';
-      if (e && e.code === 'auth/invalid-credential') msg = 'Wrong email or password.';
-      else if (e && e.code === 'auth/user-not-found') msg = 'No admin account for this email. Claim a seat first.';
-      else if (e && e.code === 'auth/too-many-requests') msg = 'Too many attempts — wait 5 minutes and try once.';
-      else if (e && e.code === 'auth/user-disabled') msg = 'This account is disabled.';
-      err('si-err', msg);
-    }
-  }
-  async function doForgot() {
-    err('si-err');
-    var em = document.getElementById('si-email').value.trim();
-    if (!em) { err('si-err', 'Type your email above first.'); return; }
-    try {
-      await sendPasswordResetEmail(auth, em);
-      show('Reset link sent — check inbox and spam.');
-    } catch (e) {
-      err('si-err', (e && e.code === 'auth/user-not-found')
-        ? 'No admin account for this email.'
-        : 'Could not send reset link — try again in a minute.');
-    }
-  }
-  async function doSignupClaim() {
-    err('su-err');
-    var em = document.getElementById('su-email').value.trim(), pw = document.getElementById('su-pass').value;
-    if (!em || pw.length < 8) { err('su-err', 'Email + 8-character password required.'); return; }
-    try {
-      var cred = await createUserWithEmailAndPassword(auth, em, pw);
-      var seat = await claimSeatsFor(cred.user);
-      if (seat) { show('Admin seat claimed (' + seat + ' of 2).'); enter(cred.user, seat); return; }
-      err('su-err', 'Account created, but both admin seats are taken. This account has no admin access.');
-    } catch (e) { err('su-err', 'Sign-up failed — email may already be registered. Try signing in.'); }
-  }
-  document.getElementById('si-go').addEventListener('click', doSignin);
-  document.getElementById('to-forgot').addEventListener('click', doForgot);
-  document.getElementById('su-go').addEventListener('click', doSignupClaim);
   document.getElementById('claim-go').addEventListener('click', doClaimSeat);
-  document.getElementById('to-claim').addEventListener('click', function () { showClaim(auth.currentUser || null); });
-  document.getElementById('to-signin').addEventListener('click', function () { err('su-err'); err('claim-err'); gateView('view-signin'); });
   document.getElementById('denied-out').addEventListener('click', function () { location.reload(); });
   document.getElementById('ad-logout').addEventListener('click', function () { try { signOut(auth); } catch (_) {} });
-  [['si-email', doSignin], ['si-pass', doSignin], ['su-email', doSignupClaim], ['su-pass', doSignupClaim]].forEach(function (t) {
-    document.getElementById(t[0]).addEventListener('keydown', function (e) { if (e.key === 'Enter') t[1](); });
-  });
 
   /* ---------- router ---------- */
   var VIEW_LOADERS = { overview: loadOverview, users: initUsers, payouts: loadPayouts, ledger: loadLedger, earn: loadEarn, system: loadSystem, audit: loadAudit };

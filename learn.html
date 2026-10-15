@@ -324,7 +324,24 @@ if (window.FavLoader) FavLoader.hold();
   // with zero network wait. Server re-verification (anti-tamper) runs behind
   // the feedback; a quiet refresh reconciles balance/history afterwards.
   var snap={answered:0,correct:0,earned:0,lifeUsed:false}, delta={a:0,c:0,e:0,miss:0};
-  var saving=0, refreshing=false, refreshQueued=false;
+  var saving=0, refreshing=false, refreshQueued=false, over=false;
+  function waitForSaves(){
+    return new Promise(function(res){
+      (function poll(){
+        if(saving<=0){res();return;}
+        setTimeout(poll,150);
+      })();
+    });
+  }
+  // Server-authoritative session end: wait for in-flight answer saves, then
+  // re-read proofs so the Game-over card shows confirmed counts/earnings —
+  // never the local optimistic estimate. Falls back to it only offline.
+  async function endSession(fallback){
+    try{ await waitForSaves(); }catch(_){}
+    var st=null;
+    try{ st=await refresh(true); }catch(_){ st=null; }
+    gameOver(st||fallback);
+  }
   function effSt(){
     var a=snap.answered+delta.a;
     return {answered:a,correct:snap.correct+delta.c,
@@ -345,12 +362,14 @@ if (window.FavLoader) FavLoader.hold();
     refresh(true).then(function(st){
       refreshing=false;
       if(refreshQueued){refreshQueued=false;silentRefresh();return;}
-      // Server truth wins: if the session truly died, end it now.
-      if(st&&!st.active&&cur){gameOver(st);}
+      // Server truth wins: if the session truly died, end it now —
+      // unless endSession already painted the card.
+      if(st&&!st.active&&cur&&!over){gameOver(st);}
     });
   }
 
   function ask(st){
+    over=false;
     snap={answered:st?st.answered:0,correct:st?st.correct:0,earned:st?st.earned:0,lifeUsed:!!(st&&st.lifeUsed)};
     delta={a:0,c:0,e:0,miss:0};
     cur=genQuizQuestion(curOp,snap.answered);
@@ -408,22 +427,19 @@ if (window.FavLoader) FavLoader.hold();
     setTimeout(function(){
       busy=false;
       var e=effSt();
-      if(e.remaining<=0){silentRefresh();gameOver(e);return;}
-      if(!correct){
-        if(e.lifeUsed){silentRefresh();gameOver(e);}
-        else{showLife();}
-        return;
-      }
+      if(e.remaining<=0||(!correct&&e.lifeUsed)){endSession(e);return;}
+      if(!correct){showLife();return;}
       ask(e);
     },correct?450:700);
   }
 
   function gameOver(st){
-    stopTimer();cur=null;
+    stopTimer();cur=null;over=true;
     var done=st&&st.remaining===0;
+    var c=st?st.correct:0, a=st?st.answered:0;
     document.getElementById('over-title').textContent=done?'Session complete':'Game over';
     document.getElementById('over-earned').textContent='+'+money(st?st.earned:0);
-    document.getElementById('over-sub').textContent=(st?st.correct:0)+' correct out of '+(st?st.answered:0)+'.'+(done?'':' Unanswered questions are lost — play again below.');
+    document.getElementById('over-sub').textContent='You answered '+c+' of '+a+' correctly.'+(done?'':' Timed-out questions score zero — play again below.');
     var fab=document.getElementById('free-again-btn'), ab=document.getElementById('again-btn'), os=document.getElementById('over-status');
     if(quizState&&quizState.freeLeft>0){
       if(fab)fab.style.display='';

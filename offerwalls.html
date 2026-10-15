@@ -27,14 +27,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="css/style.css" />
 <style>
-/* OGAds compact cards: provider art is ~100px, so cap thumbs (no upscale blur) */
-#ogads-list .oc-card{gap:12px;padding:10px 12px;align-items:center}
-#ogads-list .oc-asset{width:64px;height:64px;min-height:64px;align-self:center;flex:none;border-radius:12px;background:rgba(255,255,255,.05);overflow:hidden}
-#ogads-list .oc-asset img{width:64px;height:64px;object-fit:cover;transform:none;filter:none}
-#ogads-list .oc-body{padding-left:0;min-width:0}
+/* OGAds cards: ~100px provider art on a clean tile (no upscale blur) */
+#ogads-list .oc-card{gap:14px;padding:12px 14px;align-items:center}
+#ogads-list .oc-asset{width:104px;height:104px;min-height:104px;align-self:center;flex:none;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid var(--line-soft);overflow:hidden}
+#ogads-list .oc-asset img{width:100%;height:100%;object-fit:contain;transform:none;filter:none;padding:6px}
+#ogads-list .oc-body{padding-left:0;min-width:0;flex:1}
+#ogads-list .og-base{margin-top:10px}
 @media(min-width:640px){
-#ogads-list .oc-card{gap:12px;padding:10px 12px}
-#ogads-list .oc-asset{width:64px;min-height:64px}
+#ogads-list .oc-card{gap:14px;padding:12px 14px}
+#ogads-list .oc-asset{width:104px;min-height:104px;height:104px}
 #ogads-list .oc-body{padding-left:0}
 }
 </style>
@@ -134,10 +135,9 @@ if (window.FavLoader) FavLoader.hold();
     if(st) st.textContent = offers.length + ' offers · you keep 70% of each payout.';
     list.innerHTML = vis.map(function(o){
       var img = o.picture ? '<div class="oc-asset"><img src="' + esc(o.picture) + '" alt="" loading="lazy" decoding="async"></div>' : '';
-      var meta = ((o.device || '') + (o.country ? ' · ' + o.country : '')).trim();
       return '<div class="oc-card">' + img + '<div class="oc-body"><div class="oc-head"><div class="oc-title"><h2>' + esc(o.name) + '</h2></div><div class="oc-pay">' + formatUSD(Number(o.userPay)) + '</div></div>'
         + '<p class="oc-desc">' + esc(o.adcopy || '') + '</p>'
-        + '<div class="oc-base"><div class="oc-time"><small>Offer</small><b>' + esc(meta || ('ID ' + o.offerid)) + '</b></div><button class="btn btn-green" data-ogads="' + esc(o.link) + '" data-offer="' + o.offerid + '" style="min-height:48px">Start · ' + formatUSD(Number(o.userPay)) + '</button></div></div></div>';
+        + '<div class="oc-base og-base"><button class="btn btn-green btn-block" data-ogads="' + esc(o.link) + '" data-offer="' + o.offerid + '" style="min-height:48px">Start · ' + formatUSD(Number(o.userPay)) + '</button></div></div></div>';
     }).join('');
   }
   function paintOgads(){

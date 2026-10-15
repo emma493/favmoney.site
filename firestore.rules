@@ -5,7 +5,9 @@
 // referrals/{newUid} is the $0.50 invite claim filed by the new user, claimed by owner.
 // commissions/{autoId} are lifetime % debts filed by the earner, claimed by owner.
 // Grow model: wallets/{uid} holds invested principal (incl. locked $1 seed),
-// investedAt (ms epoch), boostUntil (ms epoch, 0 = inactive). users/{uid} holds
+// investedAt (ms epoch), boostUntil (ms epoch, 0 = inactive), mineUntil
+// (ms epoch: yield accrues only while now <= mineUntil; a watched ad opens
+// a 6h mining shift). users/{uid} holds
 // taskEarned (stakeable ceiling source), investedUser (user principal, excl. seed),
 // activeDays (UTC-day strings with rewarded activity, max 90 — stats only, mining never stops).
 // Diamond model (play-only, never withdrawable): wallets/{uid} holds diamonds
@@ -164,6 +166,7 @@ service cloud.firestore {
         && (!('invested' in request.resource.data) || (request.resource.data.invested is number && request.resource.data.invested >= 0))
         && (!('investedAt' in request.resource.data) || (request.resource.data.investedAt is number && request.resource.data.investedAt >= 0))
         && (!('boostUntil' in request.resource.data) || (request.resource.data.boostUntil is number && request.resource.data.boostUntil >= 0))
+        && (!('mineUntil' in request.resource.data) || (request.resource.data.mineUntil is number && request.resource.data.mineUntil >= 0))
         && (!('diamonds' in request.resource.data) || (request.resource.data.diamonds is number && request.resource.data.diamonds >= 0))
         && (!('lastDiamondAdAt' in request.resource.data) || (request.resource.data.lastDiamondAdAt is number && request.resource.data.lastDiamondAdAt >= 0))
         && (!('lastDiamondPassiveAt' in request.resource.data) || (request.resource.data.lastDiamondPassiveAt is number && request.resource.data.lastDiamondPassiveAt >= 0));
@@ -173,6 +176,7 @@ service cloud.firestore {
         && (!('invested' in request.resource.data) || (request.resource.data.invested is number && request.resource.data.invested >= 0))
         && (!('investedAt' in request.resource.data) || (request.resource.data.investedAt is number && request.resource.data.investedAt >= 0))
         && (!('boostUntil' in request.resource.data) || (request.resource.data.boostUntil is number && request.resource.data.boostUntil >= 0))
+        && (!('mineUntil' in request.resource.data) || (request.resource.data.mineUntil is number && request.resource.data.mineUntil >= 0))
         && (!('diamonds' in request.resource.data) || (request.resource.data.diamonds is number && request.resource.data.diamonds >= 0))
         && (!('lastDiamondAdAt' in request.resource.data) || (request.resource.data.lastDiamondAdAt is number && request.resource.data.lastDiamondAdAt >= 0))
         && (!('lastDiamondPassiveAt' in request.resource.data) || (request.resource.data.lastDiamondPassiveAt is number && request.resource.data.lastDiamondPassiveAt >= 0));

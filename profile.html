@@ -71,7 +71,6 @@
 <div class="who"><div id="avatar" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#01D676,#0a5c3f);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#06240f">?</div><div><b id="p-name">···</b><span id="p-joined">···</span></div></div>
 <div class="stat-strip" style="margin:18px 0 0">
 <div class="stat-cell"><b id="p-earn" data-usd="0">$0.00</b><span>Total earnings</span></div>
-<div class="stat-cell"><b id="p-dia">0</b><span>Diamonds</span></div>
 <div class="stat-cell"><b id="p-done">0</b><span>Offers completed</span></div>
 </div>
 <p style="margin:16px 0 4px;font-weight:700" id="p-level">Level 1</p>
@@ -110,7 +109,6 @@
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, fetchUserDocs, getUnclaimedRewards, getUserDoc, updateUserDoc } from './js/firebase.js';
-import { paintDualChip, startDiamondChest } from './js/diamonds.js';
 import { mountHeader } from './js/header.js';
 import { COUNTRY_MAP, flagUrl } from './js/countries.js';
 import { mountCountryPicker } from './js/country-picker.js';
@@ -119,7 +117,7 @@ import { requireAuth } from './js/guard.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
   setTimeout(function(){if(document.documentElement.getAttribute('data-auth')==='member'&&window.FavLoader)FavLoader.pageReady();},6000);
-  var cat='all', proofs=[], earn=0, diaBal=0, userEmail='', joinedLabel='—', stopChest=null, activeCur='USD', currentUid=null, pickedCountry='';
+  var cat='all', proofs=[], earn=0, userEmail='', joinedLabel='—', activeCur='USD', currentUid=null, pickedCountry='';
   function relDate(ts){
     if(!ts)return 'recently';
     var ms=ts.seconds?ts.seconds*1000:new Date(ts).getTime();
@@ -133,23 +131,7 @@ import { requireAuth } from './js/guard.js';
     if(s==='done')return '<span class="pill done">Done</span>';
     return '<span class="pill pending">Pending</span>';
   }
-  function diaName(l){
-    var map={ 'diamond-ad':'Chest ad reward', 'diamond-passive':'Chest drip', 'diamond-win':'Game win' };
-    if(map[l])return map[l];
-    var m=/^diamond-spend:(.+)$/.exec(l||'');
-    if(m)return 'Play: '+m[1];
-    var m2=/^diamond-play:(.+)$/.exec(l||'');
-    if(m2)return 'Played: '+m2[1];
-    return 'Diamonds';
-  }
   function rowAmt(p){
-    var l=(p.label||'');
-    if(l.indexOf('diamond-')===0){
-      var d=Number(p.diamonds||0);
-      if(d>0)return '+'+d+' DIA';
-      if(d<0)return d+' DIA';
-      return '—';
-    }
     return formatUSD(Number(p.amount||0), activeCur);
   }
   function fmtUsd(v){ return formatUSD(Number(v||0), activeCur); }
@@ -167,8 +149,7 @@ import { requireAuth } from './js/guard.js';
     });
     if(cat==='referrals'){document.getElementById('rows').innerHTML='<tr><td colspan="5" style="color:var(--muted)">No referrals yet. <a href="invite.html" style="color:#8ff0bd">Invite friends</a>.</td></tr>';return;}
     document.getElementById('rows').innerHTML=rows.length?rows.map(function(p){
-      var l=(p.label||'');
-      var nm=(l.indexOf('diamond-')===0)?diaName(l):(p.label||p.title||'Quest');
+      var nm=(p.label||p.title||'Quest');
       return '<tr><td>'+nm+'</td><td>'+rowAmt(p)+'</td><td>'+pill(p.status)+'</td><td>'+(p.partner||'Favmoney')+'</td><td>'+relDate(p.at||p.createdAt)+'</td></tr>';
     }).join(''):'<tr><td colspan="5" style="color:var(--muted)">No history yet. <a href="earn.html" style="color:#8ff0bd">Start your first offer</a>.</td></tr>';
   }
@@ -181,7 +162,6 @@ import { requireAuth } from './js/guard.js';
     var done=proofs.filter(function(p){return /paid|done|approved/i.test(p.status||'');}).length;
     var lvl=Math.floor(earn/10)+1,next=(lvl*10-earn);
     document.getElementById('p-earn').textContent=formatUSD(earn,activeCur);
-    document.getElementById('p-dia').textContent=diaBal;
     document.getElementById('p-done').textContent=done;
     document.getElementById('p-done2').textContent=done;
     document.getElementById('p-started').textContent=proofs.length;
@@ -224,7 +204,6 @@ import { requireAuth } from './js/guard.js';
     setMemoryCountry(c.code,c.currency);
     paintCountry(c.code);
     if(countryPicker&&countryPicker.value!==c.code)countryPicker.set(c.code);
-    try{var __w=window.__favLastWallet;if(__w)paintDualChip(__w.pending,__w.diamonds);}catch(_){}
     paintStats();render();
   }
   document.getElementById('save-country').addEventListener('click',async function(){
@@ -264,11 +243,8 @@ import { requireAuth } from './js/guard.js';
         applyCountry(cc);
         var w=await getWallet(user.uid);
         try{window.__favLastWallet=w;}catch(_){}
+        try{document.getElementById('chip-bal').textContent=formatUSD(w.pending);}catch(_){}
         earn=Number(w.lifetime);
-        diaBal=Math.max(0,Math.floor(Number(w.diamonds||0)));
-        paintDualChip(w.pending,w.diamonds);
-        if(stopChest){try{stopChest();}catch(_){}}
-        stopChest=startDiamondChest(user.uid,{onBalance:function(w2){diaBal=Math.max(0,Math.floor(Number(w2.diamonds||0)));paintDualChip(w2.pending,w2.diamonds);paintStats();}});
         proofs=await fetchUserDocs(user.uid,'proofs',50);
         try{
           var __n=await getUnclaimedRewards(user.uid);

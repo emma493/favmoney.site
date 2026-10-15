@@ -107,12 +107,11 @@
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getUserDoc, fetchUserDocs, ptcState, claimPtcView, getUnclaimedRewards, track, PTC_DAILY_CAP } from './js/firebase.js';
 import { adsForSlot, slotResetMs, getAd, embedSponsor, clearSponsor, PTC_VISIBLE_COUNT } from './js/ptc-catalog.js';
-import { paintDualChip, startDiamondChest } from './js/diamonds.js';
 import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 import { requireAuth } from './js/guard.js';
 if (window.FavLoader) FavLoader.hold();
 (function () {
-  var uid=null, stopChest=null, proofs=[], tickTimer=null, pollTimer=null;
+  var uid=null, proofs=[], tickTimer=null, pollTimer=null;
   var activeAd=null, viewLeft=0, viewTimer=null, viewOpen=false;
   var toast=document.getElementById('toast'), tm=null;
   function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
@@ -229,7 +228,7 @@ if (window.FavLoader) FavLoader.hold();
       proofs=await fetchUserDocs(uid,'proofs',200);
       paint();
       if(notify){
-        try{var w=await getWallet(uid);paintDualChip(w.pending,w.diamonds);}catch(e){}
+        try{var w=await getWallet(uid);try{document.getElementById('chip-bal').textContent=formatUSD(w.pending);}catch(_){}}catch(e){}
       }
     }catch(e){paint();}
   }
@@ -243,11 +242,9 @@ if (window.FavLoader) FavLoader.hold();
       document.getElementById('chip-name').textContent=(user.email||'Member').split('@')[0];
       try{
         var w=await getWallet(uid);
-        paintDualChip(w.pending,w.diamonds);
+        try{document.getElementById('chip-bal').textContent=formatUSD(w.pending);}catch(_){}
         try{adoptUserCountry(await getUserDoc(uid));}catch(_){}
         paint();paintMoney();
-        if(stopChest){try{stopChest();}catch(_){}}
-        stopChest=startDiamondChest(uid,{onBalance:function(w2){paintDualChip(w2.pending,w2.diamonds);}});
         try{await getUnclaimedRewards(uid);}catch(_){}
       }catch(e){}
       await refresh(false);

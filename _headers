@@ -8,3 +8,4 @@
   Cache-Control: public, max-age=86400
 /*
   Link: <https://fonts.googleapis.com>; rel=preconnect, <https://fonts.gstatic.com>; rel=preconnect; crossorigin, <https://randomuser.me>; rel=preconnect
+  Speculation-Rules: "/speculation.json"

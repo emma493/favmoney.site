@@ -145,9 +145,29 @@ try {
     document.addEventListener('fav-rates', function () { paintMoney(); });
   }
 } catch (_) {}
-export async function refreshRates() {
+export async function refreshRates(force) {
   try {
-    var res = await fetch('https://api.frankfurter.app/latest?from=USD');
+    // Cache-first: liveRates() already enforces the 12h TTL on read, so a
+    // fresh cache means no network at all (repeat visits stay instant).
+    try {
+      var raw0 = localStorage.getItem(RATE_CACHE_KEY);
+      if (!force && raw0) {
+        var c0 = JSON.parse(raw0);
+        if (c0 && c0.at && c0.rates && (Date.now() - Number(c0.at) < 12 * 3600000)) {
+          try { document.dispatchEvent(new CustomEvent('fav-rates')); } catch (_) {}
+          return true;
+        }
+      }
+    } catch (_) {}
+    var ctl = null, timer = 0;
+    try {
+      if (typeof AbortController !== 'undefined') {
+        ctl = new AbortController();
+        timer = setTimeout(function () { try { ctl.abort(); } catch (_) {} }, 6000);
+      }
+    } catch (_) {}
+    var res = await fetch('https://api.frankfurter.app/latest?from=USD', ctl ? { signal: ctl.signal } : undefined);
+    try { if (timer) clearTimeout(timer); } catch (_) {}
     if (!res.ok) return false;
     var j = await res.json();
     if (!j || !j.rates) return false;

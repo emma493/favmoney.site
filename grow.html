@@ -176,13 +176,12 @@
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveState, settleInvest, stakeInvest, unstakeAll, activateBoost, activateMining, fetchUserDocs, computeYield, utcDayStr, track, getUnclaimedRewards, INVEST_BASE_APR, INVEST_BOOST_APR, INVEST_BOOST_MS, MINE_SHIFT_MS, INVEST_SEED } from './js/firebase.js';
-import { paintDualChip, startDiamondChest } from './js/diamonds.js';
 import { embedSponsor, clearSponsor } from './js/ptc-catalog.js';
 import { formatUSD, convertUSD, currentCountry, symbolFor, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 import { requireAuth } from './js/guard.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
-  var uid=null, state=null, investAnchor=0, anchorAccrued=0, raf=null, lastPaint=0, lastBtnSec=-1, unclaimedN=0, stopChest=null;
+  var uid=null, state=null, investAnchor=0, anchorAccrued=0, raf=null, lastPaint=0, lastBtnSec=-1, unclaimedN=0;
   var reduced=false;
   try{reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}
   var toast=document.getElementById('toast'),tm=null;
@@ -293,7 +292,7 @@ import { requireAuth } from './js/guard.js';
       document.getElementById('s-days').textContent=(u.activeDays||[]).length;
       try{
         var __w0=await getWallet(uid);
-        paintDualChip(__w0.pending,__w0.diamonds);
+        try{document.getElementById('chip-bal').textContent=formatUSD(__w0.pending);}catch(_){}
       }catch(_){document.getElementById('chip-bal').textContent=money(state.pending);}
       try{paintBadges(await getUnclaimedRewards(uid));}catch(_){}
       paintLive();
@@ -427,9 +426,7 @@ import { requireAuth } from './js/guard.js';
       document.getElementById('chip-name').textContent=(user.email||'Member').split('@')[0];
       try{
         var w=await getWallet(uid);
-        paintDualChip(w.pending,w.diamonds);
-        if(stopChest){try{stopChest();}catch(e){}}
-        stopChest=startDiamondChest(uid,{onBalance:function(w2){paintDualChip(w2.pending,w2.diamonds);}});
+        try{document.getElementById('chip-bal').textContent=formatUSD(w.pending);}catch(_){}
       }catch(e){}
       await refresh();
       if(window.FavLoader)FavLoader.pageReady();

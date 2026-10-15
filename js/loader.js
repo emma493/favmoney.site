@@ -54,6 +54,10 @@
     if (document.readyState === 'complete') {
       scheduleAuto();
     } else {
+      // Release on DOM readiness (not window.load): ad iframes, fonts and
+      // images may keep `load` pending for seconds; the overlay must never
+      // gate perceived navigation on them. Load listeners stay as backup.
+      document.addEventListener('DOMContentLoaded', scheduleAuto);
       window.addEventListener('load', scheduleAuto);
       // Extra safety if load event never fires (CDN hang).
       setTimeout(scheduleAuto, MAX_MS + 1000);

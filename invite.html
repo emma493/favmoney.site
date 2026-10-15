@@ -171,7 +171,6 @@
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getUserDoc, getOrCreateMyCode, claimReferrals, claimCommissions, fetchReferrals, fetchUserDocs, track, getUnclaimedRewards } from './js/firebase.js';
 import { mountHeader } from './js/header.js';
-import { paintDualChip } from './js/diamonds.js';
 import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 import { requireAuth } from './js/guard.js';
 (function(){
@@ -243,7 +242,7 @@ import { requireAuth } from './js/guard.js';
     }
     try{
       var w=await getWallet(uid);
-      paintDualChip(w.pending,w.diamonds);
+      try{document.getElementById('chip-bal').textContent=formatUSD(w.pending);}catch(_){}
     }catch(e){}
     try{paintBadges(await getUnclaimedRewards(uid));}catch(_){}
   }

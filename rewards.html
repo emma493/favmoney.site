@@ -125,7 +125,6 @@
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getUserDoc, getRewardsProgress, claimMilestone, fetchUserDocs, track } from './js/firebase.js';
 import { mountHeader } from './js/header.js';
-import { paintDualChip } from './js/diamonds.js';
 import { coinPour } from './js/sfx.js';
 import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 import { requireAuth } from './js/guard.js';
@@ -235,7 +234,7 @@ import { requireAuth } from './js/guard.js';
       else{rb.style.display='none';}
       try{
         var w=await getWallet(uid);
-        paintDualChip(w.pending,w.diamonds);
+        try{document.getElementById('chip-bal').textContent=formatUSD(w.pending);}catch(_){}
       }catch(e){}
     }catch(e){}
     try{

@@ -13,16 +13,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Spin the Wheel & Win Cash Prizes Daily · Favmoney</title>
-  <meta name="description" content="Spin the daily prize wheel: one free spin a day, extra spins for diamonds, instant cash and diamond prizes." />
+  <meta name="description" content="Spin the daily prize wheel: one free spin a day plus 10 bonus spins via short ads, cash prizes only." />
   <link rel="canonical" href="https://favmoney.site/spin.html" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Favmoney" />
   <meta property="og:title" content="Spin the Wheel & Win Cash Prizes Daily · Favmoney" />
-  <meta property="og:description" content="Spin the daily prize wheel: one free spin a day, extra spins for diamonds, instant cash and diamond prizes." />
+  <meta property="og:description" content="Spin the daily prize wheel: one free spin a day plus 10 bonus spins via short ads, cash prizes only." />
   <meta property="og:url" content="https://favmoney.site/spin.html" />
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:title" content="Spin the Wheel & Win Cash Prizes Daily · Favmoney" />
-  <meta name="twitter:description" content="Spin the daily prize wheel: one free spin a day, extra spins for diamonds, instant cash and diamond prizes." />
+  <meta name="twitter:description" content="Spin the daily prize wheel: one free spin a day plus 10 bonus spins via short ads, cash prizes only." />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -88,22 +88,22 @@
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
 <div class="back-row"><a class="back-btn" href="earn.html" aria-label="Back to Earn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg><span>Earn</span></a></div>
 <h1 class="dash-title">Spin the Wheel</h1>
-<p>One free spin every day. Extra spins cost 10 diamonds. Every spin wins — cash, diamonds, or another spin.</p>
+<p>One free spin every day, plus up to 10 bonus spins by watching a short ad each. Every spin wins cash or another spin.</p>
 
 <div id="member-zone" style="display:none">
 <div class="bonus-card">
 <div class="spin-stage">
 <div class="spin-wheel-wrap">
 <div class="spin-pointer" aria-hidden="true"></div>
-<canvas id="spin-canvas" width="680" height="680" role="img" aria-label="Prize wheel: cash from 2 cents to 1 dollar, 5 diamonds, or a free spin"></canvas>
+<canvas id="spin-canvas" width="680" height="680" role="img" aria-label="Prize wheel: cash from 2 cents to 1 dollar or a free spin"></canvas>
 </div>
 <div class="spin-status" id="spin-status" aria-live="polite">Loading your spins…</div>
 <div class="spin-result" id="spin-result" aria-live="polite"></div>
 <div class="spin-btns">
 <button class="btn btn-green" id="spin-btn" type="button">Spin free</button>
-<button class="btn btn-ghost" id="extra-btn" type="button">Extra spin · 10 diamonds</button>
+<button class="btn btn-ghost" id="extra-btn" type="button">Watch ad · Spin (10 left)</button>
 </div>
-<p class="hint" id="spin-hint" style="text-align:center">Free spin resets at midnight UTC. Diamonds come from the floating chest.</p>
+<p class="hint" id="spin-hint" style="text-align:center">Free spin resets at midnight UTC. Bonus spins reset daily.</p>
 </div>
 </div>
 
@@ -119,11 +119,10 @@
 <p style="color:var(--muted);font-size:14px;margin:0">Equal slices, weighted odds. Jackpot is rare by design.</p>
 <table class="spin-odds" aria-label="Wheel odds">
 <tbody>
-<tr><td class="pr" data-usd="0.02">$0.02</td><td>Base cash</td><td class="wt">30%</td></tr>
-<tr><td class="pr" data-usd="0.05">$0.05</td><td>Base cash</td><td class="wt">25%</td></tr>
-<tr><td class="pr" data-usd="0.10">$0.10</td><td>Mid cash</td><td class="wt">18%</td></tr>
-<tr><td class="pr">+5 diamonds</td><td>Play chips for extra spins</td><td class="wt">12%</td></tr>
-<tr><td class="pr">Free Spin</td><td>Instant re-spin, no diamonds</td><td class="wt">8%</td></tr>
+<tr><td class="pr" data-usd="0.02">$0.02</td><td>Base cash</td><td class="wt">34%</td></tr>
+<tr><td class="pr" data-usd="0.05">$0.05</td><td>Base cash</td><td class="wt">28%</td></tr>
+<tr><td class="pr" data-usd="0.10">$0.10</td><td>Mid cash</td><td class="wt">21%</td></tr>
+<tr><td class="pr">Free Spin</td><td>Instant re-spin, no ad</td><td class="wt">10%</td></tr>
 <tr><td class="pr" data-usd="0.25">$0.25</td><td>Big cash</td><td class="wt">5%</td></tr>
 <tr class="jack"><td class="pr"><span data-usd="1">$1.00</span> jackpot</td><td>Rare headline prize</td><td class="wt">2%</td></tr>
 </tbody>
@@ -132,8 +131,8 @@
 
 <h2 style="font-size:20px;margin:30px 0 0">How it works</h2>
 <div class="quest-row"><div class="qico">1</div><div class="qmid"><b>Take your free spin</b><div style="font-size:13px;color:var(--muted)">One free spin per UTC day. The button counts down to midnight when used.</div></div></div>
-<div class="quest-row"><div class="qico">2</div><div class="qmid"><b>Want more? Spend diamonds</b><div style="font-size:13px;color:var(--muted)">Extra spins cost 10 diamonds from the floating chest. Free-spin prizes re-spin instantly.</div></div></div>
-<div class="quest-row"><div class="qico">3</div><div class="qmid"><b>Prizes credit instantly</b><div style="font-size:13px;color:var(--muted)">Cash lands in available, diamonds in your chip balance. Every spin counts toward Rewards milestones.</div></div></div>
+<div class="quest-row"><div class="qico">2</div><div class="qmid"><b>Want more? Watch an ad</b><div style="font-size:13px;color:var(--muted)">Up to 10 bonus spins a day — watch one short ad per spin. Free-spin prizes re-spin instantly.</div></div></div>
+<div class="quest-row"><div class="qico">3</div><div class="qmid"><b>Prizes credit instantly</b><div style="font-size:13px;color:var(--muted)">Cash lands in available. Every spin counts toward Rewards milestones.</div></div></div>
 
 <h2 style="font-size:20px;margin:30px 0 0">Spin history</h2>
 <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Prize</th><th>Type</th><th>Status</th><th>Date</th></tr></thead><tbody id="spin-rows"><tr class="skel"><td colspan="4"><span class="skeleton" style="width:90%"></span></td></tr><tr class="skel"><td colspan="4"><span class="skeleton" style="width:75%"></span></td></tr></tbody></table></div>
@@ -142,8 +141,7 @@
 <div class="faq" style="margin-top:14px">
 <div class="faq-item"><button>When does my free spin reset?<span class="plus">+</span></button><div class="a"><div><p>At midnight UTC. The countdown under the wheel shows exactly how long until the next free spin.</p></div></div></div>
 <div class="faq-item"><button>Do spins count toward Rewards?<span class="plus">+</span></button><div class="a"><div><p>Yes. Every spin counts on the Spin the Wheel track (3 / 7 / 14 / 30) on the Rewards page, where milestone chests pay bonus cash.</p></div></div></div>
-<div class="faq-item"><button>Can I lose diamonds or cash spinning?<span class="plus">+</span></button><div class="a"><div><p>No blanks — every spin wins something. The only cost is the 10-diamond extra-spin fee; free and ticket spins cost nothing.</p></div></div></div>
-<div class="faq-item"><button>Why did my diamond balance drop?<span class="plus">+</span></button><div class="a"><div><p>Extra spins spend 10 diamonds each. Free spins and free-spin tickets never touch your diamonds. History below shows every spend and win.</p></div></div></div>
+<div class="faq-item"><button>Can I lose cash spinning?<span class="plus">+</span></button><div class="a"><div><p>No blanks — every spin wins cash or another spin. Free spins cost nothing; bonus spins cost one short ad view each.</p></div></div></div>
 </div>
 </div>
 </div></section>
@@ -172,7 +170,6 @@
   window.__favSpinBooted=false;
   var SEGS=[
     {id:'cash02', short:'$0.02', color:'#22c55e'},
-    {id:'dia5', short:'+5', color:'#0ea5e9'},
     {id:'cash05', short:'$0.05', color:'#14b8a6'},
     {id:'ticket', short:'FREE', color:'#a855f7'},
     {id:'cash10', short:'$0.10', color:'#f59e0b'},
@@ -237,8 +234,7 @@
 })();
 </script>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet, getUserDoc, fetchUserDocs, getUnclaimedRewards, getSpinState, playSpin, track, DIAMOND_COST_SPIN } from './js/firebase.js';
-import { paintDualChip, startDiamondChest } from './js/diamonds.js';
+import { auth, onAuthStateChanged, getWallet, getUserDoc, fetchUserDocs, getUnclaimedRewards, getSpinState, playSpin, track, SPIN_AD_DAILY_CAP } from './js/firebase.js';
 import { formatUSD, convertUSD, symbolFor, currentCountry, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 import { requireAuth } from './js/guard.js';
 (function(){

@@ -81,7 +81,6 @@
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getUserDoc, requestCashout, track, getUnclaimedRewards } from './js/firebase.js';
 import { mountHeader } from './js/header.js';
-import { paintDualChip } from './js/diamonds.js';
 import { formatUSD, currentCountry, setMemoryCountry, refreshRates } from './js/currency.js';
 import { COUNTRY_MAP } from './js/countries.js';
 import { methodsForCountry, methodById, validateDest, packDest } from './js/payout-methods.js';
@@ -191,7 +190,7 @@ import { requireAuth } from './js/guard.js';
       try{track('cashout_request',{method:sel});}catch(_){}
       avail=Math.round((Number(fw.pending)-denom)*100)/100;
       paintHero();renderMethods();renderDenoms();
-      try{var fw2=await getWallet(uid);paintDualChip(fw2.pending,fw2.diamonds);}catch(_){}
+      try{var fw2=await getWallet(uid);try{document.getElementById('chip-bal').textContent=formatUSD(fw2.pending);}catch(_){}}catch(_){}
       show('Cashout requested: '+formatUSD(denom,cur())+' via '+sel+'.');
     }catch(err){show('Request failed — check connection and Firestore rules.');}
   }});

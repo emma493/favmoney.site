@@ -8,7 +8,7 @@
 // fails closed in the rules.
 // NOTE: amounts are still client-enforced; full server authority needs a
 // Cloud Function when backend lands.
-import { auth, db, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from '../js/firebase.js';
+import { auth, db, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut } from '../js/firebase.js';
 import {
   FAUCET_AMOUNT, FAUCET_INTERVAL_MS, FAUCET_DAILY_CAP,
   PTC_DAILY_CAP, PTC_MIN_PAY, PTC_MAX_PAY,
@@ -176,7 +176,27 @@ if (window.FavLoader) FavLoader.hold();
     var em = document.getElementById('si-email').value.trim(), pw = document.getElementById('si-pass').value;
     if (!em || !pw) { err('si-err', 'Enter email and password.'); return; }
     try { await signInWithEmailAndPassword(auth, em, pw); }
-    catch (e) { err('si-err', 'Sign-in failed — check credentials.'); }
+    catch (e) {
+      var msg = 'Sign-in failed — check credentials.';
+      if (e && e.code === 'auth/invalid-credential') msg = 'Wrong email or password.';
+      else if (e && e.code === 'auth/user-not-found') msg = 'No admin account for this email. Claim a seat first.';
+      else if (e && e.code === 'auth/too-many-requests') msg = 'Too many attempts — wait 5 minutes and try once.';
+      else if (e && e.code === 'auth/user-disabled') msg = 'This account is disabled.';
+      err('si-err', msg);
+    }
+  }
+  async function doForgot() {
+    err('si-err');
+    var em = document.getElementById('si-email').value.trim();
+    if (!em) { err('si-err', 'Type your email above first.'); return; }
+    try {
+      await sendPasswordResetEmail(auth, em);
+      show('Reset link sent — check inbox and spam.');
+    } catch (e) {
+      err('si-err', (e && e.code === 'auth/user-not-found')
+        ? 'No admin account for this email.'
+        : 'Could not send reset link — try again in a minute.');
+    }
   }
   async function doSignupClaim() {
     err('su-err');
@@ -190,6 +210,7 @@ if (window.FavLoader) FavLoader.hold();
     } catch (e) { err('su-err', 'Sign-up failed — email may already be registered. Try signing in.'); }
   }
   document.getElementById('si-go').addEventListener('click', doSignin);
+  document.getElementById('to-forgot').addEventListener('click', doForgot);
   document.getElementById('su-go').addEventListener('click', doSignupClaim);
   document.getElementById('claim-go').addEventListener('click', doClaimSeat);
   document.getElementById('to-claim').addEventListener('click', function () { showClaim(auth.currentUser || null); });

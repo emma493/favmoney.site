@@ -46,13 +46,14 @@
 <input id="pass" type="password" placeholder="••••••••" autocomplete="current-password" />
 <button class="btn btn-green btn-block" id="go" style="margin-top:16px">Sign in</button>
 <p class="tiny">No account? <a href="signup.html">Create one free</a>.</p>
+<p class="tiny"><a href="#" id="forgot">Forgot password?</a></p>
 <p class="tiny" style="margin-top:10px">Prohibited: multiple accounts, completing offers on another user's account, or any VPN, VPS or emulator software.</p>
 </div>
 </div></main>
 <div class="toast" id="toast" role="status"></div>
 
 <script type="module">
-import { auth, ensureUserDoc, track, signInWithEmailAndPassword } from './js/firebase.js';
+import { auth, ensureUserDoc, track, signInWithEmailAndPassword, sendPasswordResetEmail } from './js/firebase.js';
 (function(){
   if(window.FavLoader){FavLoader.hold();setTimeout(function(){FavLoader.pageReady();},2500);}
   var toast=document.getElementById('toast'),tm=null;function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
@@ -73,6 +74,18 @@ import { auth, ensureUserDoc, track, signInWithEmailAndPassword } from './js/fir
       show(msg);
     }
   }});
+  document.getElementById('forgot').addEventListener('click',async function(e){
+    e.preventDefault();
+    var em=document.getElementById('email').value.trim();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)){show('Type your email above first.');return;}
+    try{
+      await sendPasswordResetEmail(auth,em);
+      show('Reset link sent — check inbox and spam.');
+    }catch(err){
+      if(err&&err.code==='auth/user-not-found')show('No account for this email. Try Sign Up.');
+      else show('Could not send reset link — try again in a minute.');
+    }
+  });
 })();
 </script>
 </body>

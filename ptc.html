@@ -74,7 +74,6 @@
 <div class="back-row"><a class="back-btn" href="earn.html" aria-label="Back to Earn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg><span>Earn</span></a></div>
 <h1 class="dash-title">Watch Ads</h1>
 <p>Watch sponsored views right on this page and earn <b><span data-usd="0.10">$0.10</span>–<span data-usd="0.30">$0.30</span></b> per verified view — up to <b>50 times a day</b>. We show <b>30</b> at a time; new ones unlock as you claim.</p>
-<div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to watch and earn.</div>
 <div id="member-zone" style="display:none">
 <div class="bonus-card" id="ptc-batch">
 <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
@@ -110,6 +109,7 @@ import { auth, onAuthStateChanged, getWallet, getUserDoc, fetchUserDocs, ptcStat
 import { adsForSlot, slotResetMs, getAd, embedSponsor, clearSponsor, PTC_VISIBLE_COUNT } from './js/ptc-catalog.js';
 import { paintDualChip, startDiamondChest } from './js/diamonds.js';
 import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
+import { requireAuth } from './js/guard.js';
 if (window.FavLoader) FavLoader.hold();
 (function () {
   var uid=null, stopChest=null, proofs=[], tickTimer=null, pollTimer=null;
@@ -234,22 +234,10 @@ if (window.FavLoader) FavLoader.hold();
     }catch(e){paint();}
   }
   function ready(){if(window.FavLoader)FavLoader.pageReady();}
-  try{
-    onAuthStateChanged(auth,async function(user){
-      if(!user){
-        uid=null;proofs=[];closeView();
-        if(stopChest){try{stopChest();}catch(_){}stopChest=null;}
-        if(tickTimer){clearInterval(tickTimer);tickTimer=null;}
-        if(pollTimer){clearInterval(pollTimer);pollTimer=null;}
-        document.getElementById('auth-wall').style.display='';
-        document.getElementById('member-zone').style.display='none';
-        document.getElementById('user-chip').setAttribute('href','signin.html');
-        document.getElementById('chip-bal').textContent='—';
-        document.getElementById('chip-name').textContent='Sign in';
-        ready();return;
-      }
+  // Gated: nothing renders until Firebase confirms the member. Logged-out
+  // visitors are redirected to signin — there is no guest state.
+  requireAuth().then(async function(user){
       uid=user.uid;
-      document.getElementById('auth-wall').style.display='none';
       document.getElementById('member-zone').style.display='';
       document.getElementById('user-chip').setAttribute('href','profile.html');
       document.getElementById('chip-name').textContent=(user.email||'Member').split('@')[0];
@@ -268,9 +256,7 @@ if (window.FavLoader) FavLoader.hold();
       if(pollTimer)clearInterval(pollTimer);
       try{pollTimer=setInterval(function(){refresh(false);},20000);}catch(e){}
       ready();
-    });
-  }catch(e){ready();}
-  setTimeout(ready,6000);
+  });
   try{refreshRates().then(function(){paint();paintMoney();});}catch(_){}
   document.addEventListener('fav-rates',function(){paint();paintMoney();});
 })();

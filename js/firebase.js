@@ -69,19 +69,13 @@ export async function ensureUserDoc(user, provider, extra) {
   const w = await getDoc(wref);
   if (!w.exists()) {
     // Every account starts with a locked $1.00 grower seed (invest-only, never withdrawable).
-    // Diamonds start at 0; chest timestamps init so the ad is instantly ready
-    // but the first passive drip lands 3h after signup.
-    await setDoc(wref, { pending: 0, lifetime: 0, invested: 1, investedAt: Date.now(), boostUntil: 0, mineUntil: 0, diamonds: 0, lastDiamondAdAt: 0, lastDiamondPassiveAt: Date.now(), updatedAt: serverTimestamp() });
+    await setDoc(wref, { pending: 0, lifetime: 0, invested: 1, investedAt: Date.now(), boostUntil: 0, mineUntil: 0, updatedAt: serverTimestamp() });
   } else {
-    // Heal pre-Diamond wallets: add missing diamond fields without touching balances.
     // Heal pre-shift wallets: a missing mineUntil means a legacy account — grant
     // the one-time free 6h starter shift so nobody's miner dies on deploy day.
     try {
       const d = w.data() || {};
       const heal = {};
-      if (!('diamonds' in d)) heal.diamonds = 0;
-      if (!('lastDiamondAdAt' in d)) heal.lastDiamondAdAt = 0;
-      if (!('lastDiamondPassiveAt' in d)) heal.lastDiamondPassiveAt = Date.now();
       if (!('mineUntil' in d)) heal.mineUntil = Date.now() + MINE_SHIFT_MS;
       if (Object.keys(heal).length) { heal.updatedAt = serverTimestamp(); await setDoc(wref, heal, { merge: true }); }
     } catch (_) {}
@@ -90,14 +84,12 @@ export async function ensureUserDoc(user, provider, extra) {
 
 export async function getWallet(uid) {
   const snap = await getDoc(doc(db, 'wallets', uid));
-  if (!snap.exists()) return { pending: 0, lifetime: 0, invested: 0, investedAt: 0, boostUntil: 0, mineUntil: 0, diamonds: 0, lastDiamondAdAt: 0, lastDiamondPassiveAt: 0 };
+  if (!snap.exists()) return { pending: 0, lifetime: 0, invested: 0, investedAt: 0, boostUntil: 0, mineUntil: 0 };
   const d = snap.data();
   return {
     pending: Number(d.pending || 0), lifetime: Number(d.lifetime || 0),
     invested: Number(d.invested || 0), investedAt: Number(d.investedAt || 0), boostUntil: Number(d.boostUntil || 0),
-    mineUntil: Number(d.mineUntil || 0),
-    diamonds: Math.max(0, Math.floor(Number(d.diamonds || 0))),
-    lastDiamondAdAt: Number(d.lastDiamondAdAt || 0), lastDiamondPassiveAt: Number(d.lastDiamondPassiveAt || 0)
+    mineUntil: Number(d.mineUntil || 0)
   };
 }
 
@@ -310,7 +302,7 @@ export async function recordCommission(fromUid, baseAmount, label) {
   const base = Number(baseAmount || 0);
   if (!(base > 0)) return 0;
   const ll = (label || '').toLowerCase();
-  if (/^(referral-|invest-|ad-|diamond-)/.test(ll)) return 0;
+  if (/^(referral-|invest-|ad-)/.test(ll)) return 0;
   let ownerUid = null;
   try {
     const snap = await getDoc(doc(db, 'users', fromUid));
@@ -362,131 +354,24 @@ export async function fetchReferrals(ownerUid, n) {
   } catch (e) { return []; }
 }
 
-// ---- Diamond economy: play-only chips for Spin ----
-// Diamonds are NEVER withdrawable and NEVER convert back to USD. Earned free
-// via the floating chest (hourly rewarded ad + 3-hour claimable drip), spent
-// on extra spins beyond the daily free spin. Game USD-cent wins (when
-// they land) still flow through creditReward(); diamond wins use creditDiamonds().
-export const DIAMOND_AD_MIN = 2;
-export const DIAMOND_AD_MAX = 10;
-export const DIAMOND_AD_COOLDOWN_MS = 3600000; // 1h between ad rewards
-export const DIAMOND_PASSIVE_AMOUNT = 2;
-export const DIAMOND_PASSIVE_INTERVAL_MS = 3 * 3600000; // 3h drip, claimable
-export const DIAMOND_COST_SPIN = 10; // locked 2026-10-10: 1 free/day + extras @10
-export const DIAMOND_COST_QUIZ = 10; // Quiz & Earn entry: 10 diamonds buys a 30-question session
-export const DIAMOND_GAME_COSTS = { spin: DIAMOND_COST_SPIN, quiz: DIAMOND_COST_QUIZ };
+// ---- Ad-gated extra plays: 1 free/day + 10 ad plays/day per game ----
+// Diamonds removed 2026-10-15. Extra Spin / Quiz sessions are granted only
+// after a verified 20s ad view (UI must verify BEFORE calling). Caps count
+// entry rows per UTC day: spin-ad (Spin) and quiz-ad (Quiz).
+export const SPIN_AD_DAILY_CAP = 10;
+export const QUIZ_AD_DAILY_CAP = 10;
 
-// Weighted 2-10 roll: 2 @30%, 3-5 @50%, 6-10 @20%. Pure, unit-testable.
-export function rollDiamondReward(rand) {
-  const r = typeof rand === 'function' ? rand() : Math.random();
-  if (r < 0.30) return 2;
-  if (r < 0.80) return 3 + Math.floor(((r - 0.30) / 0.50) * 3); // 3,4,5
-  return 6 + Math.floor(((r - 0.80) / 0.20) * 5); // 6..10
-}
-
-// Pure chest state from a wallet row — no Firestore. Returns countdowns in ms.
-export function getChestState(w, nowMs) {
-  const now = Number(nowMs || Date.now());
-  const lastAd = Number((w && w.lastDiamondAdAt) || 0);
-  const lastPassive = Number((w && w.lastDiamondPassiveAt) || 0);
-  const adWait = Math.max(0, lastAd + DIAMOND_AD_COOLDOWN_MS - now);
-  const passiveWait = Math.max(0, lastPassive + DIAMOND_PASSIVE_INTERVAL_MS - now);
-  return {
-    diamonds: Math.max(0, Math.floor(Number((w && w.diamonds) || 0))),
-    adReady: adWait <= 0, adWaitMs: adWait,
-    passiveReady: passiveWait <= 0, passiveWaitMs: passiveWait,
-    ready: adWait <= 0 || passiveWait <= 0
-  };
-}
-
-async function writeDiamondDelta(uid, delta, label, stampField) {
-  const wref = doc(db, 'wallets', uid);
-  const patch = { diamonds: increment(delta), updatedAt: serverTimestamp(), lastLabel: label };
-  if (stampField) patch[stampField] = Date.now();
-  try {
-    await updateDoc(wref, patch);
-  } catch (_) {
-    const base = { diamonds: Math.max(0, delta), updatedAt: serverTimestamp() };
-    if (stampField) base[stampField] = Date.now();
-    await setDoc(wref, base, { merge: true });
-  }
-  try {
-    await addDoc(collection(db, 'proofs'), {
-      uid, amount: 0, diamonds: delta, label, status: 'done', at: serverTimestamp()
-    });
-  } catch (_) {}
-}
-
-// Claim the hourly ad reward. UI must verify the ad view BEFORE calling.
-// Returns { ok, reward } or { ok:false, reason:'cooldown', waitMs }.
-export async function claimDiamondAd(uid, rand) {
-  const w = await getWallet(uid);
-  const st = getChestState(w, Date.now());
-  if (!st.adReady) return { ok: false, reason: 'cooldown', waitMs: st.adWaitMs };
-  const reward = rollDiamondReward(rand);
-  try {
-    await writeDiamondDelta(uid, reward, 'diamond-ad', 'lastDiamondAdAt');
-  } catch (_) { return { ok: false, reason: 'write' }; }
-  return { ok: true, reward };
-}
-
-// Claim the 3-hour passive drip (2 diamonds, no stacking — one batch max).
-export async function claimDiamondPassive(uid) {
-  const w = await getWallet(uid);
-  const st = getChestState(w, Date.now());
-  if (!st.passiveReady) return { ok: false, reason: 'cooldown', waitMs: st.passiveWaitMs };
-  try {
-    await writeDiamondDelta(uid, DIAMOND_PASSIVE_AMOUNT, 'diamond-passive', 'lastDiamondPassiveAt');
-  } catch (_) { return { ok: false, reason: 'write' }; }
-  return { ok: true, reward: DIAMOND_PASSIVE_AMOUNT };
-}
-
-// Spend diamonds on an extra game play. Never touches USD.
-// Returns { ok } or { ok:false, reason:'funds'|'write' }.
-export async function spendDiamonds(uid, cost, game) {
-  const c = Math.floor(Number(cost || 0));
-  if (!(c > 0)) return { ok: false, reason: 'cost' };
-  const w = await getWallet(uid);
-  if (w.diamonds < c) return { ok: false, reason: 'funds', balance: w.diamonds };
-  try {
-    await updateDoc(doc(db, 'wallets', uid), {
-      diamonds: increment(-c), updatedAt: serverTimestamp(), lastLabel: 'diamond-spend:' + (game || 'game')
-    });
-    await addDoc(collection(db, 'proofs'), {
-      uid, amount: 0, diamonds: -c, label: 'diamond-spend:' + (game || 'game'), status: 'done', at: serverTimestamp()
-    });
-  } catch (_) { return { ok: false, reason: 'write' }; }
-  try {
-    await addDoc(collection(db, 'proofs'), {
-      uid, amount: 0, label: 'diamond-play:' + (game || 'game'), status: 'done', at: serverTimestamp()
-    });
-  } catch (_) {}
-  return { ok: true, balance: w.diamonds - c };
-}
-
-// Credit diamond wins (prizes paid in chips, not cash). Never touches USD.
-export async function creditDiamonds(uid, n, label) {
-  const amt = Math.floor(Number(n || 0));
-  if (!(amt > 0)) return { ok: false, reason: 'amount' };
-  try {
-    await writeDiamondDelta(uid, amt, label || 'diamond-win', null);
-  } catch (_) { return { ok: false, reason: 'write' }; }
-  return { ok: true, reward: amt };
-}
-
-// ---- Spin the Wheel: 1 free UTC-day spin, extras @10 diamonds, every spin wins ----
-// Locked 2026-10-10: mixed prizes, cash EV ~$0.069/spin, jackpot $1.00 @2%.
-// Cash wins flow through creditReward (instant-available +
-// tiny referrer commission, like all quests). Diamond wins use creditDiamonds.
-// Ticket wins bump users.spinTickets for an instant re-spin (no diamond cost).
-// Each spin writes exactly one win row (spin-win/diamond/ticket) so the
-// Rewards spin track counts spins without double-counting cost/entry rows.
+// ---- Spin the Wheel: 1 free UTC-day spin + 10 ad spins, cash-only wins ----
+// Cash-only since 2026-10-15 (diamonds removed). Cash wins flow through
+// creditReward (instant-available + tiny referrer commission, like all quests).
+// Ticket wins bump users.spinTickets for an instant re-spin (no ad cost).
+// Each spin writes exactly one win row (win/ticket) plus one entry row
+// (free/ad), so the Rewards spin track counts wins without double-counting.
 export const SPIN_PRIZES = [
-  { id: 'cash02', kind: 'cash', amount: 0.02, weight: 30 },
-  { id: 'cash05', kind: 'cash', amount: 0.05, weight: 25 },
-  { id: 'cash10', kind: 'cash', amount: 0.10, weight: 18 },
-  { id: 'dia5', kind: 'diamonds', diamonds: 5, weight: 12 },
-  { id: 'ticket', kind: 'ticket', weight: 8 },
+  { id: 'cash02', kind: 'cash', amount: 0.02, weight: 34 },
+  { id: 'cash05', kind: 'cash', amount: 0.05, weight: 28 },
+  { id: 'cash10', kind: 'cash', amount: 0.10, weight: 21 },
+  { id: 'ticket', kind: 'ticket', weight: 10 },
   { id: 'cash25', kind: 'cash', amount: 0.25, weight: 5 },
   { id: 'cash100', kind: 'cash', amount: 1.00, weight: 2 }
 ];
@@ -508,10 +393,20 @@ export async function getSpinState(uid, nowMs) {
   const now = Number(nowMs || Date.now());
   const [w, u] = await Promise.all([getWallet(uid), getUserDoc(uid)]);
   const today = utcDayStr(now);
+  let adUsed = 0;
+  try {
+    const proofs = await fetchUserDocs(uid, 'proofs', 100);
+    for (const p of proofs) {
+      if (String((p && p.label) || '') !== 'spin-ad') continue;
+      if (utcDayStr(proofMs(p, now)) === today) adUsed++;
+    }
+  } catch (_) {}
+  adUsed = Math.min(SPIN_AD_DAILY_CAP, adUsed);
   return {
-    today, pending: Number(w.pending || 0), diamonds: w.diamonds,
+    today, pending: Number(w.pending || 0),
     tickets: u.spinTickets, spinCount: u.spinCount, spinWon: u.spinWon,
     freeLeft: u.lastSpinDay === today ? 0 : 1,
+    adUsed, adLeft: Math.max(0, SPIN_AD_DAILY_CAP - adUsed),
     resetMs: spinResetMs(now)
   };
 }
@@ -521,16 +416,13 @@ async function writeSpinWin(uid, prize) {
     await setDoc(doc(db, 'users', uid), {
       spinCount: increment(1), spinWon: increment(prize.amount), updatedAt: serverTimestamp()
     }, { merge: true });
-  } else if (prize.kind === 'diamonds') {
-    await creditDiamonds(uid, prize.diamonds, 'diamond-win:spin');
-    await addDoc(collection(db, 'proofs'), { uid, amount: 0, diamonds: prize.diamonds, label: 'spin-diamond', status: 'done', at: serverTimestamp() });
-    await setDoc(doc(db, 'users', uid), { spinCount: increment(1), updatedAt: serverTimestamp() }, { merge: true });
   } else {
     await setDoc(doc(db, 'users', uid), { spinTickets: increment(1), spinCount: increment(1), updatedAt: serverTimestamp() }, { merge: true });
     await addDoc(collection(db, 'proofs'), { uid, amount: 0, label: 'spin-ticket', status: 'done', at: serverTimestamp() });
   }
 }
-// mode: 'free' | 'ticket' | 'extra'. Returns { ok, prize } or { ok:false, reason }.
+// mode: 'free' | 'ticket' | 'ad'. UI must verify the 20s ad view BEFORE calling
+// with mode 'ad'. Returns { ok, prize } or { ok:false, reason }.
 export async function playSpin(uid, mode, rand) {
   const now = Date.now();
   const today = utcDayStr(now);
@@ -549,12 +441,19 @@ export async function playSpin(uid, mode, rand) {
     try {
       await setDoc(doc(db, 'users', uid), { spinTickets: increment(-1), updatedAt: serverTimestamp() }, { merge: true });
     } catch (_) { return { ok: false, reason: 'write' }; }
-  } else if (mode === 'extra') {
-    const sp = await spendDiamonds(uid, DIAMOND_COST_SPIN, 'spin');
-    if (!sp.ok) return { ok: false, reason: 'funds', balance: sp.balance };
+  } else if (mode === 'ad' || mode === 'extra') {
+    // 'extra' kept as alias for old clients; both mean one verified ad play.
+    let proofs = [];
+    try { proofs = await fetchUserDocs(uid, 'proofs', 100); } catch (_) { return { ok: false, reason: 'write' }; }
+    let used = 0;
+    for (const p of proofs) {
+      if (String((p && p.label) || '') !== 'spin-ad') continue;
+      if (utcDayStr(proofMs(p, now)) === today) used++;
+    }
+    if (used >= SPIN_AD_DAILY_CAP) return { ok: false, reason: 'capped', adLeft: 0 };
     try {
-      await addDoc(collection(db, 'proofs'), { uid, amount: 0, diamonds: -DIAMOND_COST_SPIN, label: 'spin-extra', status: 'done', at: serverTimestamp() });
-    } catch (_) {}
+      await addDoc(collection(db, 'proofs'), { uid, amount: 0, label: 'spin-ad', status: 'done', at: serverTimestamp() });
+    } catch (_) { return { ok: false, reason: 'write' }; }
   } else {
     return { ok: false, reason: 'mode' };
   }
@@ -629,15 +528,14 @@ export async function claimFaucet(uid) {
   return { ok: true, amount: FAUCET_AMOUNT, remainingToday: st.remainingToday - 1 };
 }
 
-// ---- Quiz & Earn math arcade: 1 free session/day, extras at 10 diamonds ----
- // Loop: free daily 30Q session (lastQuizDay) or deposit 10 diamonds ->
+// ---- Quiz & Earn math arcade: 1 free session/day + 10 ad sessions/day ----
+// Loop: free daily 30Q session (lastQuizDay) or 1 verified ad view -> quiz-ad ->
  // pick + - x / -> answer generated questions
 // (4 options, 10s each). Correct pays $0.10 to main balance via creditReward
 // (label 'play:quiz': Rewards track + 25% commission + Grow gate, no rules
 // change — status 'pending' passes with any label). One rescue life per
 // session via a 20s house-promo view; a second fail ends the session and
 // unanswered questions are lost. Max exposure: 30 x $0.10 = $3.00/session.
-export const QUIZ_ENTRY_COST = DIAMOND_COST_QUIZ;
 export const QUIZ_SESSION_SIZE = 30;
 export const QUIZ_PAY = 0.10;
 export const QUIZ_TIME_MS = 10000;
@@ -722,7 +620,7 @@ export function quizOptions(answer, rand) {
 }
 
 // Pure session fold over proof rows — no Firestore. The session is anchored
-// on the latest entry row (diamond-spend:quiz for paid sessions, quiz-free
+// on the latest entry row (quiz-ad for ad sessions, quiz-free
 // for the daily free session); answers at the same-or-later timestamp belong
 // to it (server stamps have 1s resolution, so >= keeps a same-second first
 // answer inside the session — the safe direction).
@@ -733,7 +631,7 @@ export function quizSession(proofs, nowMs) {
   let lastEntryMs = 0, entries = 0, freeEntry = false;
   for (const p of rows) {
     const lb = String((p && p.label) || '');
-    if (lb !== 'diamond-spend:quiz' && lb !== 'quiz-free') continue;
+    if (lb !== 'quiz-ad' && lb !== 'quiz-free') continue;
     entries++;
     const ms = proofMs(p, now);
     if (ms >= lastEntryMs) { lastEntryMs = ms; freeEntry = lb === 'quiz-free'; }
@@ -757,22 +655,32 @@ export function quizSession(proofs, nowMs) {
 }
 
 // Pure free-day state — no Firestore beyond the user doc row.
-// Mirrors getSpinState: 1 free 30Q session per UTC day, extras cost diamonds.
+// Mirrors getSpinState: 1 free 30Q session per UTC day + 10 ad sessions.
 export async function getQuizState(uid, nowMs) {
   const now = Number(nowMs || Date.now());
   const [w, u] = await Promise.all([getWallet(uid), getUserDoc(uid)]);
   const today = utcDayStr(now);
+  let adUsed = 0;
+  try {
+    const proofs = await fetchUserDocs(uid, 'proofs', 100);
+    for (const p of proofs) {
+      if (String((p && p.label) || '') !== 'quiz-ad') continue;
+      if (utcDayStr(proofMs(p, now)) === today) adUsed++;
+    }
+  } catch (_) {}
+  adUsed = Math.min(QUIZ_AD_DAILY_CAP, adUsed);
   return {
-    today, pending: Number(w.pending || 0), diamonds: w.diamonds,
+    today, pending: Number(w.pending || 0),
     freeLeft: u.lastQuizDay === today ? 0 : 1,
+    adUsed, adLeft: Math.max(0, QUIZ_AD_DAILY_CAP - adUsed),
     resetMs: spinResetMs(now)
   };
 }
 
-// Open a session. mode: 'free' (daily, no diamond cost) | 'extra' (10 diamonds).
+// Open a session. mode: 'free' (daily) | 'ad' (1 verified 20s view).
 // Fails if a session is already active. Returns { ok, mode } or { ok:false, reason }.
 export async function startQuizSession(uid, mode) {
-  const m = mode === 'free' ? 'free' : 'extra';
+  const m = mode === 'free' ? 'free' : 'ad';
   let proofs = null;
   // 50 rows cover a full session (entry + 30 answers + life) with margin.
   try { proofs = await fetchUserDocs(uid, 'proofs', 50); } catch (_) { return { ok: false, reason: 'write' }; }
@@ -789,12 +697,18 @@ export async function startQuizSession(uid, mode) {
     } catch (_) { return { ok: false, reason: 'write' }; }
     return { ok: true, mode: 'free' };
   }
-  const sp = await spendDiamonds(uid, QUIZ_ENTRY_COST, 'quiz');
-  if (!sp.ok) return { ok: false, reason: 'funds', balance: sp.balance };
+  const now = Date.now();
+  const today = utcDayStr(now);
+  let used = 0;
+  for (const p of (proofs || [])) {
+    if (String((p && p.label) || '') !== 'quiz-ad') continue;
+    if (utcDayStr(proofMs(p, now)) === today) used++;
+  }
+  if (used >= QUIZ_AD_DAILY_CAP) return { ok: false, reason: 'capped', adLeft: 0 };
   try {
-    await addDoc(collection(db, 'proofs'), { uid, amount: 0, diamonds: -QUIZ_ENTRY_COST, label: 'quiz-extra', status: 'done', at: serverTimestamp() });
-  } catch (_) {}
-  return { ok: true, mode: 'extra' };
+    await addDoc(collection(db, 'proofs'), { uid, amount: 0, label: 'quiz-ad', status: 'done', at: serverTimestamp() });
+  } catch (_) { return { ok: false, reason: 'write' }; }
+  return { ok: true, mode: 'ad' };
 }
 
 // Grade one answer. q is the generated question, pickedIdx the tapped option
@@ -936,19 +850,17 @@ export function foldRewardStats(proofs, userDoc, referrals) {
     const lb = String((p && p.label) || '');
     if (lb === 'ad-view') { s.ads++; s.boosts++; continue; }
     if (lb === 'ptc-view') { s.ads++; continue; }
-    if (/^spin-(win|diamond|ticket|free|extra)$/.test(lb)) {
-      // One spin = exactly one win row (win/diamond/ticket). Cost/entry rows
-      // (free/extra) are bookkeeping and must not double-count the track.
-      if (/^spin-(win|diamond|ticket)$/.test(lb)) s.spin++;
+    if (/^spin-(win|ticket|free|ad)$/.test(lb)) {
+      // One spin = exactly one win row (win/ticket). Entry rows
+      // (free/ad) are bookkeeping and must not double-count the track.
+      if (/^spin-(win|ticket)$/.test(lb)) s.spin++;
       continue;
     }
     if (lb === 'invest-stake') { s.stakes++; s.stakedTotal = Math.round((s.stakedTotal + Number(p.amount || 0)) * 100) / 100; continue; }
     if (lb === 'invest-yield') { s.yields++; continue; }
     if (lb === 'task-reward' && p.milestone) { s.claimed[String(p.milestone)] = true; continue; }
-    const m = /^(?:play|diamond-play):([a-z]+)$/.exec(lb);
-    // Quiz entry (diamond-play:quiz) is a deposit, not a pass — only
-    // play:quiz (correct answers) counts toward the quiz track.
-    if (lb === 'diamond-play:quiz') continue;
+    const m = /^play:([a-z]+)$/.exec(lb);
+    // Only play:quiz (correct answers) counts toward the quiz track.
     if (m && REWARD_COUNTERS.indexOf(m[1]) >= 0) s[m[1]]++;
   }
   s.invites = Array.isArray(referrals) ? referrals.length : 0;
@@ -1238,7 +1150,7 @@ export async function creditReward(uid, amount, label, extra) {
   // today active (stats only — mining never stops). Referral/invest labels are excluded.
   try {
     const ll = (label || '').toLowerCase();
-    if (!/^(referral-|invest-|ad-|diamond-)/.test(ll) && Number(amount) > 0) {
+    if (!/^(referral-|invest-|ad-)/.test(ll) && Number(amount) > 0) {
       const day = utcDayStr(Date.now());
       const ud = { taskEarned: increment(Number(amount)), updatedAt: serverTimestamp() };
       if (day) ud.activeDays = arrayUnion(day);

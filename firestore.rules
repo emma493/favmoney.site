@@ -10,16 +10,12 @@
 // a 6h mining shift). users/{uid} holds
 // taskEarned (stakeable ceiling source), investedUser (user principal, excl. seed),
 // activeDays (UTC-day strings with rewarded activity, max 90 — stats only, mining never stops).
-// Diamond model (play-only, never withdrawable): wallets/{uid} holds diamonds
-// (integer chips) + lastDiamondAdAt / lastDiamondPassiveAt (ms epoch cooldowns).
 // Spin model: users/{uid} holds lastSpinDay (UTC YYYY-MM-DD), spinTickets,
 // spinCount, spinWon. Quiz model: users/{uid} holds lastQuizDay (UTC YYYY-MM-DD)
-// for 1 free 30Q session/day; extra sessions cost diamonds.
-// proofs rows spin-win (cash 0.02-1.00) + spin-diamond /
-// spin-ticket / spin-free / spin-extra (amount 0 bookkeeping).
-// proofs rows quiz-free / quiz-extra (amount 0 bookkeeping).
-// proofs rows with label diamond-* carry amount 0 (USD untouched) plus an
-// optional signed diamonds delta for history.
+// for 1 free 30Q session/day; up to 10 extra ad sessions/day (quiz-ad rows).
+// proofs rows spin-win (cash 0.02-1.00) + spin-ticket /
+// spin-free / spin-ad (amount 0 bookkeeping).
+// proofs rows quiz-free / quiz-ad (amount 0 bookkeeping).
 // Admin model (Fav-Admin ops console): admin/seat1 + admin/seat2 hold the
 // two owner uids (first-come, forever, max two admins). isAdmin() unlocks
 // cross-user list/get on users/wallets/proofs/cashouts/
@@ -166,20 +162,14 @@ service cloud.firestore {
         && (!('invested' in request.resource.data) || (request.resource.data.invested is number && request.resource.data.invested >= 0))
         && (!('investedAt' in request.resource.data) || (request.resource.data.investedAt is number && request.resource.data.investedAt >= 0))
         && (!('boostUntil' in request.resource.data) || (request.resource.data.boostUntil is number && request.resource.data.boostUntil >= 0))
-        && (!('mineUntil' in request.resource.data) || (request.resource.data.mineUntil is number && request.resource.data.mineUntil >= 0))
-        && (!('diamonds' in request.resource.data) || (request.resource.data.diamonds is number && request.resource.data.diamonds >= 0))
-        && (!('lastDiamondAdAt' in request.resource.data) || (request.resource.data.lastDiamondAdAt is number && request.resource.data.lastDiamondAdAt >= 0))
-        && (!('lastDiamondPassiveAt' in request.resource.data) || (request.resource.data.lastDiamondPassiveAt is number && request.resource.data.lastDiamondPassiveAt >= 0));
+        && (!('mineUntil' in request.resource.data) || (request.resource.data.mineUntil is number && request.resource.data.mineUntil >= 0));
       allow update: if self(userId)
         && request.resource.data.pending is number && request.resource.data.pending >= 0
         && request.resource.data.lifetime is number && request.resource.data.lifetime >= 0
         && (!('invested' in request.resource.data) || (request.resource.data.invested is number && request.resource.data.invested >= 0))
         && (!('investedAt' in request.resource.data) || (request.resource.data.investedAt is number && request.resource.data.investedAt >= 0))
         && (!('boostUntil' in request.resource.data) || (request.resource.data.boostUntil is number && request.resource.data.boostUntil >= 0))
-        && (!('mineUntil' in request.resource.data) || (request.resource.data.mineUntil is number && request.resource.data.mineUntil >= 0))
-        && (!('diamonds' in request.resource.data) || (request.resource.data.diamonds is number && request.resource.data.diamonds >= 0))
-        && (!('lastDiamondAdAt' in request.resource.data) || (request.resource.data.lastDiamondAdAt is number && request.resource.data.lastDiamondAdAt >= 0))
-        && (!('lastDiamondPassiveAt' in request.resource.data) || (request.resource.data.lastDiamondPassiveAt is number && request.resource.data.lastDiamondPassiveAt >= 0));
+        && (!('mineUntil' in request.resource.data) || (request.resource.data.mineUntil is number && request.resource.data.mineUntil >= 0));
       // Admin manual adjust: same shape, any user. Audit proof written separately.
       allow update: if isAdmin()
         && request.resource.data.pending is number && request.resource.data.pending >= 0
@@ -205,17 +195,13 @@ service cloud.firestore {
               || (request.resource.data.label == 'invest-unstake' && request.resource.data.amount > 0 && request.resource.data.amount <= 100)
                || (request.resource.data.label == 'invest-yield' && request.resource.data.amount > 0 && request.resource.data.amount <= 50)
                || (request.resource.data.label == 'ad-view' && request.resource.data.amount == 0)
-                // Spin the Wheel: cash wins 0.02-1.00, diamond/ticket/cost rows carry amount 0.
+                // Spin the Wheel: cash wins 0.02-1.00, ticket/entry rows carry amount 0.
                 || (request.resource.data.label == 'spin-win' && request.resource.data.amount >= 0.02 && request.resource.data.amount <= 1)
-                || (request.resource.data.label == 'spin-diamond' && request.resource.data.amount == 0)
                 || (request.resource.data.label == 'spin-ticket' && request.resource.data.amount == 0)
                 || (request.resource.data.label == 'spin-free' && request.resource.data.amount == 0)
-                || (request.resource.data.label == 'spin-extra' && request.resource.data.amount == 0)
+                || (request.resource.data.label == 'spin-ad' && request.resource.data.amount == 0)
                 || (request.resource.data.label == 'quiz-free' && request.resource.data.amount == 0)
-                || (request.resource.data.label == 'quiz-extra' && request.resource.data.amount == 0)
-               // Diamonds are play-only chips: all diamond moves carry amount 0
-               // (USD untouched) with a signed diamonds delta for history.
-               || (request.resource.data.label.matches('diamond-.*') && request.resource.data.amount == 0)
+                || (request.resource.data.label == 'quiz-ad' && request.resource.data.amount == 0)
                )
              )
            )

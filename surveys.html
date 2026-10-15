@@ -73,16 +73,16 @@
 import { auth, onAuthStateChanged } from './js/firebase.js';
 import { mountHeader } from './js/header.js';
 import './js/currency.js';
+import { requireAuth } from './js/guard.js';
 if (window.FavLoader) FavLoader.hold();
 (function () {
   function ready() { if (window.FavLoader) FavLoader.pageReady(); }
-  try {
-    onAuthStateChanged(auth, async function (user) {
-      try { await mountHeader(user); } catch (e) {}
-      ready();
-    });
-  } catch (e) { ready(); }
-  setTimeout(ready, 6000);
+  // Gated: nothing renders until Firebase confirms the member. Logged-out
+  // visitors are redirected to signin — there is no guest state.
+  requireAuth().then(async function (user) {
+    try { await mountHeader(user); } catch (e) {}
+    ready();
+  });
 })();
 </script>
 </body>

@@ -52,7 +52,6 @@
 <button class="on" role="tab" aria-selected="true">Cashout</button>
 <a class="btn btn-ghost" href="withdrawals.html" role="tab" aria-selected="false" style="min-height:44px">My Withdrawals</a>
 </div>
-<div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to cash out your earnings.</div>
 <div class="cashout-hero">
 <p class="avail">Available to withdraw</p>
 <div class="bigamt" id="avail" data-usd="0">$0.00</div>
@@ -86,9 +85,10 @@ import { paintDualChip } from './js/diamonds.js';
 import { formatUSD, currentCountry, setMemoryCountry, refreshRates } from './js/currency.js';
 import { COUNTRY_MAP } from './js/countries.js';
 import { methodsForCountry, methodById, validateDest, packDest } from './js/payout-methods.js';
+import { requireAuth } from './js/guard.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
-  setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
+  setTimeout(function(){if(document.documentElement.getAttribute('data-auth')==='member'&&window.FavLoader)FavLoader.pageReady();},6000);
   var METHODS=methodsForCountry(currentCountry().country||'US');
   var userCountry=currentCountry().country||'US';
   var sel='PayPal',denom=0,uid=null,avail=0;
@@ -195,16 +195,10 @@ import { methodsForCountry, methodById, validateDest, packDest } from './js/payo
       show('Cashout requested: '+formatUSD(denom,cur())+' via '+sel+'.');
     }catch(err){show('Request failed — check connection and Firestore rules.');}
   }});
-  try{
-    onAuthStateChanged(auth,async function(user){
-      if(!user){
-        uid=null;avail=0;denom=0;
-        document.getElementById('auth-wall').style.display='';
-        try{ await mountHeader(null); }catch(e){}
-        setMethodsFor(currentCountry().country||'US');return;
-      }
+  // Gated: nothing renders until Firebase confirms the member. Logged-out
+  // visitors are redirected to signin — there is no guest state.
+  requireAuth().then(async function(user){
       uid=user.uid;
-      document.getElementById('auth-wall').style.display='none';
       try{
         var w=await mountHeader(user);
         if(!w){ try{ w=await getWallet(uid); }catch(_){ w=null; } }
@@ -221,8 +215,7 @@ import { methodsForCountry, methodById, validateDest, packDest } from './js/payo
       }catch(e){}
       paintHero();renderMethods();
       if(window.FavLoader)FavLoader.pageReady();
-    });
-  }catch(e){paintHero();renderMethods();if(window.FavLoader)FavLoader.pageReady();}
+  });
   setMethodsFor(currentCountry().country||'US');
   try{refreshRates().then(function(){paintHero();renderMethods();renderDenoms();});}catch(_){}
   document.addEventListener('fav-rates',function(){paintHero();renderMethods();});

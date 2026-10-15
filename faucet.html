@@ -57,7 +57,6 @@
 <div class="back-row"><a class="back-btn" href="earn.html" aria-label="Back to Earn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg><span>Earn</span></a></div>
 <h1 class="dash-title">Free Faucet</h1>
 <p>Claim a free <b data-usd="0.15">$0.15</b> drip every <b>5 minutes</b> — up to <b>10 times a day</b>. No deposit, timer-verified.</p>
-<div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to claim the drip.</div>
 <div class="bonus-card" id="faucet-card">
 <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
 <div><div class="big" id="faucet-amount" data-usd="0.15" style="font-size:28px;font-weight:800;color:#ffd75e;font-variant-numeric:tabular-nums">$0.15</div>
@@ -77,6 +76,7 @@
 import { auth, onAuthStateChanged, getWallet, getUserDoc, fetchUserDocs, faucetState, claimFaucet, getUnclaimedRewards, track, FAUCET_AMOUNT, FAUCET_INTERVAL_MS, FAUCET_DAILY_CAP } from './js/firebase.js';
 import { paintDualChip, startDiamondChest } from './js/diamonds.js';
 import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
+import { requireAuth } from './js/guard.js';
 if (window.FavLoader) FavLoader.hold();
 (function () {
   var uid=null, stopChest=null, proofs=[], tickTimer=null;
@@ -170,23 +170,10 @@ if (window.FavLoader) FavLoader.hold();
     return doClaim();
   });
   function ready(){if(window.FavLoader)FavLoader.pageReady();}
-  try{
-    onAuthStateChanged(auth,async function(user){
-      if(!user){
-        uid=null;proofs=[];
-        if(stopChest){try{stopChest();}catch(_){}stopChest=null;}
-        if(tickTimer){clearInterval(tickTimer);tickTimer=null;}
-        document.getElementById('auth-wall').style.display='';
-        document.getElementById('user-chip').setAttribute('href','signin.html');
-        document.getElementById('chip-bal').textContent='—';
-        document.getElementById('chip-name').textContent='Sign in';
-        document.getElementById('claim-btn').disabled=true;
-        document.getElementById('faucet-status').textContent='Sign in to claim the drip.';
-        document.getElementById('f-rows').innerHTML='<tr><td colspan="2" style="color:var(--muted)">Sign in to see your claims.</td></tr>';
-        ready();return;
-      }
+  // Gated: nothing renders until Firebase confirms the member. Logged-out
+  // visitors are redirected to signin — there is no guest state.
+  requireAuth().then(async function(user){
       uid=user.uid;
-      document.getElementById('auth-wall').style.display='none';
       document.getElementById('user-chip').setAttribute('href','profile.html');
       document.getElementById('chip-name').textContent=(user.email||'Member').split('@')[0];
       try{
@@ -203,9 +190,7 @@ if (window.FavLoader) FavLoader.hold();
       tickTimer=setInterval(paint,1000);
       try{setInterval(function(){refresh(false);},20000);}catch(e){}
       ready();
-    });
-  }catch(e){ready();}
-  setTimeout(ready,6000);
+  });
   try{refreshRates().then(function(){paint();paintRows();paintMoney();});}catch(_){}
   document.addEventListener('fav-rates',function(){paint();paintRows();paintMoney();});
 })();

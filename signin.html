@@ -54,8 +54,11 @@
 
 <script type="module">
 import { auth, ensureUserDoc, track, signInWithEmailAndPassword, sendPasswordResetEmail } from './js/firebase.js';
+import { currentUserOnce, nextTarget } from './js/guard.js';
 (function(){
   if(window.FavLoader){FavLoader.hold();setTimeout(function(){FavLoader.pageReady();},2500);}
+  // Already logged in? Never show the form — bounce straight into the app.
+  try{currentUserOnce().then(function(u){if(u){try{location.replace(nextTarget('earn.html'));}catch(_){}}});}catch(_){}
   var toast=document.getElementById('toast'),tm=null;function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
 
   document.getElementById('go').addEventListener('click',function(){var __b=this;if(window.FavLoader){return FavLoader.withButton(__b,function(){return __goWork();});}return __goWork();async function __goWork(){
@@ -66,7 +69,7 @@ import { auth, ensureUserDoc, track, signInWithEmailAndPassword, sendPasswordRes
       var cred=await signInWithEmailAndPassword(auth,e,p);
       await ensureUserDoc(cred.user,'email');
       try{track('login',{method:'email'});}catch(_){}
-      show('Signed in. Redirecting…');setTimeout(function(){location.href='earn.html';},900);
+      show('Signed in. Redirecting…');setTimeout(function(){try{location.href=nextTarget('earn.html');}catch(_){location.href='earn.html';}},900);
     }catch(err){
       var msg='Sign-in failed. Check email/password.';
       if(err&&err.code==='auth/invalid-credential')msg='Wrong email or password.';

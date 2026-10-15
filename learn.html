@@ -116,16 +116,6 @@
 <div class="back-row"><a class="back-btn" href="earn.html" aria-label="Back to Earn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg><span>Earn</span></a></div>
 <h1 class="dash-title">Quiz & Earn</h1>
 <p>One <b>free session every day</b>. Extra sessions cost <b>10 diamonds</b>. Pick an operator, solve <b>30 math sprints</b> against a 10-second timer — <b data-usd="0.10">$0.10</b> per correct answer. One rescue life per session.</p>
-<div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to play Quiz & Earn.</div>
-
-<div class="bonus-card" id="guest-card" style="display:none">
-<h2 style="margin:0 0 6px;font-size:20px">Your math sprint is waiting.</h2>
-<p style="color:var(--muted);font-size:14px;margin:0 0 16px">Sign in to play your free daily session. Extra sessions cost diamonds from the floating chest — correct answers pay cash.</p>
-<div style="display:flex;gap:10px;flex-wrap:wrap">
-<a class="btn btn-green" href="signup.html" style="min-height:48px">Create free account</a>
-<a class="btn btn-ghost" href="signin.html" style="min-height:48px">Sign in</a>
-</div>
-</div>
 
 <div id="member-zone" style="display:none">
 <div class="bonus-card" id="quiz-entry" style="display:none">
@@ -229,6 +219,7 @@ import { paintDualChip, startDiamondChest } from './js/diamonds.js';
 import { embedSponsor, clearSponsor } from './js/ptc-catalog.js';
 import { coinPour, softThud, isMuted, toggleMute } from './js/sfx.js';
 import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
+import { requireAuth } from './js/guard.js';
 if (window.FavLoader) FavLoader.hold();
 (function () {
   var uid=null, stopChest=null, proofs=[], diamonds=0, quizState=null;
@@ -630,23 +621,10 @@ if (window.FavLoader) FavLoader.hold();
 
   function ready(){if(window.FavLoader)FavLoader.pageReady();}
   paintMute();
-  try{
-    onAuthStateChanged(auth,async function(user){
-      if(!user){
-        uid=null;proofs=[];cur=null;curOp=null;stopTimer();
-        if(stopChest){try{stopChest();}catch(_){}stopChest=null;}
-        document.getElementById('auth-wall').style.display='';
-        document.getElementById('guest-card').style.display='';
-        document.getElementById('member-zone').style.display='none';
-        document.getElementById('user-chip').setAttribute('href','signin.html');
-        document.getElementById('chip-bal').textContent='—';
-        document.getElementById('chip-name').textContent='Sign in';
-        document.getElementById('q-rows').innerHTML='<tr><td colspan="2" style="color:var(--muted)">Sign in to see your answers.</td></tr>';
-        ready();return;
-      }
+  // Gated: nothing renders until Firebase confirms the member. Logged-out
+  // visitors are redirected to signin — there is no guest state.
+  requireAuth().then(async function(user){
       uid=user.uid;
-      document.getElementById('auth-wall').style.display='none';
-      document.getElementById('guest-card').style.display='none';
       document.getElementById('member-zone').style.display='';
       document.getElementById('user-chip').setAttribute('href','profile.html');
       document.getElementById('chip-name').textContent=(user.email||'Member').split('@')[0];
@@ -662,9 +640,7 @@ if (window.FavLoader) FavLoader.hold();
       var st=await refresh(false);
       route(st);
       ready();
-    });
-  }catch(e){ready();}
-  setTimeout(ready,6000);
+  });
   try{refreshRates().then(function(){paintMoney();paintScore();paintRows();});}catch(_){}
   document.addEventListener('fav-rates',function(){paintMoney();paintScore();paintRows();});
 })();

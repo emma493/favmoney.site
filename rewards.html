@@ -92,16 +92,6 @@
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
 <h1 class="dash-title">Rewards</h1>
 <p>Every task has a milestone. Hit the target, claim the cash — <span data-usd="0.10">$0.10</span> to <span data-usd="2">$2.00</span> per tier, straight to your balance.</p>
-<div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to earn milestones.</div>
-
-<div class="bonus-card" id="guest-card" style="display:none">
-<h2 style="margin:0 0 6px;font-size:20px">37 ways to earn · up to <span data-usd="32.5">$32.50</span>.</h2>
-<p style="color:var(--muted);font-size:14px;margin:0 0 16px">Watch ads, finish quests, invite friends, keep streaks, grow your balance — each track pays 4 tiers. Free account, no deposit.</p>
-<div style="display:flex;gap:10px;flex-wrap:wrap">
-<a class="btn btn-green" href="signup.html" style="min-height:48px">Create free account</a>
-<a class="btn btn-ghost" href="signin.html" style="min-height:48px">Sign in</a>
-</div>
-</div>
 
 <div id="member-zone" style="display:none">
 <div class="ready-banner" id="ready-banner" style="display:none">
@@ -138,9 +128,10 @@ import { mountHeader } from './js/header.js';
 import { paintDualChip } from './js/diamonds.js';
 import { coinPour } from './js/sfx.js';
 import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
+import { requireAuth } from './js/guard.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
-  setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
+  setTimeout(function(){if(document.documentElement.getAttribute('data-auth')==='member'&&window.FavLoader)FavLoader.pageReady();},6000);
   var uid=null, unclaimedN=0;
   var toast=document.getElementById('toast'),tm=null;
   function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
@@ -299,32 +290,17 @@ import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/curr
   document.querySelectorAll('.faq-item button').forEach(function(b){
     b.addEventListener('click',function(){b.closest('.faq-item').classList.toggle('open');});
   });
-  try{
-    onAuthStateChanged(auth,async function(user){
-      if(!user){
-        uid=null;
-        document.getElementById('auth-wall').style.display='';
-        document.getElementById('guest-card').style.display='';
-        document.getElementById('member-zone').style.display='none';
-        try{ await mountHeader(null); }catch(e){}
-        paintBadges(0);
-        if(window.FavLoader)FavLoader.pageReady();
-        return;
-      }
+  // Gated: nothing renders until Firebase confirms the member. Logged-out
+  // visitors are redirected to signin — there is no guest state.
+  requireAuth().then(async function(user){
       uid=user.uid;
-      document.getElementById('auth-wall').style.display='none';
-      document.getElementById('guest-card').style.display='none';
       document.getElementById('member-zone').style.display='';
       try{ await mountHeader(user); }catch(e){}
       try{adoptUserCountry(await getUserDoc(uid));}catch(_){}
       paintMoney();
       await refresh();
       if(window.FavLoader)FavLoader.pageReady();
-    });
-  }catch(e){
-    document.getElementById('auth-wall').style.display='';
-    document.getElementById('guest-card').style.display='';
-  }
+  });
   var root=document.documentElement;function onS(){if(scrollY>0)root.setAttribute('data-top-nav-scrolled','true');else root.removeAttribute('data-top-nav-scrolled');}addEventListener('scroll',onS,{passive:true});onS();
   try{refreshRates().then(function(){paintMoney();refresh();});}catch(_){}
   document.addEventListener('fav-rates',function(){paintMoney();refresh();});

@@ -88,8 +88,11 @@ import { auth, ensureUserDoc, redeemReferral, track, createUserWithEmailAndPassw
 import { COUNTRY_MAP } from './js/countries.js';
 import { mountCountryPicker } from './js/country-picker.js';
 import { setStoredCountry, formatUSD } from './js/currency.js';
+import { currentUserOnce } from './js/guard.js';
 (function(){
   if(window.FavLoader){FavLoader.hold();setTimeout(function(){FavLoader.pageReady();},2500);}
+  // Already logged in? Never show the form — bounce straight into the app.
+  try{currentUserOnce().then(function(u){if(u){try{location.replace('earn.html');}catch(_){}}});}catch(_){}
   var toast=document.getElementById('toast'),tm=null;function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
   // REQUIRED country picker — default is "Choose country" (value '').
   var countryCode='';

@@ -63,13 +63,12 @@
 </div></header>
 <main>
 <section class="page-hero"><div class="dash-shell">
-<div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to see your profile.</div>
 <div class="tabs" role="tablist" aria-label="Profile sections" style="border:0;padding:0;margin-bottom:14px">
 <button class="on" role="tab" aria-selected="true">My Profile</button>
 <a class="btn btn-ghost" href="settings.html" style="margin-left:auto;min-height:44px">Settings</a>
 </div>
 <div class="profile-head">
-<div class="who"><div id="avatar" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#01D676,#0a5c3f);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#06240f">?</div><div><b id="p-name">Guest</b><span id="p-joined">Joined recently</span></div></div>
+<div class="who"><div id="avatar" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#01D676,#0a5c3f);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#06240f">?</div><div><b id="p-name">···</b><span id="p-joined">···</span></div></div>
 <div class="stat-strip" style="margin:18px 0 0">
 <div class="stat-cell"><b id="p-earn" data-usd="0">$0.00</b><span>Total earnings</span></div>
 <div class="stat-cell"><b id="p-dia">0</b><span>Diamonds</span></div>
@@ -116,9 +115,10 @@ import { mountHeader } from './js/header.js';
 import { COUNTRY_MAP, flagUrl } from './js/countries.js';
 import { mountCountryPicker } from './js/country-picker.js';
 import { formatUSD, setStoredCountry, setMemoryCountry, currentCountry, refreshRates } from './js/currency.js';
+import { requireAuth } from './js/guard.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
-  setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
+  setTimeout(function(){if(document.documentElement.getAttribute('data-auth')==='member'&&window.FavLoader)FavLoader.pageReady();},6000);
   var cat='all', proofs=[], earn=0, diaBal=0, userEmail='', joinedLabel='—', stopChest=null, activeCur='USD', currentUid=null, pickedCountry='';
   function relDate(ts){
     if(!ts)return 'recently';
@@ -247,18 +247,9 @@ import { formatUSD, setStoredCountry, setMemoryCountry, currentCountry, refreshR
     if(d<1)return 'Joined today';if(d<30)return 'Joined '+d+'d ago';
     if(d<365)return 'Joined '+Math.floor(d/30)+'mo ago';return 'Joined '+Math.floor(d/365)+'Y ago';
   }
-  try{
-    onAuthStateChanged(auth,async function(user){
-      if(!user){
-        currentUid=null;
-        try{applyCountry(currentCountry().country||'US');}catch(_){}
-        document.getElementById('auth-wall').style.display='';
-        try{ await mountHeader(null); }catch(_){}
-        earn=0;diaBal=0;proofs=[];userEmail='';joinedLabel='—';
-        if(stopChest){try{stopChest();}catch(_){}stopChest=null;}
-        if(window.FavLoader)FavLoader.pageReady();
-        paintStats();render();return;
-      }
+  // Gated: nothing renders until Firebase confirms the member. Logged-out
+  // visitors are redirected to signin — there is no guest state.
+  requireAuth().then(async function(user){
       currentUid=user.uid;
       userEmail=user.email||'';
       try{
@@ -287,12 +278,7 @@ import { formatUSD, setStoredCountry, setMemoryCountry, currentCountry, refreshR
       }catch(e){earn=0;proofs=[];}
       if(window.FavLoader)FavLoader.pageReady();
       paintStats();render();
-    });
-  }catch(e){
-    document.getElementById('auth-wall').style.display='';
-    if(window.FavLoader)FavLoader.pageReady();
-    paintStats();render();
-  }
+  });
   var root=document.documentElement;function onS(){if(scrollY>0)root.setAttribute('data-top-nav-scrolled','true');else root.removeAttribute('data-top-nav-scrolled');}addEventListener('scroll',onS,{passive:true});onS();
 })();
 </script>

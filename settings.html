@@ -58,15 +58,16 @@
 <script type="module">
 import { auth, onAuthStateChanged, signOut } from './js/firebase.js';
 import { mountHeader } from './js/header.js';
+import { requireAuth } from './js/guard.js';
 (function(){
-  if(window.FavLoader){FavLoader.hold();setTimeout(function(){FavLoader.pageReady();},2500);}
-  try{onAuthStateChanged(auth,async function(u){
-    document.getElementById('who').textContent=u?(u.email||'member'):'Signed out';
-    var chip=document.getElementById('user-chip');
-    if(u){ if(chip)chip.style.display=''; try{ await mountHeader(u); }catch(e){} }
-    else{ if(chip)chip.style.display='none'; try{ await mountHeader(null); }catch(e){} }
+  if(window.FavLoader){FavLoader.hold();}
+  // Gated: nothing renders until Firebase confirms the member. Logged-out
+  // visitors are redirected to signin — there is no guest state.
+  requireAuth().then(async function(u){
+    document.getElementById('who').textContent=u.email||'member';
+    try{ await mountHeader(u); }catch(e){}
     if(window.FavLoader)FavLoader.pageReady();
-  });}catch(e){}
+  });
   document.getElementById('out').addEventListener('click',async function(){try{await signOut(auth);}catch(e){}location.href='index.html';});
 })();
 </script>

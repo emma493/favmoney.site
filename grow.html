@@ -96,16 +96,6 @@
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
 <h1 class="dash-title">Grow</h1>
 <p>Invest what you earn. Watch an ad to mine 6h shifts at 10,000% APR — boost to 15,000% for an hour mid-shift. Claim unlocks when the boost ends.</p>
-<div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to start your $1.00 grower.</div>
-
-<div class="bonus-card" id="guest-card" style="display:none">
-<h2 style="margin:0 0 6px;font-size:20px">Every account starts with a $1.00 grower.</h2>
-<p style="color:var(--muted);font-size:14px;margin:0 0 16px">It grows live during each 6h mining shift. Stake your earnings beside it, start shifts and boost with ads. The $1 seed itself stays invested — its yield is yours to claim.</p>
-<div style="display:flex;gap:10px;flex-wrap:wrap">
-<a class="btn btn-green" href="signup.html" style="min-height:48px">Create free account</a>
-<a class="btn btn-ghost" href="signin.html" style="min-height:48px">Sign in</a>
-</div>
-</div>
 
 <div id="member-zone" style="display:none">
 <div class="bonus-card">
@@ -189,9 +179,9 @@ import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveSta
 import { paintDualChip, startDiamondChest } from './js/diamonds.js';
 import { embedSponsor, clearSponsor } from './js/ptc-catalog.js';
 import { formatUSD, convertUSD, currentCountry, symbolFor, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
+import { requireAuth } from './js/guard.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
-  setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
   var uid=null, state=null, investAnchor=0, anchorAccrued=0, raf=null, lastPaint=0, lastBtnSec=-1, unclaimedN=0, stopChest=null;
   var reduced=false;
   try{reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}
@@ -428,24 +418,10 @@ import { formatUSD, convertUSD, currentCountry, symbolFor, adoptUserCountry, pai
     b.addEventListener('click',function(){b.closest('.faq-item').classList.toggle('open');});
   });
   document.getElementById('bell').addEventListener('click',function(){show(unclaimedN>0?(unclaimedN+(unclaimedN===1?' reward':' rewards')+' ready — open Rewards to claim.'):('No new notifications.'));});
-  try{
-    onAuthStateChanged(auth,async function(user){
-      if(!user){
-        uid=null;state=null;
-        if(stopChest){try{stopChest();}catch(e){}stopChest=null;}
-        if(raf)cancelAnimationFrame(raf);raf=null;
-        document.getElementById('auth-wall').style.display='';
-        document.getElementById('guest-card').style.display='';
-        document.getElementById('member-zone').style.display='none';
-        document.getElementById('user-chip').setAttribute('href','signin.html');
-        document.getElementById('chip-name').textContent='Sign in';
-        document.getElementById('chip-bal').textContent='—';
-        if(window.FavLoader)FavLoader.pageReady();
-        return;
-      }
+  // Gated: nothing renders until Firebase confirms the member. Logged-out
+  // visitors are redirected to signin — there is no guest state.
+  requireAuth().then(async function(user){
       uid=user.uid;
-      document.getElementById('auth-wall').style.display='none';
-      document.getElementById('guest-card').style.display='none';
       document.getElementById('member-zone').style.display='';
       document.getElementById('user-chip').setAttribute('href','profile.html');
       document.getElementById('chip-name').textContent=(user.email||'Member').split('@')[0];
@@ -459,11 +435,7 @@ import { formatUSD, convertUSD, currentCountry, symbolFor, adoptUserCountry, pai
       if(window.FavLoader)FavLoader.pageReady();
       if(raf)cancelAnimationFrame(raf);
       lastPaint=0;raf=requestAnimationFrame(tickLoop);
-    });
-  }catch(e){
-    document.getElementById('auth-wall').style.display='';
-    document.getElementById('guest-card').style.display='';
-  }
+  });
   var root=document.documentElement;function onS(){if(scrollY>0)root.setAttribute('data-top-nav-scrolled','true');else root.removeAttribute('data-top-nav-scrolled');}addEventListener('scroll',onS,{passive:true});onS();
   try{refreshRates().then(function(){paintMoney();refresh();});}catch(_){}
   document.addEventListener('fav-rates',function(){paintMoney();refresh();});

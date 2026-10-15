@@ -57,7 +57,6 @@
 <section class="page-hero"><div class="dash-shell">
 <h1 class="dash-title">Earn</h1>
 <p>Play games, answer surveys, earn cashback. New quests drop daily.</p>
-<div class="notice" id="auth-wall" style="display:none">Browsing as guest. <a href="signin.html" style="color:#8ff0bd;font-weight:700">Sign in</a> to start offers and earn.</div>
 </div></section>
 <section class="section" style="padding-top:8px"><div class="dash-shell">
 <div class="sec-head"><h2>Choose how you earn</h2></div>
@@ -78,9 +77,9 @@
 import { auth, onAuthStateChanged, getWallet, getUserDoc, migrateLocal, wasMigrated, track, getUnclaimedRewards } from './js/firebase.js';
 import { paintDualChip, startDiamondChest } from './js/diamonds.js';
 import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
+import { requireAuth } from './js/guard.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
-  setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},6000);
   var uid=null,unclaimedN=0,stopChest=null;
   var toast=document.getElementById('toast'),tm=null;
   function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3000);}
@@ -93,19 +92,10 @@ import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/curr
     var nd=document.getElementById('navdot-rewards');
     if(nd){if(n>0){nd.textContent=n>9?'9+':n;nd.style.display='flex';}else{nd.style.display='none';}}
   }
-  try{
-    onAuthStateChanged(auth,async function(user){
-      if(!user){
-        uid=null;
-        if(stopChest){try{stopChest();}catch(_){}stopChest=null;}
-        if(window.FavLoader)FavLoader.pageReady();
-        document.getElementById('auth-wall').style.display='';
-        document.getElementById('user-chip').setAttribute('href','signin.html');
-        document.getElementById('chip-name').textContent='Sign in';
-        return;
-      }
+  // Gated: nothing renders until Firebase confirms the member. Logged-out
+  // visitors are redirected to signin — there is no guest state.
+  requireAuth().then(async function(user){
       uid=user.uid;
-      document.getElementById('auth-wall').style.display='none';
       document.getElementById('user-chip').setAttribute('href','profile.html');
       document.getElementById('chip-name').textContent=(user.email||'Member').split('@')[0];
       try{
@@ -120,8 +110,7 @@ import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/curr
         if(window.FavLoader)FavLoader.pageReady();
       }catch(err){document.getElementById('chip-bal').textContent=formatUSD(0);}
       if(window.FavLoader)FavLoader.pageReady();
-    });
-  }catch(e){document.getElementById('auth-wall').style.display='';if(window.FavLoader)FavLoader.pageReady();}
+  });
   document.getElementById('bell').addEventListener('click',function(){
     show(unclaimedN>0?(unclaimedN+(unclaimedN===1?' reward':' rewards')+' ready — open Rewards to claim.'):('No new notifications.'));
   });

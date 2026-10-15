@@ -8,11 +8,11 @@
 // fails closed in the rules.
 // NOTE: amounts are still client-enforced; full server authority needs a
 // Cloud Function when backend lands.
-import { auth, db, onAuthStateChanged, signOut } from '../js/firebase.js';
+import { auth, db, onAuthStateChanged, signInWithEmailAndPassword, signOut } from '../js/firebase.js';
 import {
   FAUCET_AMOUNT, FAUCET_INTERVAL_MS, FAUCET_DAILY_CAP,
   PTC_DAILY_CAP, PTC_MIN_PAY, PTC_MAX_PAY,
-  DIAMOND_COST_SPIN, DIAMOND_COST_QUIZ,
+  SPIN_AD_DAILY_CAP, QUIZ_AD_DAILY_CAP,
   INVEST_BASE_APR, INVEST_BOOST_APR, INVEST_MAX_STAKE, MINE_SHIFT_MS,
   REWARD_TIERS, REWARD_TRACKS
 } from '../js/firebase.js';
@@ -54,11 +54,11 @@ if (window.FavLoader) FavLoader.hold();
     e.textContent = msg; e.classList.add('show');
   }
   function gateView(id) {
-    ['view-claim', 'view-denied'].forEach(function (v) {
+    ['view-signin', 'view-claim', 'view-denied'].forEach(function (v) {
       var el = document.getElementById(v);
       if (el) el.style.display = v === id ? '' : 'none';
     });
-    document.title = 'Fav-Admin · ' + (id === 'view-claim' ? 'Claim seat' : 'Locked');
+    document.title = 'Fav-Admin · ' + (id === 'view-claim' ? 'Claim seat' : id === 'view-denied' ? 'Locked' : 'Sign in');
   }
 
   /* ---------- CSV export ---------- */
@@ -132,10 +132,7 @@ if (window.FavLoader) FavLoader.hold();
   }
   try {
     onAuthStateChanged(auth, async function (user) {
-      if (!user) {
-        locked('No login forms here — sign in or create an account on the main site first, then reopen this console.');
-        return;
-      }
+      if (!user) { gateView('view-signin'); ready(); return; }
       var seat = await mySeatId(user.uid);
       if (seat) { enter(user, seat); return; }
       showClaim(user);
@@ -153,6 +150,20 @@ if (window.FavLoader) FavLoader.hold();
     }
     return null;
   }
+  async function doSignin() {
+    err('si-err');
+    var em = document.getElementById('si-email').value.trim(), pw = document.getElementById('si-pass').value;
+    if (!em || !pw) { err('si-err', 'Enter email and password.'); return; }
+    try { await signInWithEmailAndPassword(auth, em, pw); }
+    catch (e) {
+      var msg = 'Sign-in failed — check credentials.';
+      if (e && e.code === 'auth/invalid-credential') msg = 'Wrong email or password.';
+      else if (e && e.code === 'auth/user-not-found') msg = 'No admin account for this email.';
+      else if (e && e.code === 'auth/too-many-requests') msg = 'Too many attempts — wait 5 minutes and try once.';
+      else if (e && e.code === 'auth/user-disabled') msg = 'This account is disabled.';
+      err('si-err', msg);
+    }
+  }
   async function doClaimSeat() {
     err('claim-err');
     var user = null;
@@ -164,9 +175,13 @@ if (window.FavLoader) FavLoader.hold();
     if (seat) { show('Admin seat claimed (' + seat + ' of 2).'); enter(user, seat); return; }
     err('claim-err', 'Claim failed — both seats may be taken, or the latest firestore.rules is not published yet.');
   }
+  document.getElementById('si-go').addEventListener('click', doSignin);
   document.getElementById('claim-go').addEventListener('click', doClaimSeat);
   document.getElementById('denied-out').addEventListener('click', function () { location.reload(); });
   document.getElementById('ad-logout').addEventListener('click', function () { try { signOut(auth); } catch (_) {} });
+  [['si-email', doSignin], ['si-pass', doSignin]].forEach(function (t) {
+    document.getElementById(t[0]).addEventListener('keydown', function (e) { if (e.key === 'Enter') t[1](); });
+  });
 
   /* ---------- router ---------- */
   var VIEW_LOADERS = { overview: loadOverview, users: initUsers, payouts: loadPayouts, ledger: loadLedger, earn: loadEarn, system: loadSystem, audit: loadAudit };
@@ -330,7 +345,6 @@ if (window.FavLoader) FavLoader.hold();
         '<dt>Status</dt><dd>' + (banned ? '<span class="pill rejected">banned</span> ' + esc(udoc.disabledReason || '') : '<span class="pill paid">active</span>') + '</dd>' +
         '<dt>Available</dt><dd>' + money(w.pending) + ' · lifetime ' + money(w.lifetime) + '</dd>' +
         '<dt>Staked (user)</dt><dd>' + money(w.invested) + ' · taskEarned ' + money(udoc.taskEarned) + '</dd>' +
-        '<dt>Diamonds</dt><dd>' + Math.max(0, Math.floor(Number(w.diamonds || 0))) + '</dd>' +
         '<dt>Referrals</dt><dd>' + refN + ' joined</dd>' +
         '<dt>Recent earnings</dt><dd>' + money(earnSum) + ' across ' + rows.length + ' proof rows (≤50)</dd>' +
         '</dl>' +
@@ -531,8 +545,8 @@ if (window.FavLoader) FavLoader.hold();
     }).join('');
     document.getElementById('e-out').innerHTML =
       '<div class="ad-panel"><h2>Economy constants (live code)</h2><p class="psub">Faucet ' + money(FAUCET_AMOUNT) + ' / ' + Math.round(FAUCET_INTERVAL_MS / 60000) + 'min / cap ' + FAUCET_DAILY_CAP +
-      ' · PTC cap ' + PTC_DAILY_CAP + '/day (' + money(PTC_MIN_PAY) + '–' + money(PTC_MAX_PAY) + ') · Spin extra ' + DIAMOND_COST_SPIN + '◆ · Quiz entry ' + DIAMOND_COST_QUIZ +
-      '◆ · Grow ' + INVEST_BASE_APR + '%/' + INVEST_BOOST_APR + '% · ' + Math.round(MINE_SHIFT_MS / 3600000) + 'h shifts · max stake ' + money(INVEST_MAX_STAKE) + '.</p></div>' +
+      ' · PTC cap ' + PTC_DAILY_CAP + '/day (' + money(PTC_MIN_PAY) + '–' + money(PTC_MAX_PAY) + ') · Spin 1 free + ' + SPIN_AD_DAILY_CAP + ' ads/day · Quiz 1 free + ' + QUIZ_AD_DAILY_CAP +
+      ' ads/day · Grow ' + INVEST_BASE_APR + '%/' + INVEST_BOOST_APR + '% · ' + Math.round(MINE_SHIFT_MS / 3600000) + 'h shifts · max stake ' + money(INVEST_MAX_STAKE) + '.</p></div>' +
       '<div class="ad-panel"><h2>PTC catalog (' + PTC_CATALOG.length + ' live)</h2><p class="psub">Rotation every ' + Math.round(PTC_SLOT_MS / 3600000) + 'h. New links ship via code deploy, not here.</p>' +
       '<table class="ad-tbl"><thead><tr><th>ID</th><th>Title</th><th>View</th><th>Pay</th><th>Every</th><th>Slots</th></tr></thead><tbody>' + tiers + '</tbody></table></div>' +
       '<div class="ad-panel"><h2>Reward tracks</h2><p class="psub">Milestone targets → tier payouts.</p>' +

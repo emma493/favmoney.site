@@ -71,15 +71,18 @@ export async function ensureUserDoc(user, provider, extra) {
     // Every account starts with a locked $1.00 grower seed (invest-only, never withdrawable).
     // Diamonds start at 0; chest timestamps init so the ad is instantly ready
     // but the first passive drip lands 3h after signup.
-    await setDoc(wref, { pending: 0, lifetime: 0, invested: 1, investedAt: Date.now(), boostUntil: 0, diamonds: 0, lastDiamondAdAt: 0, lastDiamondPassiveAt: Date.now(), updatedAt: serverTimestamp() });
+    await setDoc(wref, { pending: 0, lifetime: 0, invested: 1, investedAt: Date.now(), boostUntil: 0, mineUntil: 0, diamonds: 0, lastDiamondAdAt: 0, lastDiamondPassiveAt: Date.now(), updatedAt: serverTimestamp() });
   } else {
     // Heal pre-Diamond wallets: add missing diamond fields without touching balances.
+    // Heal pre-shift wallets: a missing mineUntil means a legacy account — grant
+    // the one-time free 6h starter shift so nobody's miner dies on deploy day.
     try {
       const d = w.data() || {};
       const heal = {};
       if (!('diamonds' in d)) heal.diamonds = 0;
       if (!('lastDiamondAdAt' in d)) heal.lastDiamondAdAt = 0;
       if (!('lastDiamondPassiveAt' in d)) heal.lastDiamondPassiveAt = Date.now();
+      if (!('mineUntil' in d)) heal.mineUntil = Date.now() + MINE_SHIFT_MS;
       if (Object.keys(heal).length) { heal.updatedAt = serverTimestamp(); await setDoc(wref, heal, { merge: true }); }
     } catch (_) {}
   }
@@ -87,11 +90,12 @@ export async function ensureUserDoc(user, provider, extra) {
 
 export async function getWallet(uid) {
   const snap = await getDoc(doc(db, 'wallets', uid));
-  if (!snap.exists()) return { pending: 0, lifetime: 0, invested: 0, investedAt: 0, boostUntil: 0, diamonds: 0, lastDiamondAdAt: 0, lastDiamondPassiveAt: 0 };
+  if (!snap.exists()) return { pending: 0, lifetime: 0, invested: 0, investedAt: 0, boostUntil: 0, mineUntil: 0, diamonds: 0, lastDiamondAdAt: 0, lastDiamondPassiveAt: 0 };
   const d = snap.data();
   return {
     pending: Number(d.pending || 0), lifetime: Number(d.lifetime || 0),
     invested: Number(d.invested || 0), investedAt: Number(d.investedAt || 0), boostUntil: Number(d.boostUntil || 0),
+    mineUntil: Number(d.mineUntil || 0),
     diamonds: Math.max(0, Math.floor(Number(d.diamonds || 0))),
     lastDiamondAdAt: Number(d.lastDiamondAdAt || 0), lastDiamondPassiveAt: Number(d.lastDiamondPassiveAt || 0)
   };
@@ -1000,14 +1004,17 @@ export async function claimMilestone(uid, trackId, tierIdx) {
   return { ok: true, amount };
 }
 
-// ---- Grow engine: invest task earnings, live ticker, hourly ad booster ----
-// Base 10000% APR always on. Watching an ad sets boostUntil = now + 1h, during
-// which 15000% APR applies. Yield accrues around the clock — mining never
-// stops. The $1 seed is invest-only: it accrues yield but its
-// principal can never move to available. Referral bonuses never compound here.
+// ---- Grow engine: invest task earnings, live ticker, 6-hour mining shifts ----
+// Mining runs in 6h shifts: watching an ad sets mineUntil = now + 6h, and
+// yield accrues ONLY while now <= mineUntil. Watching an ad during a live
+// shift also lights +1500% boost (15000% total) for exactly 1h; refill tops
+// to 60:00, no stacking/banking; expiry falls back to 10000%. The $1 seed is
+// invest-only: it accrues yield but its principal can never move to available.
+// Referral bonuses never compound here.
 export const INVEST_BASE_APR = 10000;
 export const INVEST_BOOST_APR = 15000;
 export const INVEST_BOOST_MS = 3600000;
+export const MINE_SHIFT_MS = 6 * 3600000;
 export const INVEST_SEED = 1;
 export const INVEST_MAX_STAKE = 100;
 export const INVEST_MIN_STAKE = 0.10;
@@ -1023,13 +1030,19 @@ export function utcDayStr(ms) {
 
 // Pure yield math — no Firestore, fully unit-testable.
 // Returns { yield, boostedSec, baseSec } for principal over [fromMs, toMs).
-// Mining never stops: the full principal accrues around the clock, split
-// between base and boosted rate by boostUntilMs. activeDays / seedGrace args
-// are kept for call compatibility but no longer gate anything.
-export function computeYield(principal, fromMs, toMs, boostUntilMs, activeDays, seedGrace) {
+// Yield accrues ONLY inside the mining shift: toMs is capped at mineUntilMs
+// (0/expired = no accrual). Base/boost split by boostUntilMs. activeDays /
+// seedGrace args are kept for call compatibility but no longer gate anything.
+export function computeYield(principal, fromMs, toMs, boostUntilMs, activeDays, seedGrace, mineUntilMs) {
   const p = Number(principal || 0);
   if (!(p > 0)) return { yield: 0, boostedSec: 0, baseSec: 0 };
   let from = Number(fromMs || 0), to = Number(toMs || 0);
+  // mineUntilMs == null (legacy caller) = no cap. A provided value caps the
+  // window — including 0, which means "no live shift" and yields nothing.
+  if (mineUntilMs != null) {
+    const mineUntil = Number(mineUntilMs || 0);
+    if (to > mineUntil) to = mineUntil;
+  }
   if (!(to > from)) return { yield: 0, boostedSec: 0, baseSec: 0 };
   if (to - from > INVEST_SETTLE_WINDOW_MS) from = to - INVEST_SETTLE_WINDOW_MS;
   const boostUntil = Number(boostUntilMs || 0);
@@ -1045,6 +1058,7 @@ async function readInvestState(uid) {
   return {
     pending: Number(w.pending || 0), lifetime: Number(w.lifetime || 0),
     invested: Number(w.invested || 0), investedAt: Number(w.investedAt || 0), boostUntil: Number(w.boostUntil || 0),
+    mineUntil: Number(w.mineUntil || 0),
     taskEarned: Number(u.taskEarned || 0), investedUser: Number(u.investedUser || 0),
     activeDays: Array.isArray(u.activeDays) ? u.activeDays : [],
     createdAtMs: Number(u.createdAtMs || 0)
@@ -1065,13 +1079,17 @@ export async function ensureSeed(uid) {
     const wref = doc(db, 'wallets', uid);
     const w = await getDoc(wref);
     if (!w.exists()) {
-      await setDoc(wref, { pending: 0, lifetime: 0, invested: INVEST_SEED, investedAt: now, boostUntil: 0, updatedAt: serverTimestamp() });
+      await setDoc(wref, { pending: 0, lifetime: 0, invested: INVEST_SEED, investedAt: now, boostUntil: 0, mineUntil: 0, updatedAt: serverTimestamp() });
     } else {
       const d = w.data();
       if (!(Number(d.invested || 0) > 0) && d.invested !== 0) {
         await setDoc(wref, { invested: INVEST_SEED, investedAt: now, boostUntil: 0, updatedAt: serverTimestamp() }, { merge: true });
       } else if (!d.investedAt) {
         await setDoc(wref, { investedAt: now, updatedAt: serverTimestamp() }, { merge: true });
+      }
+      // One-time starter shift for pre-shift wallets (field missing = legacy).
+      if (!('mineUntil' in d)) {
+        await setDoc(wref, { mineUntil: now + MINE_SHIFT_MS, updatedAt: serverTimestamp() }, { merge: true });
       }
     }
   } catch (_) {}
@@ -1096,7 +1114,7 @@ export async function settleInvest(uid) {
     return { yield: 0, boostedSec: 0, baseSec: 0 };
   }
   const from = s.investedAt > 0 ? s.investedAt : now;
-  const r = computeYield(s.invested, from, now, s.boostUntil, s.activeDays, seedGraceFor(s, now));
+  const r = computeYield(s.invested, from, now, s.boostUntil, s.activeDays, seedGraceFor(s, now), s.mineUntil);
   const y = Math.floor(r.yield * 100000000) / 100000000;
   try {
     const wref = doc(db, 'wallets', uid);
@@ -1115,18 +1133,20 @@ export async function settleInvest(uid) {
   return { yield: y, boostedSec: r.boostedSec, baseSec: r.baseSec };
 }
 
-// Pure read for the ticker: current principal, unsettled accrual, boost state.
+// Pure read for the ticker: current principal, unsettled accrual, boost + shift state.
 export async function getLiveState(uid, atMs) {
   const now = Number(atMs || Date.now());
   const s = await readInvestState(uid);
   const from = s.investedAt > 0 ? s.investedAt : now;
   const grace = seedGraceFor(s, now);
-  const r = computeYield(s.invested, from, now, s.boostUntil, s.activeDays, grace);
+  const r = computeYield(s.invested, from, now, s.boostUntil, s.activeDays, grace, s.mineUntil);
   const boosted = s.boostUntil > now;
+  const mining = s.mineUntil > now;
   return {
     invested: s.invested, pending: s.pending,
     accrued: r.yield, boostedSec: r.boostedSec, baseSec: r.baseSec,
     boosted, boostUntil: s.boostUntil, boostRemainingMs: boosted ? s.boostUntil - now : 0,
+    mining, mineUntil: s.mineUntil, shiftRemainingMs: mining ? s.mineUntil - now : 0,
     apr: boosted ? INVEST_BOOST_APR : INVEST_BASE_APR,
     investedUser: s.investedUser, taskEarned: s.taskEarned,
     graceMsLeft: grace ? Math.max(0, grace.graceUntilMs - now) : 0,
@@ -1172,16 +1192,31 @@ export async function unstakeAll(uid) {
 }
 
 // Called after a verified ad view: settle, then top the boost tank to a full hour.
+// Boost applies inside a live mining shift (a second ad during a shift).
 export async function activateBoost(uid) {
   const now = Date.now();
   const s = await readInvestState(uid);
   if (s.boostUntil - now > 55 * 60000) return { ok: false, reason: 'full' };
+  if (!(s.mineUntil > now)) return { ok: false, reason: 'noshift' };
   await settleInvest(uid);
   try {
     await setDoc(doc(db, 'wallets', uid), { boostUntil: now + INVEST_BOOST_MS, updatedAt: serverTimestamp() }, { merge: true });
     await addDoc(collection(db, 'proofs'), { uid, amount: 0, label: 'ad-view', status: 'done', at: serverTimestamp() });
   } catch (_) { return { ok: false, reason: 'write' }; }
   return { ok: true, boostUntil: now + INVEST_BOOST_MS };
+}
+
+// Called after a verified ad view: settle, then open a fresh 6h mining shift.
+// Re-watching with a nearly-full tank is refused (no stacking/banking).
+export async function activateMining(uid) {
+  const now = Date.now();
+  const s = await readInvestState(uid);
+  if (s.mineUntil - now > MINE_SHIFT_MS - 5 * 60000) return { ok: false, reason: 'full' };
+  await settleInvest(uid);
+  try {
+    await setDoc(doc(db, 'wallets', uid), { mineUntil: now + MINE_SHIFT_MS, updatedAt: serverTimestamp(), lastLabel: 'mine-start' }, { merge: true });
+  } catch (_) { return { ok: false, reason: 'write' }; }
+  return { ok: true, mineUntil: now + MINE_SHIFT_MS };
 }
 
 // Single reward write path (replaces FavStore.addReward): wallet + proof row.

@@ -199,7 +199,7 @@
 5. Trust kit: live counters, estimator, published odds tables, low $5 min (already have), instant local credit with Firebase-synced review queue (already have).
 6. Never: deposits, lock-ups, re-denominations, moving minimums, silent shutdowns.
 
-## 9. Grow Engine (2026-10-09, BUILT — needs firestore.rules paste + live test)
+## 9. Grow Engine (2026-10-09, SUPERSEDED 2026-10-15 by §12 mining shifts)
 - **Rates (user-locked):** 3000% base APR always on; ad view lights +1500% (4500% total) for exactly 1h; refill tops to 60:00, no stacking/banking; expiry falls back to 3000%. Calibrated 5→3500% ladder in chat; tiered/promo framing recommended if rates ever change.
 - **Seed:** every account gets $1.00 invested (invest-only: principal never moves to available, yield claimable). New signups via `ensureUserDoc`; legacy via `ensureSeed` on Grow visit.
 - **Scope:** only task earnings stakeable (max $100 user principal, min $0.10). Referral $1/$0.50 + commissions excluded from staking AND from commission-on-commission (`recordCommission` + `creditReward` skip `referral-*`/`invest-*`/`ad-*` labels).
@@ -210,6 +210,11 @@
 - **Pipes fixed en route:** `creditReward` was silently NOT filing commissions (edit had landed in `migrateLocal` loop, which also broke on undefined vars) — both repaired and verified.
 - **Files:** `firestore.rules` (wallets `invested/investedAt/boostUntil`, users `taskEarned/investedUser/activeDays`, proofs `invest-*/ad-view` done-labels), `js/firebase.js` (invest engine + seed + hooks), `grow.html` (ticker, fuel gauge, invest/claim/unstake, history, FAQ, viewer).
 - **Still required:** paste `firestore.rules` to Console; live test (signup seeds $1 → earn task → stake → ticker climbs → ad boosts slope → close 90min → reopen settles 60 boosted + 30 base min → claim/unstake correct, seed stays).
+
+## 12. Mining shifts (2026-10-15, BUILT — needs firestore.rules re-paste + deploy)
+- **Model (owner-locked):** yield accrues ONLY inside 6h shifts (`wallets.mineUntil`). Watch an ad → `activateMining` opens a fresh 6h shift (no stacking; refusals when tank nearly full). Second ad mid-shift → existing 1h 15,000% boost. Rate in-shift stays 10,000%.
+- **Deploy-day grace:** pre-shift wallets (no `mineUntil` field) get a one-time free 6h shift via `ensureSeed`/`ensureUserDoc` heal; new wallets start at 0 (must watch ad).
+- **Files:** `js/firebase.js` (`MINE_SHIFT_MS`, `computeYield` 7th param cap, `activateMining`, `activateBoost` requires live shift), `grow.html` (shift countdown, paused state, dual-mode ad button, FAQ/copy), `firestore.rules` (`mineUntil` wallet field), `Fav-Admin` Earn line shows shift length. Verified: 8/8 shift-math tests + syntax checks.
 
 ## 10. Diamonds (2026-10-10, BUILT — needs firestore.rules paste + live test)- **Model (user-locked):** play-only chips, never withdrawable/convertible. Floating chest bottom-right on earn/spin/flip/dice/profile/grow: tap → 20s visible ad → 2–10 diamonds (weighted 2@30%/3-5@50%/6-10@20%), 1h cooldown; passive 2 diamonds per 3h, claimable on tap (glows, no stacking).
 - **Games:** 1 free play/day each (to build); extra plays cost diamonds — Spin 10 / Flip 15 / Dice 5 are placeholder constants (`DIAMOND_GAME_COSTS`, USER TO CONFIRM when each game is built). Wins: mostly diamonds via `creditDiamonds()`, rare USD cents via existing `creditReward()`.

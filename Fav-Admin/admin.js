@@ -13,7 +13,7 @@ import {
   FAUCET_AMOUNT, FAUCET_INTERVAL_MS, FAUCET_DAILY_CAP,
   PTC_DAILY_CAP, PTC_MIN_PAY, PTC_MAX_PAY,
   DIAMOND_COST_SPIN, DIAMOND_COST_QUIZ,
-  INVEST_BASE_APR, INVEST_BOOST_APR, INVEST_MAX_STAKE,
+  INVEST_BASE_APR, INVEST_BOOST_APR, INVEST_MAX_STAKE, MINE_SHIFT_MS,
   REWARD_TIERS, REWARD_TRACKS
 } from '../js/firebase.js';
 import { PTC_CATALOG, PTC_SLOT_MS } from '../js/ptc-catalog.js';
@@ -564,7 +564,7 @@ if (window.FavLoader) FavLoader.hold();
     document.getElementById('e-out').innerHTML =
       '<div class="ad-panel"><h2>Economy constants (live code)</h2><p class="psub">Faucet ' + money(FAUCET_AMOUNT) + ' / ' + Math.round(FAUCET_INTERVAL_MS / 60000) + 'min / cap ' + FAUCET_DAILY_CAP +
       ' · PTC cap ' + PTC_DAILY_CAP + '/day (' + money(PTC_MIN_PAY) + '–' + money(PTC_MAX_PAY) + ') · Spin extra ' + DIAMOND_COST_SPIN + '◆ · Quiz entry ' + DIAMOND_COST_QUIZ +
-      '◆ · Grow ' + INVEST_BASE_APR + '%/' + INVEST_BOOST_APR + '% · max stake ' + money(INVEST_MAX_STAKE) + '.</p></div>' +
+      '◆ · Grow ' + INVEST_BASE_APR + '%/' + INVEST_BOOST_APR + '% · ' + Math.round(MINE_SHIFT_MS / 3600000) + 'h shifts · max stake ' + money(INVEST_MAX_STAKE) + '.</p></div>' +
       '<div class="ad-panel"><h2>PTC catalog (' + PTC_CATALOG.length + ' live)</h2><p class="psub">Rotation every ' + Math.round(PTC_SLOT_MS / 3600000) + 'h. New links ship via code deploy, not here.</p>' +
       '<table class="ad-tbl"><thead><tr><th>ID</th><th>Title</th><th>View</th><th>Pay</th><th>Every</th><th>Slots</th></tr></thead><tbody>' + tiers + '</tbody></table></div>' +
       '<div class="ad-panel"><h2>Reward tracks</h2><p class="psub">Milestone targets → tier payouts.</p>' +

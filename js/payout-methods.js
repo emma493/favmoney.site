@@ -168,7 +168,7 @@ export const METHOD_DEFS = {
   },
   'MTN MoMo': {
     id: 'MTN MoMo', kind: 'momo', sec: 'local',
-    img: 'https://res.cloudinary.com/nonzehj3/image/upload/f_auto,q_auto/favmoney/cashout/mtn-momo-logo.png', min: 30,
+    img: 'https://res.cloudinary.com/nonzehj3/image/upload/f_auto,q_auto/favmoney/cashout/mtn-momo-gold.png', min: 30,
     denoms: [30, 50, 75, 100, 200],
     destLabel: 'Destination (MTN MoMo)',
     destPlaceholder: '',

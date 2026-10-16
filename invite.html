@@ -57,7 +57,7 @@
     .lb-av img{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;object-fit:cover}
     .lb-av .crown{position:absolute;top:-9px;right:-7px;width:16px;height:16px;transform:rotate(12deg);filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
     .lb-face{display:flex;line-height:0;width:100%;height:100%}
-    .lb-face svg{width:100%;height:100%;border-radius:50%}
+    .lb-face svg,.lb-face img{width:100%;height:100%;border-radius:50%}
     .aff-leader .row.lb-open{border-style:dashed}
     .aff-leader .row.lb-open b{color:var(--muted);font-size:13px}
     .aff-leader .row.lb-you{border-color:rgba(1,214,118,.5);background:rgba(1,214,118,.06)}
@@ -141,10 +141,10 @@
 <div class="quest-row"><div class="qico">2</div><div class="qmid"><b>They sign up with your code</b><div style="font-size:13px;color:var(--muted)">The code auto-fills from your link. They get <span data-usd="1">$1.00</span> instantly.</div></div></div>
 <div class="quest-row"><div class="qico">3</div><div class="qmid"><b>You earn <span data-usd="0.5">$0.50</span> instantly + commission for life</b><div style="font-size:13px;color:var(--muted)">Cash out from <span data-usd="20">$20.00</span> like any other earning.</div></div></div>
 
-<h2 style="font-size:20px;margin:30px 0 0">Top inviters</h2>
-<div class="aff-leader" id="top-board">
-<div class="row"><span class="rank">–</span><span class="lb-av">?</span><span style="flex:1">Loading board…</span><b></b></div>
+<h2 style="font-size:20px;margin:30px 0 0;display:none" id="top-title">Top inviters</h2>
+<div class="aff-leader" id="top-board" style="display:none">
 </div>
+<p class="hint" id="top-you" style="font-size:13px;color:var(--muted);margin:10px 0 0"></p>
 
 <h2 style="font-size:20px;margin:30px 0 0">My referrals</h2>
 <div class="tbl-wrap"><table class="tbl tbl--cards"><thead><tr><th>Friend</th><th>Reward</th><th>Status</th><th>Date</th></tr></thead><tbody id="ref-rows"><tr class="skel"><td colspan="4"><span class="skeleton" style="width:90%"></span></td></tr><tr class="skel"><td colspan="4"><span class="skeleton" style="width:75%"></span></td></tr><tr class="skel"><td colspan="4"><span class="skeleton" style="width:82%"></span></td></tr></tbody></table></div>
@@ -165,7 +165,7 @@
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getUserDoc, getOrCreateMyCode, claimReferrals, claimCommissions, fetchReferrals, fetchUserDocs, track, getUnclaimedRewards, getTopInviters, logShare, SHARE_NAMES } from './js/firebase.js';
-import { avatarSVG, maskHandle } from './js/avatars.js';
+import { avatarImg, maskHandle } from './js/avatars.js';
 import { mountHeader } from './js/header.js';
 import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 import { requireAuth } from './js/guard.js';
@@ -218,38 +218,35 @@ import { requireAuth } from './js/guard.js';
     var fill=i===0?'#FFC93C':(i===1?'#C9D2E0':'#9BE9FF');
     return '<svg class="crown" viewBox="0 0 24 24" fill="'+fill+'" aria-hidden="true"><path d="M3 8.5 7 11l5-6.5L17 11l4-2.5L19.5 18h-15L3 8.5z"/></svg>';
   }
-  // Real-only Top inviters: hourly Worker board, cartoon avatar per uid,
-  // masked handle per row. Empty slots invite the viewer to fill them.
-  // Never throws — worst case the board keeps its loading row.
+  // Real-only Top inviters: the ranked board stays hidden until at least
+  // 10 ranked inviters exist. Your own position line always shows.
+  // Never throws — worst case the board stays hidden.
   async function paintBoard(meUid, myInvited){
     var box=document.getElementById('top-board');
+    var title=document.getElementById('top-title');
+    var you=document.getElementById('top-you');
+    var mine=Math.max(0,Math.floor(Number(myInvited)||0));
+    if(you&&meUid)you.textContent='Your invites: '+mine;
     if(!box)return;
     var top=null;
     try{top=await getTopInviters();}catch(_){top=null;}
-    var entries=(top&&top.entries)||[];
-    var html='', used=0, meShown=false;
-    for(var i=0;i<entries.length&&used<10;i++){
+    var entries=((top&&top.entries)||[]).filter(function(e){return Math.floor(Number(e.invited)||0)>0;}).slice(0,10);
+    if(entries.length<10){
+      if(title)title.style.display='none';
+      box.style.display='none';
+      return;
+    }
+    var html='';
+    for(var i=0;i<entries.length;i++){
       var e=entries[i], n=Math.max(0,Math.floor(Number(e.invited)||0));
-      if(!(n>0))continue;
-      var mine=meUid&&e.uid===meUid;
-      if(mine)meShown=true;
-      html+='<div class="row'+(mine?' lb-you':'')+'"><span class="rank">'+(used+1)+'</span>'
-        +'<span class="lb-av"><span class="lb-face">'+avatarSVG(e.uid,40)+'</span>'+crownSVG(used)+'</span>'
-        +'<span style="flex:1">'+(mine?'YOU':maskHandle(e.handle))+'</span><b>'+n+' invited</b></div>';
-      used++;
-    }
-    if(!meShown&&meUid){
-      html+='<div class="row lb-you"><span class="rank">–</span>'
-        +'<span class="lb-av"><span class="lb-face">'+avatarSVG(meUid,40)+'</span></span>'
-        +'<span style="flex:1">YOU</span><b>'+Math.max(0,Math.floor(Number(myInvited)||0))+' invited</b></div>';
-      used++;
-    }
-    for(var k=used;k<10;k++){
-      html+='<div class="row lb-open"><span class="rank">'+(k+1)+'</span>'
-        +'<span class="lb-av">?</span>'
-        +'<span style="flex:1">Your name here</span><b>invite friends</b></div>';
+      var isMe=!!(meUid&&e.uid===meUid);
+      html+='<div class="row'+(isMe?' lb-you':'')+'"><span class="rank">'+(i+1)+'</span>'
+        +'<span class="lb-av"><span class="lb-face">'+avatarImg(e.uid,40)+'</span>'+crownSVG(i)+'</span>'
+        +'<span style="flex:1">'+(isMe?'YOU':maskHandle(e.handle))+'</span><b>'+n+' invited</b></div>';
     }
     box.innerHTML=html;
+    box.style.display='';
+    if(title)title.style.display='';
   }
   async function refreshStats(){
     if(!uid)return;

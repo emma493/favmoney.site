@@ -8,10 +8,34 @@ var resolved = false;
 var cachedUser = null;
 var waiters = [];
 
+// Persistent session hint: proves THIS browser has signed in before.
+// Written on every confirmed login, cleared ONLY by an explicit sign-out
+// tap. Survives slow networks/CDN where Firebase hasn't answered yet, so
+// the gate can tell "member, still checking" apart from "genuine guest".
+var HINT_KEY = 'fav_had_session';
+function readHint() {
+  try {
+    var raw = localStorage.getItem(HINT_KEY);
+    if (!raw) return null;
+    var o = JSON.parse(raw);
+    if (o && o.uid) return o;
+    return null;
+  } catch (_) { return null; }
+}
+function writeHint(user) {
+  try {
+    if (user && user.uid) localStorage.setItem(HINT_KEY, JSON.stringify({ uid: user.uid, at: Date.now() }));
+  } catch (_) {}
+}
+export function clearSessionHint() {
+  try { localStorage.removeItem(HINT_KEY); } catch (_) {}
+}
+
 function settle(user) {
   if (resolved) return;
   resolved = true;
   cachedUser = user || null;
+  if (cachedUser) writeHint(cachedUser);
   try { document.documentElement.setAttribute('data-auth', cachedUser ? 'member' : 'leaving'); } catch (_) {}
   var w = waiters; waiters = [];
   for (var i = 0; i < w.length; i++) { try { w[i](cachedUser); } catch (_) {} }
@@ -34,11 +58,13 @@ function goLogin() {
   try { location.replace(loginTarget()); } catch (_) {}
 }
 
-// Gate for app pages. Resolves with the Firebase user. Never resolves for
-// logged-out visitors — they are redirected to signin instead, so no page
-// ever renders guest content, guest banners, or "Sign in" text.
-// 8s fallback: if Firebase is unreachable, go to signin (which surfaces the
-// network error) instead of hanging on the loader forever.
+// Gate for app pages. Resolves with the Firebase user. Redirects to signin
+// ONLY on an explicit "no user" answer from Firebase — never on a timeout
+// when this browser has a session hint. No navigation, however slow, can
+// bounce a member to login: with a hint present the loader simply holds
+// (with the page's retry button) until Firebase answers.
+// Genuine first-time guests (no hint) still redirect after 8s so nobody
+// hangs on a spinner.
 export function requireAuth() {
   return new Promise(function (resolve) {
     if (resolved) {
@@ -49,11 +75,12 @@ export function requireAuth() {
     var done = false;
     waiters.push(function (u) {
       if (done) return; done = true;
-      if (u) resolve(u);
+      if (u) { writeHint(u); resolve(u); }
       else goLogin();
     });
     setTimeout(function () {
       if (done || resolved) return; done = true;
+      if (readHint()) return; // member, still checking — hold, never redirect
       goLogin();
     }, 8000);
   });

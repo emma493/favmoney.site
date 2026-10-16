@@ -184,7 +184,7 @@ if (window.FavLoader) FavLoader.hold();
   document.getElementById('si-go').addEventListener('click', doSignin);
   document.getElementById('claim-go').addEventListener('click', doClaimSeat);
   document.getElementById('denied-out').addEventListener('click', function () { location.reload(); });
-  document.getElementById('ad-logout').addEventListener('click', function () { try { signOut(auth); } catch (_) {} });
+  document.getElementById('ad-logout').addEventListener('click', function () { try { localStorage.removeItem('fav_had_session'); } catch (_) {} try { signOut(auth); } catch (_) {} });
   [['si-email', doSignin], ['si-pass', doSignin]].forEach(function (t) {
     document.getElementById(t[0]).addEventListener('keydown', function (e) { if (e.key === 'Enter') t[1](); });
   });
@@ -671,7 +671,7 @@ if (window.FavLoader) FavLoader.hold();
       '· Two admin seats, first-come, max two — enforced in firestore.rules, no third seat can exist.<br />' +
       '· Amounts are client-enforced; full server authority needs a Cloud Function.<br />' +
       '· Admin reads bill per document — keep sample caps where they are.</p></div>';
-    document.getElementById('sys-out').addEventListener('click', function () { try { signOut(auth); } catch (_) {} });
+    document.getElementById('sys-out').addEventListener('click', function () { try { localStorage.removeItem('fav_had_session'); } catch (_) {} try { signOut(auth); } catch (_) {} });
   }
 
   /* ---------- static wiring (elements exist at parse time) ---------- */

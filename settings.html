@@ -57,7 +57,7 @@
 <script type="module">
 import { auth, onAuthStateChanged, signOut } from './js/firebase.js';
 import { mountHeader } from './js/header.js';
-import { requireAuth } from './js/guard.js';
+import { requireAuth, clearSessionHint } from './js/guard.js';
 (function(){
   if(window.FavLoader){FavLoader.hold();}
   // Gated: nothing renders until Firebase confirms the member. Logged-out
@@ -67,7 +67,7 @@ import { requireAuth } from './js/guard.js';
     try{ await mountHeader(u); }catch(e){}
     if(window.FavLoader)FavLoader.pageReady();
   });
-  document.getElementById('out').addEventListener('click',async function(){try{await signOut(auth);}catch(e){}location.href='index.html';});
+  document.getElementById('out').addEventListener('click',async function(){try{clearSessionHint();}catch(_){}try{await signOut(auth);}catch(e){}location.href='index.html';});
 })();
 </script>
 </body>

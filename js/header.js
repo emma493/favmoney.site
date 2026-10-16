@@ -6,7 +6,7 @@
 // so pages can reuse it instead of calling getWallet() twice.
 import { getWallet } from './firebase.js';
 import { formatUSD } from './currency.js';
-import { avatarSVG } from './avatars.js';
+import { avatarImg } from './avatars.js';
 
 function paintAvatar(uid) {
   try {
@@ -19,7 +19,7 @@ function paintAvatar(uid) {
       av.id = 'chip-av';
       chip.insertBefore(av, chip.firstChild);
     }
-    av.innerHTML = avatarSVG(uid, 22);
+    av.innerHTML = avatarImg(uid, 22);
   } catch (_) { /* noop */ }
 }
 

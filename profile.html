@@ -106,7 +106,7 @@
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, fetchUserDocs, getUnclaimedRewards, getUserDoc, updateUserDoc } from './js/firebase.js';
 import { mountHeader } from './js/header.js';
-import { avatarSVG } from './js/avatars.js';
+import { avatarImg } from './js/avatars.js';
 import { COUNTRY_MAP, flagUrl } from './js/countries.js';
 import { mountCountryPicker } from './js/country-picker.js';
 import { formatUSD, setStoredCountry, setMemoryCountry, currentCountry, refreshRates } from './js/currency.js';
@@ -163,7 +163,7 @@ import { requireAuth } from './js/guard.js';
     var cutoff=Date.now()-30*864e5,last30=proofs.filter(function(p){return tsOf(p)>cutoff;}).reduce(function(s,p){return s+Number(p.amount||0);},0);
     document.getElementById('p-30').textContent=formatUSD(last30,activeCur);
     var name=userEmail?userEmail.split('@')[0]:'Guest';
-    if(userEmail){document.getElementById('chip-name').textContent=name;try{document.getElementById('avatar').innerHTML=avatarSVG(currentUid||userEmail,52);}catch(_){document.getElementById('avatar').textContent=name.charAt(0).toUpperCase();}}
+    if(userEmail){document.getElementById('chip-name').textContent=name;try{document.getElementById('avatar').innerHTML=avatarImg(currentUid||userEmail,52,name);}catch(_){document.getElementById('avatar').textContent=name.charAt(0).toUpperCase();}}
     document.getElementById('p-name').textContent=name;
     document.getElementById('p-joined').textContent=joinedLabel;
   }

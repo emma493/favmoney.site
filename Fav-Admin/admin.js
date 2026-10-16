@@ -132,7 +132,13 @@ if (window.FavLoader) FavLoader.hold();
   }
   try {
     onAuthStateChanged(auth, async function (user) {
-      if (!user) { gateView('view-signin'); ready(); return; }
+      if (!user) {
+        // Hard sign-out: drop the stale admin identity and force every view
+        // to reload fresh on the next sign-in (no cross-account leakage).
+        if (me) { try { show('Signed out.'); } catch (_) {} }
+        me = null; loaded = {};
+        gateView('view-signin'); ready(); return;
+      }
       var seat = await mySeatId(user.uid);
       if (seat) { enter(user, seat); return; }
       showClaim(user);
@@ -184,7 +190,7 @@ if (window.FavLoader) FavLoader.hold();
   });
 
   /* ---------- router ---------- */
-  var VIEW_LOADERS = { overview: loadOverview, users: initUsers, payouts: loadPayouts, ledger: loadLedger, earn: loadEarn, system: loadSystem, audit: loadAudit };
+  var VIEW_LOADERS = { overview: loadOverview, users: initUsers, payouts: loadPayouts, ledger: loadLedger, providers: loadProviders, earn: loadEarn, system: loadSystem, audit: loadAudit };
   function showView(v) {
     document.querySelectorAll('#ad-nav button[data-view], #ad-tabs button[data-view]').forEach(function (b) {
       b.classList.toggle('on', b.getAttribute('data-view') === v);
@@ -535,6 +541,54 @@ if (window.FavLoader) FavLoader.hold();
       (rows.length > 100 ? '<p class="psub">First 100 shown — export CSV for all ' + rows.length + '.</p>' : '');
   }
 
+  /* ---------- providers (offerwall conversions, read-only audit) ---------- */
+  var provRows = [], provLimit = 200;
+  async function loadProviders() {
+    var out = document.getElementById('pv-out');
+    try {
+      var gg = await colAll('gg_events', provLimit);
+      var og = await colAll('og_events', provLimit);
+      provRows = gg.concat(og);
+      provRows.forEach(function (r) {
+        if (!r.provider) r.provider = (String(r.eventId || '').indexOf('og-') === 0) ? 'ogads' : 'gg';
+      });
+      provRows.sort(function (a, b) { return tsMs(b.at) - tsMs(a.at); });
+      paintProviders();
+    } catch (_) { out.innerHTML = '<p class="psub">Load failed - check rules (gg_events, og_events) + connection.</p>'; }
+  }
+  function provOffer(r) {
+    return r.offerName || r.offerId || r.campaignId || r.landingId || String(r.eventId || '').slice(0, 12) || '?';
+  }
+  function paintProviders() {
+    var f = document.getElementById('pv-filter').value;
+    var q = (document.getElementById('pv-q').value || '').toLowerCase().trim();
+    var rows = provRows.filter(function (r) {
+      if (f && String(r.provider || '') !== f) return false;
+      if (q && String(r.uid || '').toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    });
+    var paid = rows.reduce(function (s, r) { return s + Number(r.amount || 0); }, 0);
+    var profit = rows.reduce(function (s, r) { return s + Number(r.profit || 0); }, 0);
+    document.getElementById('pv-out').innerHTML =
+      '<p class="psub">' + rows.length + ' conversions - ' + money(paid) + ' paid to users (' + money(profit) + ' provider gross) in sample of ' + provRows.length + '.</p>' +
+      '<table class="ad-tbl"><thead><tr><th>When</th><th>User</th><th>Provider</th><th>Offer</th><th>Gross</th><th>Paid</th><th>Status</th></tr></thead><tbody>' +
+      (rows.slice(0, 100).map(function (r) {
+        return '<tr><td style="white-space:nowrap">' + fullTs(tsMs(r.at)) + '</td>' +
+          '<td class="mono">' + esc(String(r.uid || '').slice(0, 8)) + '..</td>' +
+          '<td><span class="pill done">' + esc(r.provider || '?') + '</span></td>' +
+          '<td>' + esc(provOffer(r)) + '</td>' +
+          '<td>' + money(r.profit) + '</td><td>' + money(r.amount) + '</td>' +
+          '<td><span class="pill ' + esc(r.status || 'pending') + '">' + esc(r.status || 'pending') + '</span></td></tr>';
+      }).join('') || '<tr><td colspan="7">No rows.</td></tr>') + '</tbody></table>' +
+      (rows.length > 100 ? '<p class="psub">First 100 shown.</p>' : '');
+  }
+  document.getElementById('pv-go').addEventListener('click', function () { provLimit = 200; loadProviders(); });
+  document.getElementById('pv-more').addEventListener('click', function () {
+    provLimit = Math.min(1000, provLimit + 300); loadProviders();
+  });
+  document.getElementById('pv-filter').addEventListener('change', paintProviders);
+  document.getElementById('pv-q').addEventListener('input', paintProviders);
+
   /* ---------- earn ---------- */
   function loadEarn() {
     var tiers = PTC_CATALOG.map(function (a) {
@@ -554,16 +608,22 @@ if (window.FavLoader) FavLoader.hold();
     document.getElementById('e-faucet').value = FAUCET_AMOUNT;
     document.getElementById('e-ptccap').value = PTC_DAILY_CAP;
     document.getElementById('e-maxstake').value = INVEST_MAX_STAKE;
+    document.getElementById('e-spincap').value = SPIN_AD_DAILY_CAP;
+    document.getElementById('e-quizcap').value = QUIZ_AD_DAILY_CAP;
   }
   function genSnippet() {
     var f = Number(document.getElementById('e-faucet').value || FAUCET_AMOUNT);
     var pc = Math.floor(Number(document.getElementById('e-ptccap').value || PTC_DAILY_CAP));
     var ms = Math.floor(Number(document.getElementById('e-maxstake').value || INVEST_MAX_STAKE));
+    var sc = Math.floor(Number(document.getElementById('e-spincap').value || SPIN_AD_DAILY_CAP));
+    var qc = Math.floor(Number(document.getElementById('e-quizcap').value || QUIZ_AD_DAILY_CAP));
     document.getElementById('e-snippet').textContent =
       '// Paste into js/firebase.js, then deploy + test.\n' +
       'export const FAUCET_AMOUNT = ' + f.toFixed(2) + ';\n' +
       'export const PTC_DAILY_CAP = ' + pc + ';\n' +
-      'export const INVEST_MAX_STAKE = ' + ms + ';';
+      'export const INVEST_MAX_STAKE = ' + ms + ';\n' +
+      'export const SPIN_AD_DAILY_CAP = ' + sc + ';\n' +
+      'export const QUIZ_AD_DAILY_CAP = ' + qc + ';';
   }
 
   /* ---------- audit ---------- */

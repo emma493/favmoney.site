@@ -27,10 +27,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="css/style.css" />
 <style>
-/* OGAds cards: ~100px provider art on a clean tile, bold pay pill */
+/* OGAds + provider cards: ~100px provider art on a clean tile, bold pay pill */
 #ogads-list .oc-card{gap:14px;padding:12px 14px;align-items:center}
 #ogads-list .oc-asset{width:120px;height:120px;min-height:120px;align-self:center;flex:none;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid var(--line-soft);overflow:hidden}
 #ogads-list .oc-asset img{width:100%;height:100%;object-fit:contain;transform:none;filter:none;padding:6px}
+#provider-list .oc-card{gap:14px;padding:12px 14px;align-items:center}
+#provider-list .oc-asset{width:120px;height:120px;min-height:120px;align-self:center;flex:none;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid var(--line-soft);overflow:hidden}
+#provider-list .oc-asset img{width:100%;height:100%;object-fit:contain;transform:none;filter:none;padding:6px}
 #ogads-list .oc-body{padding-left:0;min-width:0;flex:1}
 #ogads-list .oc-pay{font-size:15px;font-weight:800;padding:6px 14px;border-radius:999px;background:rgba(255,215,94,.12);border:1px solid rgba(255,215,94,.35);color:#ffd75e;white-space:nowrap}
 #ogads-list .og-base{margin-top:10px}
@@ -100,15 +103,22 @@ if (window.FavLoader) FavLoader.hold();
   function paintProviders(){
     var list = document.getElementById('provider-list');
     if(!list) return;
-    var missing = OFFER_PROVIDERS.filter(function(p){ return !p.base; });
+    var gg = null;
+    for(var gi = 0; gi < OFFER_PROVIDERS.length; gi++){ if(OFFER_PROVIDERS[gi].id === 'gg') gg = OFFER_PROVIDERS[gi]; }
     var setup = document.getElementById('gg-setup');
-    if(setup) setup.style.display = missing.length ? '' : 'none';
+    if(setup) setup.style.display = (gg && !gg.base) ? '' : 'none';
     list.innerHTML = OFFER_PROVIDERS.map(function(p){
       var ready = !!p.base && !!uid;
-      var btn = ready
-        ? '<button class="btn btn-green" data-provider="' + esc(p.id) + '" style="min-height:48px">Visit · 70%</button>'
-        : '<button class="btn btn-ghost" disabled style="min-height:48px">' + (p.base ? 'Sign in to earn' : 'Coming soon') + '</button>';
-      return '<div class="oc-card"><div class="oc-body"><div class="oc-head"><div class="oc-title"><h2>' + esc(p.name) + '</h2></div><div class="oc-pay">70% payout</div></div>'
+      var img = p.img ? '<div class="oc-asset"><img src="' + esc(p.img) + '" alt="" loading="lazy" decoding="async"></div>' : '';
+      var btn;
+      if(ready){
+        btn = '<button class="btn btn-green" data-provider="' + esc(p.id) + '" style="min-height:48px">Visit · 70%</button>';
+      }else if(p.page){
+        btn = '<a class="btn btn-green" href="' + esc(p.page) + '" style="min-height:48px;display:inline-flex;align-items:center">Open</a>';
+      }else{
+        btn = '<button class="btn btn-ghost" disabled style="min-height:48px">' + (p.base ? 'Sign in to earn' : 'Coming soon') + '</button>';
+      }
+      return '<div class="oc-card">' + img + '<div class="oc-body"><div class="oc-head"><div class="oc-title"><h2>' + esc(p.name) + '</h2></div><div class="oc-pay">70% payout</div></div>'
         + '<p class="oc-desc">' + esc(p.desc || p.tag || '') + '</p>'
         + '<div class="oc-base"><div class="oc-time"><small>Provider</small><b>' + esc(p.tag || '') + '</b></div>' + btn + '</div></div></div>';
     }).join('');

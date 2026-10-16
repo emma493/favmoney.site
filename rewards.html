@@ -110,7 +110,7 @@
 
 <h2 style="font-size:20px;margin:30px 0 0">Good to know</h2>
 <div class="faq" style="margin-top:14px">
-<div class="faq-item"><button>What counts toward each card?<span class="plus">+</span></button><div class="a"><div><p>Verified completions: finished offers, quizzes, ad views, faucet claims, spins, joined friends, active-day streaks and Grow actions. Counters never decrease.</p></div></div></div>
+<div class="faq-item"><button>What counts toward each card?<span class="plus">+</span></button><div class="a"><div><p>Verified completions: finished offers, ad views, faucet claims, spins, joined friends, active-day streaks and Grow actions. Counters never decrease.</p></div></div></div>
 <div class="faq-item"><button>Why is a card sitting at 0?<span class="plus">+</span></button><div class="a"><div><p>Some games are still opening. A card starts counting the moment its game goes live — nothing is lost, and milestones never expire.</p></div></div></div>
 <div class="faq-item"><button>Where does claimed cash go?<span class="plus">+</span></button><div class="a"><div><p>Straight to available balance, counting toward the $20 cashout like any task earning — and it can be staked in Grow.</p></div></div></div>
 <div class="faq-item"><button>Can I claim a tier twice?<span class="plus">+</span></button><div class="a"><div><p>No. Each tier pays once ever. The claim is re-checked before paying, so double-taps and stale tabs can't double-pay.</p></div></div></div>
@@ -143,9 +143,13 @@ import { requireAuth } from './js/guard.js';
     if(d===0)return 'today';if(d===1)return '1 day ago';if(d<30)return d+' days ago';
     return Math.floor(d/30)+'mo ago';
   }
-  var UNITS={offers:['offer','offers'],ads:['ad','ads'],quiz:['quiz','quizzes'],faucet:['claim','claims'],spin:['spin','spins'],invite:['friend','friends'],streak:['day','days']};
+  var UNITS={offers:['offer','offers'],ads:['ad','ads'],faucet:['claim','claims'],spin:['spin','spins'],invite:['friend','friends'],streak:['day','days']};
   var GROW_TITLES=['First stake — invest anything','First boost — light one ad boost','First harvest — claim Grow yield','Big staker'];
-  var LINKS={offers:['earn.html','View on Earn'],ads:['ptc.html','Watch ads'],quiz:['learn.html','Play Quiz & Earn'],faucet:['earn.html','View on Earn'],spin:['earn.html','View on Earn'],invite:['invite.html','Invite friends'],streak:['earn.html','Earn today'],grow:['grow.html','Open Grow']};
+  var LINKS={offers:['earn.html','View on Earn'],ads:['ptc.html','Watch ads'],faucet:['earn.html','View on Earn'],spin:['earn.html','View on Earn'],invite:['invite.html','Invite friends'],streak:['earn.html','Earn today'],grow:['grow.html','Open Grow']};
+  // Quiz & Earn track retired: card hidden and its tiers excluded from the
+  // unclaimed counts below, so the badge/banner never advertise rewards
+  // with no claim button. Past quiz claims stay visible in Claim history.
+  var VISIBLE=['welcome','offers','ads','faucet','spin','invite','streak','grow'];
   var UNLAUNCHED=['offers','spin'];
   function tierLabel(t,i,tr){
     if(t.id==='welcome')return 'New here — gift unlocked';
@@ -223,14 +227,19 @@ import { requireAuth } from './js/guard.js';
     if(!uid)return;
     try{
       var p=await getRewardsProgress(uid);
-      var cards=p.tracks.filter(function(t){return ['welcome','offers','ads','quiz','faucet','spin'].indexOf(t.id)>=0;});
+      var cards=p.tracks.filter(function(t){return ['welcome','offers','ads','faucet','spin'].indexOf(t.id)>=0;});
       var bonus=p.tracks.filter(function(t){return ['invite','streak','grow'].indexOf(t.id)>=0;});
       document.getElementById('ms-cards').innerHTML=cards.map(cardHTML).join('');
       document.getElementById('ms-bonus').innerHTML=bonus.map(cardHTML).join('');
       if(window.lucide){try{lucide.createIcons();}catch(e){}}
-      paintBadges(p.unclaimed);
+      var un=0,unT=0;
+      p.tracks.forEach(function(t){
+        if(VISIBLE.indexOf(t.id)<0)return;
+        t.tiers.forEach(function(tr){if(tr.unlocked&&!tr.claimed){un++;unT=Math.round((unT+tr.amount)*100)/100;}});
+      });
+      paintBadges(un);
       var rb=document.getElementById('ready-banner');
-      if(p.unclaimed>0){rb.style.display='';document.getElementById('ready-total').textContent=money(p.unclaimedTotal);document.getElementById('ready-sub').textContent=p.unclaimed+(p.unclaimed===1?' reward':' rewards')+' ready to claim';}
+      if(un>0){rb.style.display='';document.getElementById('ready-total').textContent=money(unT);document.getElementById('ready-sub').textContent=un+(un===1?' reward':' rewards')+' ready to claim';}
       else{rb.style.display='none';}
       try{
         var w=await getWallet(uid);

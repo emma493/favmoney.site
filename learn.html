@@ -305,7 +305,7 @@ if (window.FavLoader) FavLoader.hold();
       var w=await getWallet(uid);
       if(repaintChip)try{document.getElementById('chip-bal').textContent=formatUSD(w.pending);}catch(_){}
     }catch(e){}
-    try{quizState=await getQuizState(uid);}catch(e){}
+    try{quizState=await getQuizState(uid);}catch(e){quizState=null;}
     paintQuizState();
     paintRows();
     return st;
@@ -434,6 +434,7 @@ if (window.FavLoader) FavLoader.hold();
       show('+'+formatUSD(QUIZ_PAY)+' — nice.');
     }else{
       softThud();
+      if(idx<0)show("Time's up — miss recorded.");
     }
     // Server grading runs behind the feedback — never blocks the next question.
     saving++;

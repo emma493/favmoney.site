@@ -694,13 +694,20 @@ export async function getQuizState(uid, nowMs) {
 }
 
 // Open a session. mode: 'free' (daily) | 'ad' (1 verified 20s view).
-// Fails if a session is already active. Returns { ok, mode } or { ok:false, reason }.
+// An explicit start always begins at 0: if a previous session is still
+// active it is voided first (a 'quiz-abandon' marker row; the fresh entry
+// row orphans its answers so counts restart). Daily gates still apply.
+// Returns { ok, mode } or { ok:false, reason }.
 export async function startQuizSession(uid, mode) {
   const m = mode === 'free' ? 'free' : 'ad';
   let proofs = null;
   // 50 rows cover a full session (entry + 30 answers + life) with margin.
   try { proofs = await fetchUserDocs(uid, 'proofs', 50); } catch (_) { return { ok: false, reason: 'write' }; }
-  if (quizSession(proofs, Date.now()).active) return { ok: false, reason: 'active' };
+  const prev = quizSession(proofs, Date.now());
+  async function voidPrior() {
+    if (!prev.active) return;
+    try { await addDoc(collection(db, 'proofs'), { uid, amount: 0, label: 'quiz-abandon', status: 'done', at: serverTimestamp() }); } catch (_) {}
+  }
   if (m === 'free') {
     const now = Date.now();
     const today = utcDayStr(now);
@@ -709,6 +716,7 @@ export async function startQuizSession(uid, mode) {
     if (u.lastQuizDay === today) return { ok: false, reason: 'nofree' };
     try {
       await setDoc(doc(db, 'users', uid), { lastQuizDay: today, updatedAt: serverTimestamp() }, { merge: true });
+      await voidPrior();
       await addDoc(collection(db, 'proofs'), { uid, amount: 0, label: 'quiz-free', status: 'done', at: serverTimestamp() });
     } catch (_) { return { ok: false, reason: 'write' }; }
     return { ok: true, mode: 'free' };
@@ -722,6 +730,7 @@ export async function startQuizSession(uid, mode) {
   }
   if (used >= QUIZ_AD_DAILY_CAP) return { ok: false, reason: 'capped', adLeft: 0 };
   try {
+    await voidPrior();
     await addDoc(collection(db, 'proofs'), { uid, amount: 0, label: 'quiz-ad', status: 'done', at: serverTimestamp() });
   } catch (_) { return { ok: false, reason: 'write' }; }
   return { ok: true, mode: 'ad' };

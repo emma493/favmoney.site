@@ -12,7 +12,9 @@
     "GG_MAX_PAYOUT": "20",
     "GG_CREDIT_EVENTS": "redeem,iclick",
     "OGADS_SHARE": "0.7",
-    "OGADS_MAX_PAYOUT": "20"
+    "OGADS_MAX_PAYOUT": "20",
+    "CPAGRIP_SHARE": "0.7",
+    "CPAGRIP_MAX_PAYOUT": "20"
   },
   "assets": {
     "directory": ".",

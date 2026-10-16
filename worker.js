@@ -1,16 +1,25 @@
-// Favmoney Cloudflare Worker: static assets + Golden Goose postback receiver.
+// Favmoney Cloudflare Worker: static assets + offerwall postback receivers
+// (Golden Goose, OGAds, CPA Grip).
 //
-// Route: GET /api/gg-postback?p1={p1}&p2={p2}&event_id={event_id}&event={event}
-//   &profit={profit}&campaign_id={campaign_id}&landing_id={landing_id}
-//   &operator={operator}&key=<secret>
+// Routes:
+//   GET /api/gg-postback?p1={p1}&p2={p2}&event_id={event_id}&event={event}
+//     &profit={profit}&campaign_id={campaign_id}&landing_id={landing_id}
+//     &operator={operator}&key=<secret>
+//   GET|POST /api/ogads-postback (uid via aff_sub4, key via ?key=)
+//   GET|POST /api/cpagrip-postback?payout={payout}&offer={offer_id}&subid={tracking_id}
+//     (CPA Grip POSTs password/payout/offer_id/tracking_id; GET tokens also read)
 // Everything else falls through to static assets (env.ASSETS).
 //
-// Required secrets (never commit — `wrangler secret put <NAME>`):
+// Required secrets (never commit — dashboard or `wrangler secret put <NAME>`):
 //   GG_POSTBACK_KEY            shared secret you append as &key= in GG dashboard
+//   OGADS_POSTBACK_KEY         shared secret for OGAds global postback
+//   CPAGRIP_POSTBACK_KEY       password set on CPA Grip Global Postback page
 //   FIREBASE_SERVICE_ACCOUNT   full service-account JSON (client_email + private_key)
 // Optional vars (wrangler.jsonc [vars]):
 //   FIREBASE_PROJECT_ID (default 'favmoney'), GG_SHARE (default 0.7),
-//   GG_MAX_PAYOUT (default 20), GG_CREDIT_EVENTS (default 'redeem,iclick')
+//   GG_MAX_PAYOUT (default 20), GG_CREDIT_EVENTS (default 'redeem,iclick'),
+//   OGADS_SHARE (default 0.7), OGADS_MAX_PAYOUT (default 20),
+//   CPAGRIP_SHARE (default 0.7), CPAGRIP_MAX_PAYOUT (default 20)
 //
 // Crediting policy: auto-credit ONLY allowlisted events with profit > 0.
 // subs/unsubs/rebill/hold* are recorded, never auto-credited (carrier-billing
@@ -294,6 +303,128 @@ async function handleOgadsPostback(request, env) {
   }
 }
 
+// ---------- CPA Grip postback (SmartLink + offer wall, Global Postback) ----------
+// CPA Grip POSTs form fields: password, payout, offer_id, tracking_id.
+// The saved postback URL also carries GET tokens (?payout={payout}
+// &offer={offer_id}&subid={tracking_id}) — both are read, POST wins.
+// NOTE: CPA Grip sends no transaction id, so the dedupe key is the
+// uid+offer+payout composite (same tradeoff as OGAds): two identical
+// conversions dedupe, differing ones credit separately.
+export function cpagripShare(env) {
+  return Number((env && env.CPAGRIP_SHARE) || 0.7);
+}
+
+export function cpagripMaxPayout(env) {
+  return Number((env && env.CPAGRIP_MAX_PAYOUT) || 20);
+}
+
+export function cpagripUserAmount(payout, share, cap) {
+  const s = Number(share == null ? 0.7 : share);
+  const c = Number(cap == null ? 20 : cap);
+  const amt = Math.round(Number(payout || 0) * s * 100) / 100;
+  if (!(amt > 0)) return 0;
+  return Math.min(amt, c);
+}
+
+export function cpagripEventId(uid, offerId, payout) {
+  return 'cp-' + String(uid || '') + '-' + String(offerId || '0')
+    + '-' + String(Math.round(Number(payout || 0) * 100));
+}
+
+async function readPostBody(request) {
+  try {
+    const ct = String(request.headers.get('Content-Type') || '').toLowerCase();
+    if (ct.indexOf('application/json') >= 0) return await request.json();
+    if (ct.indexOf('form') >= 0) {
+      const out = {};
+      for (const [k, v] of (await request.formData()).entries()) out[k] = v;
+      return out;
+    }
+    const t = await request.text();
+    if (!t) return {};
+    try { return JSON.parse(t); } catch (_) {}
+    const out = {};
+    for (const [k, v] of new URLSearchParams(t).entries()) out[k] = v;
+    return out;
+  } catch (_) { return {}; }
+}
+
+async function handleCpagripPostback(request, env) {
+  const q = new URL(request.url).searchParams;
+  const body = (request.method === 'POST') ? await readPostBody(request) : {};
+  const str = (v) => String(v == null ? '' : v);
+  const key = str(body.password || body.key || q.get('key'));
+  const secret = (env && env.CPAGRIP_POSTBACK_KEY) || '';
+  if (!secret) {
+    console.log('cpagrip-postback: CPAGRIP_POSTBACK_KEY not configured');
+    return json({ ok: false, reason: 'setup' }, 500);
+  }
+  if (!timingSafeEqual(key, secret)) return json({ ok: false, reason: 'auth' }, 401);
+  const uid = str(body.tracking_id || body.subid || body.uid || q.get('subid') || q.get('tracking_id')).slice(0, 128);
+  const payout = Number(body.payout || q.get('payout') || 0);
+  const offerId = str(body.offer_id || body.offer || q.get('offer') || q.get('offer_id')).slice(0, 64);
+  if (!isUid(uid)) return json({ ok: false, reason: 'uid' }, 400);
+  if (!(payout > 0)) return json({ ok: false, reason: 'payout' }, 400);
+  const amount = cpagripUserAmount(payout, cpagripShare(env), cpagripMaxPayout(env));
+  if (!(amount > 0)) return json({ ok: false, reason: 'payout' }, 400);
+  const projectId = (env && env.FIREBASE_PROJECT_ID) || 'favmoney';
+  const saJson = (env && (env.FIREBASE_SERVICE_ACCOUNT || env.FIREBASE_SERVICE_ACCOUNT_JSON)) || '';
+  if (!saJson) {
+    console.log('cpagrip-postback: FIREBASE_SERVICE_ACCOUNT not configured');
+    return json({ ok: false, reason: 'setup' }, 500);
+  }
+  const eventId = cpagripEventId(uid, offerId, payout);
+  try {
+    const token = await googleAccessToken(saJson);
+    const seen = await fsGet(projectId, token, 'cp_events/' + encodeURIComponent(eventId));
+    if (seen) return text('OK');
+    const baseFields = {
+      uid: S(uid), provider: S('cpagrip'), offerId: S(offerId),
+      eventId: S(eventId), profit: N(payout), amount: N(amount), at: T()
+    };
+    const created = await fsCreate(projectId, token, 'cp_events', eventId, { ...baseFields, status: S('processing') });
+    if (created && created.conflict) return text('OK');
+    const wallet = await fsGet(projectId, token, 'wallets/' + encodeURIComponent(uid));
+    const wf = (wallet && wallet.fields) || {};
+    const pending = Number((wf.pending && (wf.pending.doubleValue || wf.pending.integerValue)) || 0);
+    const lifetime = Number((wf.lifetime && (wf.lifetime.doubleValue || wf.lifetime.integerValue)) || 0);
+    const invested = wf.invested || { doubleValue: 1 };
+    const walletFields = {
+      pending: N(Math.round((pending + amount) * 100) / 100),
+      lifetime: N(Math.round((lifetime + amount) * 100) / 100),
+      invested,
+      lastLabel: S('play:offers'),
+      updatedAt: T()
+    };
+    if (wallet) {
+      await fsPatch(projectId, token, 'wallets/' + encodeURIComponent(uid), walletFields, ['pending', 'lifetime', 'invested', 'lastLabel', 'updatedAt']);
+    } else {
+      await fsCreate(projectId, token, 'wallets', uid, {
+        ...walletFields, investedAt: N(Date.now()), boostUntil: N(0)
+      });
+    }
+    await fsCreate(projectId, token, 'proofs', '', {
+      uid: S(uid), amount: N(amount), label: S('play:offers'), status: S('pending'), at: T(),
+      provider: S('cpagrip'), eventId: S(eventId), offerId: S(offerId), profit: N(payout)
+    });
+    await fsPatch(projectId, token, 'cp_events/' + encodeURIComponent(eventId), { status: S('credited'), amount: N(amount) }, ['status', 'amount']);
+    try {
+      const uref = 'users/' + encodeURIComponent(uid);
+      const u = await fsGet(projectId, token, uref);
+      const uf = (u && u.fields) || {};
+      const earned = Number((uf.taskEarned && (uf.taskEarned.doubleValue || uf.taskEarned.integerValue)) || 0);
+      await fsPatch(projectId, token, uref, {
+        taskEarned: N(Math.round((earned + amount) * 100) / 100),
+        updatedAt: T()
+      }, ['taskEarned', 'updatedAt']);
+    } catch (_) {}
+    return text('OK');
+  } catch (e) {
+    console.log('cpagrip-postback error: ' + (e && e.message ? e.message : e));
+    return json({ ok: false, reason: 'write' }, 502);
+  }
+}
+
 // ---------- request handler ----------
 export default {
   async fetch(request, env, ctx) {
@@ -311,6 +442,14 @@ export default {
       try { return await handleOgadsPostback(request, env); }
       catch (e) {
         console.log('ogads-postback error: ' + (e && e.message ? e.message : e));
+        return json({ ok: false, reason: 'write' }, 502);
+      }
+    }
+    if (url.pathname === '/api/cpagrip-postback' || url.pathname === '/api/cpagrip-postback/') {
+      if (request.method !== 'GET' && request.method !== 'POST') return json({ ok: false, reason: 'method' }, 405);
+      try { return await handleCpagripPostback(request, env); }
+      catch (e) {
+        console.log('cpagrip-postback error: ' + (e && e.message ? e.message : e));
         return json({ ok: false, reason: 'write' }, 502);
       }
     }

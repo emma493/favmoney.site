@@ -328,21 +328,34 @@ if (window.FavLoader) FavLoader.hold();
   // the feedback; a quiet refresh reconciles balance/history afterwards.
   var snap={answered:0,correct:0,earned:0}, delta={a:0,c:0,e:0,miss:0}, curMiss=0;
   var saving=0, refreshing=false, refreshQueued=false, over=false;
-  function waitForSaves(){
+  function waitForSaves(maxMs){
+    var budget=(maxMs==null?6000:maxMs);
+    var t0=Date.now();
     return new Promise(function(res){
       (function poll(){
         if(saving<=0){res();return;}
+        if(Date.now()-t0>budget){res();return;}
         setTimeout(poll,150);
       })();
     });
   }
+  // Resolve with null if the promise stalls past ms — the screen must
+  // always appear, even on a dead connection.
+  function withTimeout(p,ms){
+    return Promise.race([p,new Promise(function(res){setTimeout(function(){res(null);},Math.max(500,Number(ms||6000)));})]);
+  }
   // Server-authoritative session end: wait for in-flight answer saves, then
   // re-read proofs so the Game-over card shows confirmed counts/earnings —
   // never the local optimistic estimate. Falls back to it only offline.
+  // Every wait is bounded: worst case the card paints from local counts.
   async function endSession(fallback){
-    try{ await waitForSaves(); }catch(_){}
     var st=null;
-    try{ st=await refresh(true); }catch(_){ st=null; }
+    try{
+      st=await withTimeout((async function(){
+        try{await waitForSaves(5000);}catch(_){}
+        try{return await refresh(true);}catch(_){return null;}
+      })(),6000);
+    }catch(_){st=null;}
     gameOver(st||fallback);
   }
   function effSt(){
@@ -437,12 +450,19 @@ if (window.FavLoader) FavLoader.hold();
       if(!correct&&curMiss>=2){
         // Fail is final: no rescue, no replay. Kill the session server-side
         // so it can never resume, show what was kept, send them to ads.
+        // All waits bounded (6s total worst case) — the card always paints,
+        // even on a dead connection. Kill-first ordering is safe: answers
+        // without a live entry can never resurrect a session.
         cur=null;
         show('Session failed — watch an ad to start a new one.');
         (async function(){
-          try{await waitForSaves();}catch(_){}
-          try{await endQuizSession(uid);}catch(_){}
-          try{await refresh(false);}catch(_){}
+          try{
+            await withTimeout(Promise.all([
+              waitForSaves(5000),
+              endQuizSession(uid),
+              refresh(false)
+            ]),6000);
+          }catch(_){}
           gameOver(e);
         })();
         return;

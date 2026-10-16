@@ -73,9 +73,6 @@
 <div class="stat-cell"><b id="p-earn" data-usd="0">$0.00</b><span>Total earnings</span></div>
 <div class="stat-cell"><b id="p-done">0</b><span>Offers completed</span></div>
 </div>
-<p style="margin:16px 0 4px;font-weight:700" id="p-level">Level 1</p>
-<div class="level-bar"><i id="p-levelbar" style="width:0%"></i></div>
-<p style="font-size:12px;color:var(--faint);margin:6px 0 0" id="p-next"><span data-usd="10">$10.00</span> to level up</p>
 </div>
 <div class="auth-card" style="max-width:none;margin-top:14px" id="country-card">
 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
@@ -158,14 +155,10 @@ import { requireAuth } from './js/guard.js';
   }
   function paintStats(){
     var done=proofs.filter(function(p){return /paid|done|approved/i.test(p.status||'');}).length;
-    var lvl=Math.floor(earn/10)+1,next=(lvl*10-earn);
     document.getElementById('p-earn').textContent=formatUSD(earn,activeCur);
     document.getElementById('p-done').textContent=done;
     document.getElementById('p-done2').textContent=done;
     document.getElementById('p-started').textContent=proofs.length;
-    document.getElementById('p-level').textContent='Level '+lvl;
-    document.getElementById('p-levelbar').style.width=Math.min(100,(earn%10)*10)+'%';
-    document.getElementById('p-next').textContent=formatUSD(next,activeCur)+' to level up';
     var cutoff=Date.now()-30*864e5,last30=proofs.filter(function(p){return tsOf(p)>cutoff;}).reduce(function(s,p){return s+Number(p.amount||0);},0);
     document.getElementById('p-30').textContent=formatUSD(last30,activeCur);
     var name=userEmail?userEmail.split('@')[0]:'Guest';

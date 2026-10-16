@@ -30,50 +30,23 @@
 <script src="js/loader.js"></script>
 <style>
 .quiz-ops{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
-#quiz-ops{position:relative;overflow:hidden;background-color:#0f172a;background-image:linear-gradient(rgba(148,163,184,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,.08) 1px,transparent 1px);background-size:28px 28px}
-.quiz-reward-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;flex-wrap:wrap}
-.qz-tag{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#c4b5fd;background:rgba(139,92,246,.14);border:1px solid rgba(139,92,246,.45);border-radius:999px;padding:5px 12px;white-space:nowrap}
-.qz-pay{font-size:12px;font-weight:800;color:#052e16;background:linear-gradient(135deg,#bef264,#34d399);border-radius:999px;padding:5px 12px;white-space:nowrap;font-variant-numeric:tabular-nums}
-.quiz-op{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:92px;border-radius:16px;border:1px solid rgba(255,255,255,.16);border-bottom-width:4px;color:#fff;font-family:var(--font);cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}
-.quiz-op .op-sym{font-size:32px;font-weight:800;line-height:1.1}
-.quiz-op .op-name{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.88}
-.op-add{background:linear-gradient(135deg,#6366f1,#8b5cf6);box-shadow:0 6px 16px rgba(99,102,241,.28)}
-.op-sub{background:linear-gradient(135deg,#f43f5e,#fb923c);box-shadow:0 6px 16px rgba(244,63,94,.28)}
-.op-mul{background:linear-gradient(135deg,#10b981,#0d9488);box-shadow:0 6px 16px rgba(16,185,129,.28)}
-.op-div{background:linear-gradient(135deg,#f59e0b,#ca8a04);box-shadow:0 6px 16px rgba(245,158,11,.28)}
-.quiz-op:hover{transform:scale(1.05)}
-.op-add:hover{box-shadow:0 0 0 3px rgba(129,140,248,.6),0 8px 22px rgba(99,102,241,.45)}
-.op-sub:hover{box-shadow:0 0 0 3px rgba(251,113,133,.6),0 8px 22px rgba(244,63,94,.45)}
-.op-mul:hover{box-shadow:0 0 0 3px rgba(52,211,153,.6),0 8px 22px rgba(16,185,129,.45)}
-.op-div:hover{box-shadow:0 0 0 3px rgba(252,211,77,.6),0 8px 22px rgba(245,158,11,.45)}
-.quiz-op:active{transform:scale(.98)}
-.quiz-arena{text-align:center;position:relative;overflow:hidden;background-color:#0f172a;background-image:linear-gradient(rgba(148,163,184,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,.08) 1px,transparent 1px);background-size:28px 28px}
-.qz-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
-#quiz-progress{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#a78bfa;white-space:nowrap}
-.qz-earn{font-size:13px;font-weight:800;color:#052e16;background:linear-gradient(135deg,#bef264,#34d399);border-radius:999px;padding:5px 12px;white-space:nowrap;font-variant-numeric:tabular-nums}
-.paper{position:relative;background:#F8FAFC;border-radius:24px;box-shadow:0 24px 48px rgba(0,0,0,.5);padding:12px 16px 18px;color:#0f172a}
-.holes{height:12px;margin:2px 4px 8px;background-image:radial-gradient(circle,#cbd5e1 4px,transparent 4.6px);background-size:32px 12px;background-repeat:repeat-x;background-position:center}
-.quiz-q{font-size:clamp(34px,8vw,44px);font-weight:800;color:#0f172a;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+.quiz-op{min-height:64px;border-radius:14px;border:1px solid var(--line);background:#141523;color:#fff;font-family:var(--font);font-size:28px;font-weight:800;cursor:pointer;transition:transform .12s ease,border-color .12s ease}
+.quiz-op:hover{border-color:var(--green);transform:translateY(-2px)}
+.quiz-arena{text-align:center}
+.quiz-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);font-weight:700;margin-bottom:6px}
+.quiz-q{font-size:clamp(40px,9vw,60px);font-weight:800;color:#fff;margin:8px 0 2px;font-variant-numeric:tabular-nums}
 .quiz-timer{display:flex;align-items:center;justify-content:center;gap:10px;margin:4px 0 12px}
 .quiz-ring{transform:rotate(-90deg)}
-.quiz-ring .bg{stroke:rgba(15,23,42,.12)}
+.quiz-ring .bg{stroke:rgba(255,255,255,.12)}
 .quiz-ring .fg{stroke:#01D676;stroke-linecap:round;transition:stroke .2s}
 .quiz-ring.low .fg{stroke:#f43f5e}
-.quiz-count{font-size:15px;font-weight:800;color:#0f172a;min-width:44px;text-align:left;font-variant-numeric:tabular-nums}
+.quiz-count{font-size:15px;font-weight:800;color:#fff;min-width:44px;text-align:left;font-variant-numeric:tabular-nums}
 .quiz-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
-.quiz-opt{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:60px;border-radius:16px;border:1px solid #cbd5e1;background:#fff;color:#0f172a;font-family:var(--font);font-size:22px;font-weight:800;cursor:pointer;padding:10px 10px 10px 16px;font-variant-numeric:tabular-nums}
-.quiz-opt:not(:disabled):hover{background:#e2e8f0}
-.quiz-opt .opt-mark{flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;background:#e2e8f0;color:#64748b}
-.quiz-opt.right{border:2px solid #10b981;background:#d1fae5;color:#065f46}
-.quiz-opt.right .opt-mark{background:#10b981;color:#fff}
-.quiz-opt.wrong{border:2px solid #f43f5e;background:#ffe4e6;color:#881337}
-.quiz-opt.wrong .opt-mark{background:#f43f5e;color:#fff}
-.quiz-opt:disabled{cursor:default}
-.quiz-opt:disabled:not(.right):not(.wrong){opacity:.65}
-.formula-link{background:none;border:0;color:#4f46e5;font-family:var(--font);font-size:13px;font-weight:700;text-decoration:underline;cursor:pointer;margin-top:12px;padding:6px}
-.formula-guide{margin-top:8px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.55;color:#312e81;text-align:left}
-.quiz-next{display:block;width:100%;margin-top:12px;border:0;cursor:pointer;font-family:var(--font);font-weight:800;font-size:17px;letter-spacing:.02em;color:#052e16;background:linear-gradient(90deg,#a3e635,#10b981);border-radius:16px;padding:14px;box-shadow:0 8px 20px rgba(132,204,22,.35)}
-.quiz-next:active{transform:scale(.99)}
+.quiz-opt{min-height:60px;border-radius:14px;border:1px solid var(--line);background:#141523;color:#fff;font-family:var(--font);font-size:22px;font-weight:800;cursor:pointer;font-variant-numeric:tabular-nums}
+.quiz-opt:not(:disabled):hover{border-color:var(--green)}
+.quiz-opt.right{border-color:#01D676;background:rgba(1,214,118,.14);color:#8ff0bd}
+.quiz-opt.wrong{border-color:#f43f5e;background:rgba(244,63,94,.12);color:#fda4af}
+.quiz-opt:disabled{cursor:default;opacity:.85}
 .quiz-life{display:inline-block;margin-top:10px;font-size:13px;font-weight:700;color:#7dd3fc}
 .quiz-life.used{color:var(--faint)}
 .quiz-veil{position:fixed;inset:0;z-index:90;background:rgba(10,11,22,.9);display:none;align-items:center;justify-content:center;padding:20px}
@@ -84,8 +57,8 @@
 .quiz-box .big{font-size:clamp(40px,9vw,56px);font-weight:800;line-height:1;margin:6px 0;color:var(--green)}
 .quiz-ad-veil{position:fixed;inset:0;z-index:95;background:rgba(10,11,22,.9);display:none;align-items:center;justify-content:center;padding:20px}
 .quiz-ad-veil.open{display:flex}
-@media(max-width:640px){.quiz-ops{grid-template-columns:repeat(2,1fr)}.quiz-op{min-height:84px}}
-@media(prefers-reduced-motion:reduce){.quiz-op:hover{transform:none}.quiz-next:active{transform:none}}
+@media(max-width:640px){.quiz-ops{grid-template-columns:repeat(2,1fr)}}
+@media(prefers-reduced-motion:reduce){.quiz-op:hover{transform:none}}
 </style>
 </head>
 <body>
@@ -132,29 +105,22 @@
 <div class="bonus-card" id="quiz-ops" style="display:none">
 <h2 style="margin:0 0 6px;font-size:20px">Pick your operator</h2>
 <p style="color:var(--muted);font-size:14px;margin:0">Questions start easy and ramp up as you clear all 30.</p>
-<div class="quiz-reward-banner"><span class="qz-tag">Free Daily Session</span><span class="qz-pay"><span data-usd="0.10">$0.10</span> / Correct Answer</span></div>
 <div class="quiz-ops" role="group" aria-label="Pick operator">
-<button class="quiz-op op-add" data-op="+" aria-label="Addition"><span class="op-sym">+</span><span class="op-name">Addition</span></button>
-<button class="quiz-op op-sub" data-op="-" aria-label="Subtraction"><span class="op-sym">−</span><span class="op-name">Subtraction</span></button>
-<button class="quiz-op op-mul" data-op="x" aria-label="Multiplication"><span class="op-sym">×</span><span class="op-name">Multiplication</span></button>
-<button class="quiz-op op-div" data-op="/" aria-label="Division"><span class="op-sym">÷</span><span class="op-name">Division</span></button>
+<button class="quiz-op" data-op="+" aria-label="Addition">+</button>
+<button class="quiz-op" data-op="-" aria-label="Subtraction">−</button>
+<button class="quiz-op" data-op="x" aria-label="Multiplication">×</button>
+<button class="quiz-op" data-op="/" aria-label="Division">÷</button>
 </div>
 </div>
 
 <div class="bonus-card quiz-arena" id="quiz-arena" style="display:none">
-<div class="qz-top"><span id="quiz-progress">QUESTION 01 / 30</span><span class="qz-earn" id="quiz-score">+<span data-usd="0">$0.00</span></span><button class="btn btn-ghost" id="mute-btn" style="min-height:32px;padding:4px 12px;font-size:12px" type="button">Sound: on</button></div>
-<div class="paper">
-<div class="holes" aria-hidden="true"></div>
+<div class="quiz-meta"><span id="quiz-progress">Q 1/30</span><span id="quiz-score">0 correct · +<span data-usd="0">$0.00</span></span><button class="btn btn-ghost" id="mute-btn" style="min-height:32px;padding:4px 12px;font-size:12px" type="button">Sound: on</button></div>
 <div class="quiz-q" id="quiz-q" aria-live="polite">21 + 6</div>
 <div class="quiz-timer">
 <svg class="quiz-ring" id="quiz-ring" width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><circle class="bg" cx="22" cy="22" r="18" fill="none" stroke-width="5"/><circle class="fg" id="quiz-ring-fg" cx="22" cy="22" r="18" fill="none" stroke-width="5" stroke-dasharray="113.1" stroke-dashoffset="0"/></svg>
 <span class="quiz-count" id="quiz-count">10.0s</span>
 </div>
 <div class="quiz-grid" id="quiz-grid"></div>
-<button class="formula-link" id="formula-link" type="button">Confused? Check formula guide</button>
-<div class="formula-guide" id="formula-guide" hidden><b>Quick formula guide</b><br>Addition (+): combine both numbers. Subtraction (−): take the second number away from the first. Multiplication (×): repeated addition — 4 × 3 is 4 + 4 + 4. Division (÷): split into equal parts — 12 ÷ 4 asks how many 4s fit in 12. Eliminate answers that are too big or too small first.</div>
-<button class="quiz-next" id="quiz-next" type="button" style="display:none">CONTINUE →</button>
-</div>
 <div><span class="quiz-life" id="quiz-life">1 rescue life left</span></div>
 </div>
 
@@ -254,13 +220,6 @@ if (window.FavLoader) FavLoader.hold();
   }
   function paintMute(){document.getElementById('mute-btn').textContent=isMuted()?'Sound: off':'Sound: on';}
   document.getElementById('mute-btn').addEventListener('click',function(){toggleMute();paintMute();});
-  document.getElementById('quiz-next').addEventListener('click',function(){advance();});
-  document.getElementById('formula-link').addEventListener('click',function(){
-    var g=document.getElementById('formula-guide');
-    if(!g)return;
-    if(g.hasAttribute('hidden'))g.removeAttribute('hidden');
-    else g.setAttribute('hidden','');
-  });
   document.querySelectorAll('.faq-item button').forEach(function(b){
     b.addEventListener('click',function(){b.closest('.faq-item').classList.toggle('open');});
   });
@@ -354,7 +313,6 @@ if (window.FavLoader) FavLoader.hold();
   // the feedback; a quiet refresh reconciles balance/history afterwards.
   var snap={answered:0,correct:0,earned:0,lifeUsed:false}, delta={a:0,c:0,e:0,miss:0};
   var saving=0, refreshing=false, refreshQueued=false, over=false;
-  var awaitingNext=false, lastCorrect=false;
   function waitForSaves(){
     return new Promise(function(res){
       (function poll(){
@@ -378,11 +336,10 @@ if (window.FavLoader) FavLoader.hold();
       earned:Math.round((snap.earned+delta.e)*100)/100,
       lifeUsed:snap.lifeUsed,remaining:Math.max(0,QUIZ_SESSION_SIZE-a)};
   }
-  function pad2q(n){n=Math.max(0,Math.floor(Number(n||0)));return (n<10?'0':'')+n;}
   function paintScore(){
     var e=effSt();
-    document.getElementById('quiz-progress').textContent='QUESTION '+pad2q(Math.min(QUIZ_SESSION_SIZE,e.answered+1))+' / '+QUIZ_SESSION_SIZE;
-    document.getElementById('quiz-score').textContent='+'+money(e.earned);
+    document.getElementById('quiz-progress').textContent='Q '+Math.min(QUIZ_SESSION_SIZE,e.answered+1)+'/'+QUIZ_SESSION_SIZE;
+    document.getElementById('quiz-score').textContent=e.correct+' correct · +'+money(e.earned);
     var life=document.getElementById('quiz-life');
     if(e.lifeUsed){life.textContent='Rescue life used';life.classList.add('used');}
     else{life.textContent='1 rescue life left';life.classList.remove('used');}
@@ -407,23 +364,15 @@ if (window.FavLoader) FavLoader.hold();
     cur.options=quizOptions(cur.answer);
     showZone('quiz-arena');
     paintScore();
-    document.getElementById('quiz-q').textContent=cur.text+' = ?';
+    document.getElementById('quiz-q').textContent=cur.text;
     var grid=document.getElementById('quiz-grid');
     grid.innerHTML='';
     cur.options.forEach(function(v,i){
       var b=document.createElement('button');
-      b.type='button';b.className='quiz-opt';
-      var val=document.createElement('span');val.className='opt-val';val.textContent=String(v);
-      var mark=document.createElement('span');mark.className='opt-mark';mark.setAttribute('aria-hidden','true');
-      b.appendChild(val);b.appendChild(mark);
+      b.type='button';b.className='quiz-opt';b.textContent=String(v);
       b.addEventListener('click',function(){onPick(i);});
       grid.appendChild(b);
     });
-    try{
-      document.getElementById('quiz-next').style.display='none';
-      document.getElementById('formula-guide').setAttribute('hidden','');
-    }catch(_){}
-    awaitingNext=false;
     busy=false;
     startTimer();
   }
@@ -436,9 +385,8 @@ if (window.FavLoader) FavLoader.hold();
     // Instant local verdict — no network in this path.
     var correct=idx>=0&&cur.options&&Number(cur.options[idx])===Number(cur.answer);
     for(var j=0;j<btns.length;j++){
-      var mk=btns[j].querySelector?btns[j].querySelector('.opt-mark'):null;
-      if(Number(cur.options[j])===Number(cur.answer)){btns[j].classList.add('right');if(mk)mk.textContent='✓';}
-      else if(j===idx){btns[j].classList.add('wrong');if(mk)mk.textContent='✕';}
+      if(Number(cur.options[j])===Number(cur.answer))btns[j].classList.add('right');
+      else if(j===idx)btns[j].classList.add('wrong');
     }
     delta.a++;
     if(correct){delta.c++;delta.e=Math.round((delta.e+QUIZ_PAY)*100)/100;}
@@ -464,31 +412,17 @@ if (window.FavLoader) FavLoader.hold();
         silentRefresh();
       });
     })(cur,idx);
-    // Manual advance: the player taps CONTINUE to move on (busy stays true so
-    // options cannot be re-tapped meanwhile).
-    lastCorrect=correct;
-    awaitingNext=true;
-    try{
-      var nx=document.getElementById('quiz-next');
-      nx.textContent='NEXT QUESTION →';
-      nx.style.display='';
-    }catch(_){}
-  }
-
-  function advance(){
-    if(!awaitingNext)return;
-    awaitingNext=false;
-    try{document.getElementById('quiz-next').style.display='none';}catch(_){}
-    busy=false;
-    var e=effSt();
-    if(e.remaining<=0||(!lastCorrect&&e.lifeUsed)){endSession(e);return;}
-    if(!lastCorrect){showLife();return;}
-    ask(e);
+    setTimeout(function(){
+      busy=false;
+      var e=effSt();
+      if(e.remaining<=0||(!correct&&e.lifeUsed)){endSession(e);return;}
+      if(!correct){showLife();return;}
+      ask(e);
+    },correct?450:700);
   }
 
   function gameOver(st){
-    stopTimer();cur=null;over=true;awaitingNext=false;
-    try{document.getElementById('quiz-next').style.display='none';}catch(_){}
+    stopTimer();cur=null;over=true;
     var done=st&&st.remaining===0;
     var c=st?st.correct:0, a=st?st.answered:0;
     document.getElementById('over-title').textContent=done?'Session complete':'Game over';
@@ -602,7 +536,7 @@ if (window.FavLoader) FavLoader.hold();
       return;
     }
     try{track('quiz_start_mode',{mode:r.mode||mode});}catch(_){}
-    try{var w=await getWallet(uid);try{document.getElementById('chip-bal').textContent=formatUSD(w.pending);}catch(e){}
+    try{var w=await getWallet(uid);try{document.getElementById('chip-bal').textContent=formatUSD(w.pending);}catch(e){}}catch(_){}
     var st2=await refresh(false);
     route(st2);
   }
@@ -656,10 +590,14 @@ if (window.FavLoader) FavLoader.hold();
         paintMoney();
         try{await getUnclaimedRewards(uid);}catch(_){}
       }catch(e){}
-      var st=await refresh(false);
-      route(st);
+      var st=null;
+      try{ st=await refresh(false); }catch(_){ st=null; }
+      // Even if the read failed, show the entry card instead of a blank page.
+      route(st||{hasSession:false,active:false});
       ready();
   });
+  // Safety net: never leave the loader spinning if anything above stalls.
+  setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},8000);
   try{refreshRates().then(function(){paintMoney();paintScore();paintRows();});}catch(_){}
   document.addEventListener('fav-rates',function(){paintMoney();paintScore();paintRows();});
 })();

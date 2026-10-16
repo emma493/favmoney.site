@@ -100,6 +100,7 @@
 <div class="ptc-timer"><span id="ptc-msg">…</span><b id="ptc-count"></b></div>
 <div class="prog" style="margin:0 0 14px"><i id="ptc-bar" style="width:0%"></i></div>
 <button class="btn btn-green btn-block" id="ptc-resume" style="display:none">Resume viewing</button>
+<button class="btn btn-green btn-block" id="ptc-back" style="display:none">Back to ad</button>
 <a class="btn btn-green btn-block" id="ptc-openlink" href="#" target="_blank" rel="noopener sponsored nofollow" style="display:none">Open ad in new tab</a>
 <button class="btn btn-ghost btn-block" id="ptc-close" style="margin-top:8px">Close</button>
 </div>
@@ -191,7 +192,7 @@ if (window.FavLoader) FavLoader.hold();
     if(!veil)return;
     function set(id,txt){try{document.getElementById(id).textContent=txt;}catch(_){}}
     function showEl(id,on){try{document.getElementById(id).style.display=on?'':'none';}catch(_){}}
-    if(!s||s.status==='idle'||s.status==='viewing'){veil.classList.remove('open');return;}
+    if(!s||s.status==='idle'||(s.status==='viewing'&&!s.soft)){veil.classList.remove('open');return;}
     var ad=s.id?getAd(s.id):null;
     var req=s.secs||(ad?ad.secs:0)||0;
     var done=Math.min(Number(s.accumMs||0),Number(s.requiredMs||req*1000));
@@ -204,6 +205,17 @@ if (window.FavLoader) FavLoader.hold();
       var ol=document.getElementById('ptc-openlink');
       if(ol){ ol.href=(ad&&ad.url)||'#'; ol.style.display='none'; }
     }catch(_){}
+    showEl('ptc-back',false);
+    if(s.status==='viewing'){
+      // Soft progress: the timer keeps running behind this modal.
+      set('ptc-title',ad?ad.title:'Sponsored view');
+      set('ptc-text','Watching... '+Math.floor(done/1000)+'s of '+req+'s - return to the ad tab.');
+      set('ptc-msg','Watching...');set('ptc-count',left+'s left');
+      showEl('ptc-resume',false);
+      try{var ol0=document.getElementById('ptc-openlink');if(ol0)ol0.style.display='none';}catch(_){}
+      showEl('ptc-back',true);
+      return;
+    }
     if(s.status==='paused'){
       set('ptc-title',ad?ad.title:'Sponsored view');
       if(s.error)set('ptc-text',s.error);
@@ -252,6 +264,7 @@ if (window.FavLoader) FavLoader.hold();
     paint();
   });
   document.getElementById('ptc-resume').addEventListener('click',function(){try{rv.resume();}catch(_){}});
+  document.getElementById('ptc-back').addEventListener('click',function(){try{rv.resume();rv.dismissSoft();}catch(_){}});
   // Raw tap-to-open link: a real user-gesture navigation no blocker stops.
   // Its tap counts time WITHOUT close detection (server caps still apply).
   document.getElementById('ptc-openlink').addEventListener('click',function(){try{rv.assumeOpen();}catch(_){}});
@@ -259,6 +272,7 @@ if (window.FavLoader) FavLoader.hold();
     // Close only dismisses: a running/paused view keeps counting invisibly
     // (row shows live state). Only a finished credit is cleared.
     try{document.getElementById('ptc-modal').classList.remove('open');}catch(_){}
+    try{rv.dismissSoft();}catch(_){}
     var s=rvSnap();
     if(s&&s.status==='credited'){try{rv.abandon();}catch(_){}paint();}
   });

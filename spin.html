@@ -165,6 +165,7 @@
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--muted);margin:14px 0 8px"><span id="spin-ad-msg">Keep this view visible…</span><b id="spin-ad-count" style="color:#8ff0bd">20s</b></div>
 <div class="prog" style="margin:0 0 8px"><i id="spin-ad-bar" style="width:0%"></i></div>
 <button class="btn btn-green btn-block" id="spin-ad-resume" style="display:none">Resume viewing</button>
+<button class="btn btn-green btn-block" id="spin-ad-back" style="display:none">Back to ad</button>
 <a class="btn btn-green btn-block" id="spin-ad-openlink" href="#" target="_blank" rel="noopener sponsored nofollow" style="display:none">Open ad in new tab</a>
 <button class="btn btn-green btn-block" id="spin-ad-go" style="display:none">Continue</button>
 <button class="btn btn-ghost btn-block" id="spin-ad-close" style="margin-top:8px">Close</button>
@@ -388,7 +389,7 @@ import { requireAuth } from './js/guard.js';
     if(!veil)return;
     function set(id,txt){try{document.getElementById(id).textContent=txt;}catch(_){}}
     function showEl(id,on){try{document.getElementById(id).style.display=on?'':'none';}catch(_){}}
-    if(!s||s.status==='idle'||s.status==='viewing'){veil.classList.remove('open');return;}
+    if(!s||s.status==='idle'||(s.status==='viewing'&&!s.soft)){veil.classList.remove('open');return;}
     var req=s.secs||20;
     var done=Math.min(Number(s.accumMs||0),Number(s.requiredMs||req*1000));
     var pct=req>0?Math.min(100,done/(req*1000)*100):0;
@@ -400,6 +401,17 @@ import { requireAuth } from './js/guard.js';
       if(ol){ ol.href=SPONSOR_URL; ol.style.display='none'; }
     }catch(_){}
     showEl('spin-ad-go',false);
+    showEl('spin-ad-back',false);
+    if(s.status==='viewing'){
+      // Soft progress: the timer keeps running behind this modal.
+      set('spin-ad-title','Bonus spin break');
+      set('spin-ad-text','Watching... '+Math.floor(done/1000)+'s of '+req+'s - return to the ad tab.');
+      set('spin-ad-msg','Watching...');set('spin-ad-count',left+'s left');
+      showEl('spin-ad-resume',false);
+      try{var ol0=document.getElementById('spin-ad-openlink');if(ol0)ol0.style.display='none';}catch(_){}
+      showEl('spin-ad-back',true);
+      return;
+    }
     if(s.status==='paused'){
       set('spin-ad-title','Bonus spin break');
       if(s.error)set('spin-ad-text',s.error);
@@ -465,12 +477,14 @@ import { requireAuth } from './js/guard.js';
     show(r.blocked?'Popup blocked - tap Resume to open the ad.':'Ad opened in a new tab - timer runs in the background.');
   });
   document.getElementById('spin-ad-resume').addEventListener('click',function(){try{srv.resume();}catch(_){}});
+  document.getElementById('spin-ad-back').addEventListener('click',function(){try{srv.resume();srv.dismissSoft();}catch(_){}});
   // Raw tap-to-open link: a real user-gesture navigation no blocker stops.
   document.getElementById('spin-ad-openlink').addEventListener('click',function(){try{srv.assumeOpen();}catch(_){}});
   document.getElementById('spin-ad-close').addEventListener('click',function(){
     // Dismiss only: a running/paused view keeps counting invisibly.
     // Only a finished grant is cleared.
     try{document.getElementById('spin-ad-modal').classList.remove('open');}catch(_){}
+    try{srv.dismissSoft();}catch(_){}
     var s=srvSnap();
     if(s&&s.status==='credited'){try{srv.abandon();}catch(_){}}
   });

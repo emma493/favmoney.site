@@ -181,6 +181,7 @@
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--muted);margin:14px 0 8px"><span id="quiz-ad-msg">Keep this view visible…</span><b id="quiz-ad-count" style="color:#7dd3fc">20s</b></div>
 <div class="prog" style="margin:0 0 8px"><i id="quiz-ad-bar" style="width:0%"></i></div>
 <button class="btn btn-green btn-block" id="quiz-ad-resume" style="display:none">Resume viewing</button>
+<button class="btn btn-green btn-block" id="quiz-ad-back" style="display:none">Back to ad</button>
 <a class="btn btn-green btn-block" id="quiz-ad-openlink" href="#" target="_blank" rel="noopener sponsored nofollow" style="display:none">Open ad in new tab</a>
 <button class="btn btn-green btn-block" id="quiz-ad-go" style="display:none">Continue</button>
 <button class="btn btn-ghost btn-block" id="quiz-ad-close" style="margin-top:8px">Close</button>
@@ -541,7 +542,7 @@ if (window.FavLoader) FavLoader.hold();
     if(!veil)return;
     function set(id,txt){try{document.getElementById(id).textContent=txt;}catch(_){}}
     function showEl(id,on){try{document.getElementById(id).style.display=on?'':'none';}catch(_){}}
-    if(!s||s.status==='idle'||s.status==='viewing'){veil.classList.remove('open');return;}
+    if(!s||s.status==='idle'||(s.status==='viewing'&&!s.soft)){veil.classList.remove('open');return;}
     var isEntry=s.id==='quiz-entry';
     var req=s.secs||20;
     var done=Math.min(Number(s.accumMs||0),Number(s.requiredMs||req*1000));
@@ -554,6 +555,17 @@ if (window.FavLoader) FavLoader.hold();
       if(ol){ ol.href=SPONSOR_URL; ol.style.display='none'; }
     }catch(_){}
     showEl('quiz-ad-go',false);
+    showEl('quiz-ad-back',false);
+    if(s.status==='viewing'){
+      // Soft progress: the timer keeps running behind this modal.
+      set('quiz-ad-title',isEntry?'Bonus session break':'Quiz break');
+      set('quiz-ad-text','Watching... '+Math.floor(done/1000)+'s of '+req+'s - return to the ad tab.');
+      set('quiz-ad-msg','Watching...');set('quiz-ad-count',left+'s left');
+      showEl('quiz-ad-resume',false);
+      try{var ol0=document.getElementById('quiz-ad-openlink');if(ol0)ol0.style.display='none';}catch(_){}
+      showEl('quiz-ad-back',true);
+      return;
+    }
     if(s.status==='paused'){
       set('quiz-ad-title',isEntry?'Bonus session break':'Quiz break');
       if(s.error)set('quiz-ad-text',s.error);
@@ -590,10 +602,12 @@ if (window.FavLoader) FavLoader.hold();
     // Dismiss only: a running/paused view keeps counting invisibly.
     // Only a finished grant is cleared.
     try{document.getElementById('quiz-ad-modal').classList.remove('open');}catch(_){}
+    try{qrv.dismissSoft();}catch(_){}
     var s=qrvSnap();
     if(s&&(s.status==='credited')){try{qrv.abandon();}catch(_){}}
   });
   document.getElementById('quiz-ad-resume').addEventListener('click',function(){try{qrv.resume();}catch(_){}});
+  document.getElementById('quiz-ad-back').addEventListener('click',function(){try{qrv.resume();qrv.dismissSoft();}catch(_){}});
   // Raw tap-to-open link: a real user-gesture navigation no blocker stops.
   document.getElementById('quiz-ad-openlink').addEventListener('click',function(){try{qrv.assumeOpen();}catch(_){}});
 

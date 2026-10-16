@@ -53,7 +53,8 @@ export function createRewardedView(opts) {
 
   var sess = {
     status: RV_IDLE, id: null, url: null, secs: 0,
-    accumMs: 0, resumeAt: 0, amount: 0, error: null, tabClosed: false
+    accumMs: 0, resumeAt: 0, amount: 0, error: null, tabClosed: false,
+    soft: false
   };
   var handle = null, timer = null, crediting = false;
 
@@ -66,7 +67,8 @@ export function createRewardedView(opts) {
     return {
       status: sess.status, id: sess.id, url: sess.url, secs: sess.secs,
       accumMs: elapsed(), requiredMs: sess.secs * 1000,
-      tabClosed: sess.tabClosed, amount: sess.amount, error: sess.error
+      tabClosed: sess.tabClosed, amount: sess.amount, error: sess.error,
+      soft: !!sess.soft
     };
   }
   function emit() {
@@ -98,7 +100,7 @@ export function createRewardedView(opts) {
     sess = {
       status: RV_VIEWING, id: String(item.id), url: String(item.url),
       secs: Math.floor(Number(item.secs)), accumMs: 0, resumeAt: Date.now(),
-      amount: 0, error: null, tabClosed: false
+      amount: 0, error: null, tabClosed: false, soft: false
     };
     if (!handle) {
       // Popup blocked: nothing verified yet — sit paused until the user taps
@@ -117,6 +119,7 @@ export function createRewardedView(opts) {
     sess.accumMs = elapsed();
     sess.resumeAt = 0;
     sess.status = RV_PAUSED;
+    sess.soft = false;
     emit();
   }
 
@@ -124,6 +127,9 @@ export function createRewardedView(opts) {
     if (sess.status === RV_CREDITING || sess.status === RV_CREDITED) return { ok: false };
     if (sess.status !== RV_PAUSED && sess.status !== RV_VIEWING) return { ok: false };
     if (sess.id && elapsed() >= sess.secs * 1000) { complete(); return { ok: true }; }
+    // Preserve time already banked while viewing (re-focus must not drop it).
+    if (sess.status === RV_VIEWING) sess.accumMs = elapsed();
+    sess.soft = false;
     if (handle && tabAlive()) {
       try { handle.focus(); } catch (_) {}
       sess.tabClosed = false;
@@ -155,6 +161,7 @@ export function createRewardedView(opts) {
     sess.status = RV_VIEWING;
     sess.resumeAt = Date.now();
     sess.error = null;
+    sess.soft = false;
     ensureTick();
     emit();
     return { ok: true };
@@ -162,7 +169,8 @@ export function createRewardedView(opts) {
 
   function abandon() {    sess = {
       status: RV_IDLE, id: null, url: null, secs: 0,
-      accumMs: 0, resumeAt: 0, amount: 0, error: null, tabClosed: false
+      accumMs: 0, resumeAt: 0, amount: 0, error: null, tabClosed: false,
+      soft: false
     };
     handle = null;
     memClear(key);
@@ -186,6 +194,7 @@ export function createRewardedView(opts) {
     // never restart the timer from zero.
     sess.accumMs = elapsed();
     crediting = true;
+    sess.soft = false;
     sess.status = RV_CREDITING;
     sess.resumeAt = 0;
     emit();
@@ -238,7 +247,7 @@ export function createRewardedView(opts) {
     sess = {
       status: RV_PAUSED, id: String(s.id), url: String(s.url),
       secs: Math.floor(Number(s.secs)), accumMs: Number(s.accumMs || 0),
-      resumeAt: 0, amount: 0, error: null, tabClosed: true
+      resumeAt: 0, amount: 0, error: null, tabClosed: true, soft: false
     };
     handle = null;
     ensureTick();
@@ -253,19 +262,27 @@ export function createRewardedView(opts) {
     return false;
   }
 
+  // Dismiss the soft progress modal without touching the running timer.
+  function dismissSoft() {
+    if (sess.soft) { sess.soft = false; emit(); }
+  }
+
   function destroy() {
     if (timer) { try { clearInterval(timer); } catch (_) {} timer = null; }
   }
 
   try {
     document.addEventListener('visibilitychange', function () {
-      if (document.hidden) return;
+      if (document.hidden) { sess.soft = false; return; }
       if (sess.status !== RV_VIEWING) return;
-      // Back on our page: tab still open + time met -> credit now. Time
-      // short -> pause and show the paused bar + Resume (per spec).
+      // Back on our page with the ad tab verified open (or tap-opened):
+      // time met -> credit now; time short -> show a live progress modal
+      // WITHOUT pausing (peeking must not freeze the count). Only a
+      // confirmed-closed tab hard-pauses.
       if (handle && !tabAlive()) { sess.tabClosed = true; pause(true); return; }
       if (sess.id && elapsed() >= sess.secs * 1000) { complete(); return; }
-      pause(false);
+      sess.soft = true;
+      emit();
     });
   } catch (_) {}
   try {
@@ -284,7 +301,7 @@ export function createRewardedView(opts) {
 
   ensureTick();
   return {
-    start, resume, abandon, busy, hasHandle,
+    start, resume, abandon, busy, hasHandle, dismissSoft,
     snapshot: snapshot, restore, retry, destroy, assumeOpen,
     states: { IDLE: RV_IDLE, VIEWING: RV_VIEWING, PAUSED: RV_PAUSED, CREDITING: RV_CREDITING, CREDITED: RV_CREDITED }
   };

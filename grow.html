@@ -163,6 +163,7 @@
 <div class="ad-timer"><span id="ad-msg">Keep this view visible…</span><b id="ad-count">20s</b></div>
 <div class="prog" style="margin:0 0 8px"><i id="ad-bar" style="width:0%"></i></div>
 <button class="btn btn-green btn-block" id="ad-resume" style="display:none">Resume viewing</button>
+<button class="btn btn-green btn-block" id="ad-back" style="display:none">Back to ad</button>
 <a class="btn btn-green btn-block" id="ad-openlink" href="#" target="_blank" rel="noopener sponsored nofollow" style="display:none">Open ad in new tab</a>
 <div class="ad-foot">
 <button class="btn btn-green btn-block" id="ad-go" style="display:none">Continue</button>
@@ -382,7 +383,7 @@ import { requireAuth } from './js/guard.js';
     if(!veil)return;
     function set(id,txt){try{document.getElementById(id).textContent=txt;}catch(_){}}
     function showEl(id,on){try{document.getElementById(id).style.display=on?'':'none';}catch(_){}}
-    if(!s||s.status==='idle'||s.status==='viewing'){veil.classList.remove('open');return;}
+    if(!s||s.status==='idle'||(s.status==='viewing'&&!s.soft)){veil.classList.remove('open');return;}
     var req=s.secs||20;
     var done=Math.min(Number(s.accumMs||0),Number(s.requiredMs||req*1000));
     var pct=req>0?Math.min(100,done/(req*1000)*100):0;
@@ -394,6 +395,17 @@ import { requireAuth } from './js/guard.js';
       if(ol){ ol.href=SPONSOR_URL; ol.style.display='none'; }
     }catch(_){}
     showEl('ad-go',false);
+    showEl('ad-back',false);
+    if(s.status==='viewing'){
+      // Soft progress: the timer keeps running behind this modal.
+      set('ad-title','Favmoney booster break');
+      set('ad-text','Watching... '+Math.floor(done/1000)+'s of '+req+'s - return to the ad tab.');
+      set('ad-msg','Watching...');set('ad-count',left+'s left');
+      showEl('ad-resume',false);
+      try{var ol0=document.getElementById('ad-openlink');if(ol0)ol0.style.display='none';}catch(_){}
+      showEl('ad-back',true);
+      return;
+    }
     if(s.status==='paused'){
       set('ad-title','Favmoney booster break');
       if(s.error)set('ad-text',s.error);
@@ -431,10 +443,12 @@ import { requireAuth } from './js/guard.js';
     // Dismiss only: a running/paused view keeps counting invisibly.
     // Only a finished grant is cleared.
     try{document.getElementById('ad-modal').classList.remove('open');}catch(_){}
+    try{grv.dismissSoft();}catch(_){}
     var s=grvSnap();
     if(s&&s.status==='credited'){try{grv.abandon();}catch(_){}}
   });
   document.getElementById('ad-resume').addEventListener('click',function(){try{grv.resume();}catch(_){}});
+  document.getElementById('ad-back').addEventListener('click',function(){try{grv.resume();grv.dismissSoft();}catch(_){}});
   // Raw tap-to-open link: a real user-gesture navigation no blocker stops.
   document.getElementById('ad-openlink').addEventListener('click',function(){try{grv.assumeOpen();}catch(_){}});
   document.querySelectorAll('.faq-item button').forEach(function(b){

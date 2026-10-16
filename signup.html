@@ -58,28 +58,29 @@
 <span data-ad-slot data-ad-type="atoptions" data-ad-key="e7f2971f3e98ae987349d7316bc32c62" data-ad-w="728" data-ad-h="90" data-ad-host="https://www.highrevenueformat.com"><script>atOptions={'key':'e7f2971f3e98ae987349d7316bc32c62','format':'iframe','height':90,'width':728,'params':{}};</script><script async src="https://www.highrevenueformat.com/e7f2971f3e98ae987349d7316bc32c62/invoke.js"></script></span>
 </div>
 <script defer src="js/ads.js"></script>
+<script defer src="js/i18n.js"></script>
 <div id="page-loader" role="status" aria-label="Loading Favmoney"><div class="spinner" id="loader-spin" aria-hidden="true"></div><button id="loader-retry" type="button" aria-label="Retry loading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button></div><script>window.__favLoaderT0=window.__favLoaderT0||Date.now();(function(){setTimeout(function(){var o=document.getElementById("page-loader");if(o)o.classList.add("slow");},8000);var r=document.getElementById("loader-retry");if(r)r.addEventListener("click",function(){location.reload();});})();</script>
 <header class="topnav" style="background:rgba(29,30,48,.9)"><div class="topnav-inner">
 <a class="brand" href="index.html"><span class="brand-word"><span class="g">FAV</span><span class="w">MONEY</span></span></a>
-<div class="auth"><a class="btn btn-ghost" href="signin.html">Sign In</a></div>
+<div class="auth"><a class="btn btn-ghost" href="signin.html" data-i18n="nav.signin">Sign In</a></div>
 </div></header>
 <main class="section" style="padding-top:130px"><div class="wrap">
 <div class="auth-card">
-<h1 style="font-size:28px;margin:0 0 6px">Create your account</h1>
-<label for="email">Email</label>
+<h1 style="font-size:28px;margin:0 0 6px" data-i18n="signup.title">Create your account</h1>
+<label for="email" data-i18n="signup.email">Email</label>
 <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
-<label for="pass">Password</label>
+<label for="pass" data-i18n="signup.pass">Password</label>
 <input id="pass" type="password" placeholder="••••••••" autocomplete="new-password" />
-<label for="country-picker">Country <span style="color:#ff9aa2">*</span></label>
+<label for="country-picker"><span data-i18n="signup.country">Country</span> <span style="color:#ff9aa2">*</span></label>
 <div id="country-picker"></div>
-<p class="tiny" data-country-error style="display:none;color:#ff9aa2;text-align:left;margin:6px 0 0">Please choose your country.</p>
+<p class="tiny" data-country-error style="display:none;color:#ff9aa2;text-align:left;margin:6px 0 0" data-i18n="signup.country_err">Please choose your country.</p>
 <p class="tiny" id="currency-hint" style="text-align:left;margin:6px 0 0"></p>
-<label for="refcode">Referral code <span style="color:#8ff0bd">— get $1.00 instantly</span></label>
+<label for="refcode"><span data-i18n="signup.ref">Referral code</span> <span style="color:#8ff0bd" data-i18n="signup.refbonus">— get $1.00 instantly</span></label>
 <input id="refcode" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="6" style="text-transform:uppercase;letter-spacing:.12em" />
-<p class="tiny" id="ref-hint" style="text-align:left;margin:6px 0 0">Have a friend's code? Enter it for a $1.00 instant bonus. Your friend gets $0.50 instantly.</p>
-<button class="btn btn-green btn-block" id="go" style="margin-top:16px">Create free account</button>
-<p class="tiny">By continuing you agree to Terms and Privacy. Already have one? <a href="signin.html">Sign in</a>.</p>
-<p class="tiny" style="margin-top:10px">Prohibited: multiple accounts, completing offers on another user's account, or any VPN, VPS or emulator software.</p>
+<p class="tiny" id="ref-hint" style="text-align:left;margin:6px 0 0" data-i18n="signup.refhint">Have a friend's code? Enter it for a $1.00 instant bonus. Your friend gets $0.50 instantly.</p>
+<button class="btn btn-green btn-block" id="go" style="margin-top:16px" data-i18n="signup.go">Create free account</button>
+<p class="tiny"><span data-i18n="signup.agree">By continuing you agree to Terms and Privacy. Already have one? </span><a href="signin.html" data-i18n="nav.signin">Sign in</a>.</p>
+<p class="tiny" style="margin-top:10px" data-i18n="signup.rules">Prohibited: multiple accounts, completing offers on another user's account, or any VPN, VPS or emulator software.</p>
 </div>
 </div></main>
 <div class="toast" id="toast" role="status"></div>

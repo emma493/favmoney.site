@@ -499,6 +499,22 @@ if (window.FavLoader) FavLoader.hold();
     try {
       await updateDoc(doc(db, 'cashouts', id), { status: to });
       await audit(to === 'paid' ? 'payout-paid' : 'payout-rejected', id, 0, to);
+      // Member bell feed (best-effort, never blocks the decision).
+      try {
+        var csnap = await getDoc(doc(db, 'cashouts', id));
+        var cd = csnap.exists() ? csnap.data() : {};
+        var camt = Number(cd.amount || 0);
+        var cm = String(cd.method || 'your method');
+        var cbody = to === 'paid'
+          ? '+$' + camt.toFixed(2) + ' sent via ' + cm
+          : 'Cashout of $' + camt.toFixed(2) + ' declined — balance returned';
+        await addDoc(collection(db, 'notifications'), {
+          uid: String(cd.uid || ''), kind: to === 'paid' ? 'payout-paid' : 'payout-rejected',
+          title: to === 'paid' ? 'Cashout paid' : 'Cashout declined',
+          body: cbody.slice(0, 160), link: 'withdrawals.html',
+          read: false, at: serverTimestamp()
+        });
+      } catch (_) {}
       show(to === 'paid' ? 'Marked paid.' : 'Rejected.');
       await loadPayouts();
       loaded.overview = false;

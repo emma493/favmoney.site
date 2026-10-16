@@ -274,8 +274,38 @@ service cloud.firestore {
       allow create, read, update, delete: if isAdmin();
     }
 
-    match /cashouts/{docId} {
-      // Floor $20 at rule level (PayPal min); crypto $25, other rails $30
+    // Bell notifications feed (separate from Rewards dots): { uid, kind,
+    // title, body, link, read, at }. Members file only their own
+    // 'reward-ready' + 'referral-payout' rows; admins file payout decisions;
+    // the Worker files 'offer-credit' via Admin SDK (bypasses rules).
+    // Reads are own-docs (+ admin audit); mark-read flips `read` only.
+    match /notifications/{docId} {
+      allow create: if authed()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'kind', 'title', 'body', 'link', 'read', 'at'])
+        && (request.resource.data.kind == 'reward-ready' || request.resource.data.kind == 'referral-payout')
+        && request.resource.data.title is string && request.resource.data.title.size() >= 1 && request.resource.data.title.size() <= 80
+        && request.resource.data.body is string && request.resource.data.body.size() <= 160
+        && request.resource.data.link is string && request.resource.data.link.size() <= 64
+        && request.resource.data.read == false;
+      allow create: if isAdmin()
+        && request.resource.data.uid is string
+        && request.resource.data.keys().hasOnly(['uid', 'kind', 'title', 'body', 'link', 'read', 'at'])
+        && (request.resource.data.kind == 'payout-paid' || request.resource.data.kind == 'payout-rejected')
+        && request.resource.data.title is string && request.resource.data.title.size() >= 1 && request.resource.data.title.size() <= 80
+        && request.resource.data.body is string && request.resource.data.body.size() <= 160
+        && request.resource.data.link is string && request.resource.data.link.size() <= 64
+        && request.resource.data.read == false;
+      allow read: if authed() && resource.data.uid == request.auth.uid;
+      allow read: if isAdmin();
+      allow update: if authed()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
+        && request.resource.data.read == true;
+      allow delete: if false;
+    }
+
+    match /cashouts/{docId} {      // Floor $20 at rule level (PayPal min); crypto $25, other rails $30
       // are enforced per-method client-side.
       allow create: if authed()
         && request.resource.data.uid == request.auth.uid

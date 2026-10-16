@@ -160,6 +160,7 @@ async function fsPatch(projectId, token, path, fields, mask) {
 
 const S = (v) => ({ stringValue: String(v == null ? '' : v) });
 const N = (v) => ({ doubleValue: Number(v || 0) });
+const B = (v) => ({ booleanValue: !!v });
 const T = () => ({ timestampValue: new Date().toISOString() });
 
 // List every document in a collection (paginated). Returns raw REST docs.
@@ -366,6 +367,13 @@ async function handleOgadsPostback(request, env) {
       uid: S(p.uid), amount: N(amount), label: S('play:offers'), status: S('pending'), at: T(),
       provider: S('ogads'), eventId: S(eventId), offerId: S(p.offerId), profit: N(p.payout)
     });
+    try {
+      await fsCreate(projectId, token, 'notifications', 'notif-' + eventId, {
+        uid: S(p.uid), kind: S('offer-credit'), title: S('Offer approved'),
+        body: S('+$' + amount.toFixed(2) + ' from OGAds'), link: S('profile.html'),
+        read: B(false), at: T()
+      });
+    } catch (_) {}
     await fsPatch(projectId, token, 'og_events/' + encodeURIComponent(eventId), { status: S('credited'), amount: N(amount) }, ['status', 'amount']);
     try {
       const uref = 'users/' + encodeURIComponent(p.uid);
@@ -488,6 +496,13 @@ async function handleCpagripPostback(request, env) {
       uid: S(uid), amount: N(amount), label: S('play:offers'), status: S('pending'), at: T(),
       provider: S('cpagrip'), eventId: S(eventId), offerId: S(offerId), profit: N(payout)
     });
+    try {
+      await fsCreate(projectId, token, 'notifications', 'notif-' + eventId, {
+        uid: S(uid), kind: S('offer-credit'), title: S('Offer approved'),
+        body: S('+$' + amount.toFixed(2) + ' from CPA Grip'), link: S('profile.html'),
+        read: B(false), at: T()
+      });
+    } catch (_) {}
     await fsPatch(projectId, token, 'cp_events/' + encodeURIComponent(eventId), { status: S('credited'), amount: N(amount) }, ['status', 'amount']);
     try {
       const uref = 'users/' + encodeURIComponent(uid);
@@ -611,6 +626,13 @@ export default {
         provider: S('gg'), eventId: S(p.eventId), event: S(p.event),
         campaignId: S(p.campaignId), operator: S(p.operator), profit: N(p.profit)
       });
+      try {
+        await fsCreate(projectId, token, 'notifications', 'notif-' + p.eventId, {
+          uid: S(p.p1), kind: S('offer-credit'), title: S('Offer approved'),
+          body: S('+$' + amount.toFixed(2) + ' from Golden Goose'), link: S('profile.html'),
+          read: B(false), at: T()
+        });
+      } catch (_) {}
       await fsPatch(projectId, token, 'gg_events/' + encodeURIComponent(p.eventId), { status: S('credited'), amount: N(amount) }, ['status', 'amount']);
       try {
         const uref = 'users/' + encodeURIComponent(p.p1);

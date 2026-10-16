@@ -296,7 +296,11 @@ export async function claimReferrals(uid) {
       n++;
     } catch (_) {}
   }
-  return { claimed: n, total: Math.round(n * REF_INVITER_AMOUNT * 100) / 100 };
+  const refTotal = Math.round(n * REF_INVITER_AMOUNT * 100) / 100;
+  if (n > 0) {
+    try { await notifyUser(uid, 'referral-payout', 'Referral payout', '+$' + refTotal.toFixed(2) + ' from invites', 'invite.html'); } catch (_) {}
+  }
+  return { claimed: n, total: refTotal };
 }
 
 // Earner-side: after every reward, file the owner's lifetime % debt (fire-and-forget).
@@ -341,6 +345,7 @@ export async function claimCommissions(uid) {
   for (const r of rows) {
     try { await setDoc(doc(db, 'commissions', r.id), { claimed: true }, { merge: true }); } catch (_) {}
   }
+  try { await notifyUser(uid, 'referral-payout', 'Commission paid', '+$' + total.toFixed(2) + ' from referrals', 'invite.html'); } catch (_) {}
   return { claimed: rows.length, total };
 }
 
@@ -970,6 +975,51 @@ export async function getRewardsProgress(uid) {
     }
   });
   return { tracks, stats, unclaimed, unclaimedTotal };
+}
+
+// ---- Notifications: bell feed, separate from Rewards dots ----
+// Collection `notifications`: { uid, kind, title, body, link, read, at }.
+// Kinds: self-filed 'reward-ready' + 'referral-payout'; admin-filed
+// 'payout-paid' + 'payout-rejected'; worker-filed 'offer-credit' (server SDK,
+// bypasses rules). Readers see own docs only; mark-read flips `read` only.
+export const NOTIF_KINDS = ['reward-ready', 'referral-payout', 'offer-credit', 'payout-paid', 'payout-rejected'];
+
+export async function notifyUser(uid, kind, title, body, link) {
+  if (!uid || NOTIF_KINDS.indexOf(kind) < 0) return null;
+  try {
+    const r = await addDoc(collection(db, 'notifications'), {
+      uid, kind,
+      title: String(title || '').slice(0, 80),
+      body: String(body || '').slice(0, 160),
+      link: String(link || 'rewards.html').slice(0, 64),
+      read: false, at: serverTimestamp()
+    });
+    return r.id;
+  } catch (_) { return null; }
+}
+
+export async function getNotifications(uid, n) {
+  try { return await fetchUserDocs(uid, 'notifications', n || 30); }
+  catch (_) { return []; }
+}
+
+export async function getUnreadNotifCount(uid) {
+  try {
+    const rows = await fetchUserDocs(uid, 'notifications', 30);
+    return rows.filter(function (r) { return r.read !== true; }).length;
+  } catch (_) { return 0; }
+}
+
+// Mark all unread as read. Best-effort: failures never block the UI.
+export async function markNotifsRead(uid) {
+  try {
+    const rows = await fetchUserDocs(uid, 'notifications', 30);
+    for (const r of rows) {
+      if (r.read === true || !r.id) continue;
+      try { await setDoc(doc(db, 'notifications', r.id), { read: true }, { merge: true }); } catch (_) {}
+    }
+  } catch (_) {}
+  return true;
 }
 
 export async function getUnclaimedRewards(uid) {

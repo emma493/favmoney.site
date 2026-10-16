@@ -231,3 +231,8 @@
 - **Audit view:** append-only `admin_logs` trail (credit/debit/payout-paid/payout-rejected/ban/unban/2fa-on/2fa-off), filter + show-more + CSV; Overview shows recent-10 + soft-banned count.
 - **Earn:** deploy-snippet generator (faucet/PTC-cap/max-stake → paste block for `js/firebase.js`); live values still ship via code deploy.
 - **Rules:** proofs admin labels bounded to admin-adjust/credit/debit ±$100; new `admin_logs` match; users admin soft-ban update. Paste `firestore.rules` to Console, then live test: claim seat → enable 2FA → sign out/in (code required) → browse → credit/debit → ban/unban → payout decision → audit view shows all.
+
+## 13. Bell notifications split from Rewards (2026-10-16, BUILT — needs firestore.rules re-paste + deploy + live test)
+- **Split:** bell badge/ping now driven by unread `notifications/` docs (`js/notify.js` shared panel); Rewards `navdot` stays on `getUnclaimedRewards()`. Bell tap opens dropdown feed (latest 30, mark-read on open) instead of rewards toast. Wired on earn/grow/spin/invite/rewards.
+- **Writers:** worker postbacks (gg/ogads/cpagrip) file `offer-credit` via Admin SDK (dedupe `notif-<eventId>`); admin payout decisions file `payout-paid`/`payout-rejected`; referral claims + new reward unlocks self-file `referral-payout`/`reward-ready` (high-water mark, one doc per rise). No admin announcements per owner.
+- **Rules:** new `notifications` match (self-create 2 kinds bounded, admin-create 2 kinds, own-read, read-only-flip). Paste `firestore.rules` to Console, then live test: earn → bell shows payout/referral/reward events, Rewards dot independent.

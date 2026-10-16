@@ -52,6 +52,7 @@
 .quiz-opt:not(:disabled):hover{border-color:var(--green)}
 .quiz-badge{flex:none;width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.08);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--grey-300)}
 .quiz-opt .opt-val{flex:1;text-align:center}
+.quiz-opt .opt-val{flex:1;text-align:center}
 .quiz-opt.right{border-color:#01D676;background:rgba(1,214,118,.14);color:#8ff0bd}
 .quiz-opt.right .quiz-badge{background:var(--green);border-color:var(--green);color:#06240f}
 .quiz-opt.wrong{border-color:#f43f5e;background:rgba(244,63,94,.12);color:#fda4af}
@@ -180,9 +181,9 @@
 <div style="text-align:center"><h3 id="quiz-ad-title">Quiz break</h3><p id="quiz-ad-text"></p></div>
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--muted);margin:14px 0 8px"><span id="quiz-ad-msg">Keep this view visible…</span><b id="quiz-ad-count" style="color:#7dd3fc">20s</b></div>
 <div class="prog" style="margin:0 0 8px"><i id="quiz-ad-bar" style="width:0%"></i></div>
-<div style="margin:0 0 8px;border-radius:12px;overflow:hidden;background:#0d0e1d"><iframe id="quiz-ad-frame" title="Sponsored view" loading="lazy" style="display:block;width:100%;height:260px;border:0;background:#0d0e1d"></iframe></div>
-<p style="font-size:11px;color:var(--faint);margin:0 0 12px;text-align:center">Sponsored view above · blank? <a id="quiz-ad-anchor" href="https://www.profitableratecpmnetwork.com/ahct9uhb?key=f4da12d7aaa67cd61f6a1196381da654" target="_blank" rel="noopener sponsored nofollow" style="color:#8ff0bd;font-weight:700">Open in new tab</a></p>
-<button class="btn btn-green btn-block" id="quiz-ad-go" style="display:none">Continue · rescue me</button>
+<button class="btn btn-green btn-block" id="quiz-ad-resume" style="display:none">Resume viewing</button>
+<a class="btn btn-green btn-block" id="quiz-ad-openlink" href="#" target="_blank" rel="noopener sponsored nofollow" style="display:none">Open ad in new tab</a>
+<button class="btn btn-green btn-block" id="quiz-ad-go" style="display:none">Continue</button>
 <button class="btn btn-ghost btn-block" id="quiz-ad-close" style="margin-top:8px">Close</button>
 </div>
 </div>
@@ -190,7 +191,8 @@
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getUserDoc, fetchUserDocs, quizSession, genQuizQuestion, quizOptions, startQuizSession, getQuizState, answerQuiz, useQuizLife, getUnclaimedRewards, track, QUIZ_AD_DAILY_CAP, QUIZ_SESSION_SIZE, QUIZ_PAY, QUIZ_TIME_MS } from './js/firebase.js';
-import { embedSponsor, clearSponsor } from './js/ptc-catalog.js';
+import { SPONSOR_URL } from './js/ptc-catalog.js';
+import { createRewardedView } from './js/rewarded-view.js';
 import { coinPour, softThud, isMuted, toggleMute } from './js/sfx.js';
 import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 import { requireAuth } from './js/guard.js';

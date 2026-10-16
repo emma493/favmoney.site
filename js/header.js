@@ -6,23 +6,9 @@
 // so pages can reuse it instead of calling getWallet() twice.
 import { getWallet } from './firebase.js';
 import { formatUSD } from './currency.js';
-import { avatarImg } from './avatars.js';
 
-function paintAvatar(uid) {
-  try {
-    const chip = document.getElementById('user-chip');
-    if (!chip) return;
-    let av = document.getElementById('chip-av');
-    if (!av) {
-      av = document.createElement('span');
-      av.className = 'fav-av';
-      av.id = 'chip-av';
-      chip.insertBefore(av, chip.firstChild);
-    }
-    av.innerHTML = avatarImg(uid, 22);
-  } catch (_) { /* noop */ }
-}
-
+// No avatar in the nav bar by design: the member chip shows balance + name
+// only. (Member avatars still live on the profile page and leaderboards.)
 function clearAvatar() {
   try {
     const av = document.getElementById('chip-av');
@@ -49,7 +35,7 @@ export async function paintMemberHeader(user) {
     const name = document.getElementById('chip-name');
     if (chip) chip.setAttribute('href', 'profile.html');
     if (name) name.textContent = email.split('@')[0];
-    paintAvatar(user.uid);
+    clearAvatar();
   } catch (_) { /* noop */ }
   try {
     const w = await getWallet(user.uid);

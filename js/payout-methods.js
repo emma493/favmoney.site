@@ -168,13 +168,23 @@ export const METHOD_DEFS = {
   },
   'MTN MoMo': {
     id: 'MTN MoMo', kind: 'momo', sec: 'local',
-    img: null, min: 30,
+    img: 'https://res.cloudinary.com/nonzehj3/image/upload/favmoney/cashout/mtn-momo.svg', min: 30,
     denoms: [30, 50, 75, 100, 200],
     destLabel: 'Destination (MTN MoMo)',
     destPlaceholder: '',
     fields: momoFields('MTN MoMo number', 'e.g. 024 000 0000'),
     validate: function (v) { return momoValidate(v, 'MTN MoMo'); },
     pack: function (v) { return 'MTN MoMo: ' + String(v.number || '').trim() + ' | Name: ' + String(v.name || '').trim(); }
+  },
+  'Telecel Cash': {
+    id: 'Telecel Cash', kind: 'momo', sec: 'local',
+    img: 'https://res.cloudinary.com/nonzehj3/image/upload/f_auto,q_auto,w_600/favmoney/cashout/telecel-cash.png', min: 30,
+    denoms: [30, 50, 75, 100, 200],
+    destLabel: 'Destination (Telecel Cash)',
+    destPlaceholder: '',
+    fields: momoFields('Telecel Cash number', 'e.g. 020 000 0000'),
+    validate: function (v) { return momoValidate(v, 'Telecel Cash'); },
+    pack: function (v) { return 'Telecel Cash: ' + String(v.number || '').trim() + ' | Name: ' + String(v.name || '').trim(); }
   },
   'M-Pesa': {
     id: 'M-Pesa', kind: 'momo', sec: 'local',
@@ -198,7 +208,7 @@ const VISA_COUNTRIES = ['US', 'GB', 'CA', 'AU', 'NZ', 'IE', 'DE', 'FR', 'ES', 'I
 // (+ Visa where listed above).
 export const COUNTRY_METHODS = {
   NG: ['PayPal', 'Bitcoin', 'Litecoin', 'Dogecoin', 'Bank Transfer', 'Mobile Money'],
-  GH: ['PayPal', 'Bitcoin', 'Litecoin', 'Dogecoin', 'MTN MoMo', 'Bank Transfer'],
+  GH: ['PayPal', 'Bitcoin', 'Litecoin', 'Dogecoin', 'MTN MoMo', 'Telecel Cash'],
   KE: ['PayPal', 'Bitcoin', 'Litecoin', 'Dogecoin', 'M-Pesa', 'Bank Transfer'],
   ZA: ['PayPal', 'Bitcoin', 'Litecoin', 'Dogecoin', 'Bank Transfer'],
   UG: ['PayPal', 'Bitcoin', 'Litecoin', 'Dogecoin', 'Mobile Money'],

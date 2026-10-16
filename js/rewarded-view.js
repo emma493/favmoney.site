@@ -144,8 +144,23 @@ export function createRewardedView(opts) {
     return { ok: true };
   }
 
-  function abandon() {
-    sess = {
+  // Raw-anchor path: the user tapped a real link (never blocked) so no tab
+  // handle exists. Count elapsed time honestly WITHOUT close detection —
+  // server caps and per-ad cooldowns bound this weaker mode.
+  function assumeOpen() {
+    if (sess.status !== RV_PAUSED) return { ok: false };
+    if (sess.id && elapsed() >= sess.secs * 1000) { complete(); return { ok: true }; }
+    handle = null;
+    sess.tabClosed = false;
+    sess.status = RV_VIEWING;
+    sess.resumeAt = Date.now();
+    sess.error = null;
+    ensureTick();
+    emit();
+    return { ok: true };
+  }
+
+  function abandon() {    sess = {
       status: RV_IDLE, id: null, url: null, secs: 0,
       accumMs: 0, resumeAt: 0, amount: 0, error: null, tabClosed: false
     };
@@ -156,6 +171,11 @@ export function createRewardedView(opts) {
 
   function busy() {
     return sess.status === RV_VIEWING || sess.status === RV_PAUSED || sess.status === RV_CREDITING;
+  }
+
+  function hasHandle() {
+    if (!handle) return false;
+    try { return !handle.closed; } catch (_) { return false; }
   }
 
   async function complete() {
@@ -264,8 +284,8 @@ export function createRewardedView(opts) {
 
   ensureTick();
   return {
-    start, resume, abandon, busy,
-    snapshot: snapshot, restore, retry, destroy,
+    start, resume, abandon, busy, hasHandle,
+    snapshot: snapshot, restore, retry, destroy, assumeOpen,
     states: { IDLE: RV_IDLE, VIEWING: RV_VIEWING, PAUSED: RV_PAUSED, CREDITING: RV_CREDITING, CREDITED: RV_CREDITED }
   };
 }

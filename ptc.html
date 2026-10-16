@@ -100,6 +100,7 @@
 <div class="ptc-timer"><span id="ptc-msg">…</span><b id="ptc-count"></b></div>
 <div class="prog" style="margin:0 0 14px"><i id="ptc-bar" style="width:0%"></i></div>
 <button class="btn btn-green btn-block" id="ptc-resume" style="display:none">Resume viewing</button>
+<a class="btn btn-green btn-block" id="ptc-openlink" href="#" target="_blank" rel="noopener sponsored nofollow" style="display:none">Open ad in new tab</a>
 <button class="btn btn-ghost btn-block" id="ptc-close" style="margin-top:8px">Close</button>
 </div>
 </div>
@@ -147,6 +148,7 @@ if (window.FavLoader) FavLoader.hold();
   });
   try{ rv.restore(); }catch(_){}
   function rvSnap(){ try{ return rv?rv.snapshot():null; }catch(_){ return null; } }
+  function rvHasHandle(){ try{ return !!(rv&&rv.hasHandle&&rv.hasHandle()); }catch(_){ return false; } }
   function paint(){
     if(!uid)return;
     var st=ptcState(proofs, adsForSlot(Date.now()), Date.now());
@@ -198,6 +200,10 @@ if (window.FavLoader) FavLoader.hold();
     try{document.getElementById('ptc-bar').style.width=pct+'%';}catch(_){}
     veil.classList.add('open');
     showEl('ptc-earned',false);
+    try{
+      var ol=document.getElementById('ptc-openlink');
+      if(ol){ ol.href=(ad&&ad.url)||'#'; ol.style.display='none'; }
+    }catch(_){}
     if(s.status==='paused'){
       set('ptc-title',ad?ad.title:'Sponsored view');
       if(s.error)set('ptc-text',s.error);
@@ -205,6 +211,13 @@ if (window.FavLoader) FavLoader.hold();
       else set('ptc-text','Paused at '+Math.floor(done/1000)+'s of '+req+'s. Tap Resume to continue.');
       set('ptc-msg','Paused');set('ptc-count',left+'s left');
       showEl('ptc-resume',true);
+      // No verified tab handle (blocked popup / closed tab): offer a real
+      // tap-to-open link that no blocker can stop. Its tap counts time
+      // without close detection (server caps still apply).
+      try{
+        var ol2=document.getElementById('ptc-openlink');
+        if(ol2) ol2.style.display=(s.tabClosed||s.error||!rvHasHandle())?'':'none';
+      }catch(_){}
     }else if(s.status==='crediting'){
       set('ptc-title','Crediting...');set('ptc-text','Verifying your view.');
       set('ptc-msg','Crediting...');set('ptc-count','');
@@ -239,6 +252,9 @@ if (window.FavLoader) FavLoader.hold();
     paint();
   });
   document.getElementById('ptc-resume').addEventListener('click',function(){try{rv.resume();}catch(_){}});
+  // Raw tap-to-open link: a real user-gesture navigation no blocker stops.
+  // Its tap counts time WITHOUT close detection (server caps still apply).
+  document.getElementById('ptc-openlink').addEventListener('click',function(){try{rv.assumeOpen();}catch(_){}});
   document.getElementById('ptc-close').addEventListener('click',function(){
     // Close only dismisses: a running/paused view keeps counting invisibly
     // (row shows live state). Only a finished credit is cleared.

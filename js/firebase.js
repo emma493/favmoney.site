@@ -273,7 +273,7 @@ export async function redeemReferral(newUid, rawCode) {
 
 function commissionKind(label) {
   const l = (label || '').toLowerCase();
-  if (/offer|survey|partner|adgate|timewall|app install|trial/.test(l)) return 'offer';
+  if (/offer|partner|adgate|timewall|app install|trial/.test(l)) return 'offer';
   return 'task';
 }
 
@@ -464,17 +464,21 @@ export async function playSpin(uid, mode, rand) {
   return { ok: true, prize };
 }
 
-// ---- Free Faucet: $0.15 drip per 1-hour claim, 10 paid claims per UTC day ----
+// ---- Free Faucet: $0.15 drip per 1-hour claim, rolling batches of 10 ----
 // Timer-only anti-bot at launch: visible countdown + cooldown enforced on a
 // re-read of the user's own proofs before every pay (same pattern as
 // claimMilestone), so double-taps and stale tabs cannot double-pay. Claims
 // flow through creditReward(uid, 0.15, 'play:faucet') so the Rewards faucet
 // track, Grow taskEarned/stakeable ceiling, and referral commission all pick
 // them up with no rules change (status 'pending' passes with any label).
-// Max exposure is bounded: 10 x $0.15 = $1.50/user/day, paced hourly.
+// Batch model: claim -> 1h wait -> claim, 10 drips per batch. Exhausting a
+// batch flows into the normal 1h drip wait, which IS the fresh batch.
+// Bounded: 4 batches x 10 x $0.15 = $6.00/user/UTC-day.
 export const FAUCET_AMOUNT = 0.15;
 export const FAUCET_INTERVAL_MS = 60 * 60000;
-export const FAUCET_DAILY_CAP = 10;
+export const FAUCET_BATCH_SIZE = 10;
+export const FAUCET_BATCHES_PER_DAY = 4;
+export const FAUCET_DAILY_CAP = FAUCET_BATCH_SIZE * FAUCET_BATCHES_PER_DAY;
 
 // Pure: ms timestamp of a proof row. Server Timestamps expose .seconds;
 // a just-written local estimate may carry null — treat as just-now (which
@@ -493,7 +497,8 @@ export function proofMs(p, nowMs) {
 }
 
 // Pure faucet state from an array of proof rows — no Firestore.
-// Returns { ready, waitMs, claimedToday, remainingToday, lastClaimMs, resetMs }.
+// Returns { ready, waitMs, claimedToday, remainingToday, lastClaimMs,
+//   resetMs, batch (1-based), inBatch (0..size), batchSize, batchesPerDay }.
 export function faucetState(proofs, nowMs) {
   const now = Number(nowMs || Date.now());
   const today = utcDayStr(now);
@@ -506,11 +511,14 @@ export function faucetState(proofs, nowMs) {
   }
   const waitMs = Math.max(0, last + FAUCET_INTERVAL_MS - now);
   const remainingToday = Math.max(0, FAUCET_DAILY_CAP - todayN);
+  const batch = Math.min(FAUCET_BATCHES_PER_DAY, Math.floor(todayN / FAUCET_BATCH_SIZE) + 1);
+  const inBatch = Math.min(FAUCET_BATCH_SIZE, todayN % FAUCET_BATCH_SIZE);
   return {
     ready: waitMs <= 0 && remainingToday > 0,
     waitMs, claimedToday: todayN, remainingToday, lastClaimMs: last,
     capped: remainingToday <= 0,
-    resetMs: spinResetMs(now)
+    resetMs: spinResetMs(now),
+    batch, inBatch, batchSize: FAUCET_BATCH_SIZE, batchesPerDay: FAUCET_BATCHES_PER_DAY
   };
 }
 
@@ -832,7 +840,6 @@ export const REWARD_TIERS = [0.10, 0.50, 1.00, 2.00];
 export const REWARD_TRACKS = [
   { id: 'welcome', name: 'Welcome Chest', tag: 'Your first reward — on the house', icon: 'gift', counter: 'welcome', targets: [1] },
   { id: 'offers', name: 'Offers & Apps', tag: 'Complete app offers', icon: 'layers', counter: 'offers', targets: [1, 3, 10, 25] },
-  { id: 'surveys', name: 'Paid Surveys', tag: 'Finish surveys', icon: 'clipboard-list', counter: 'surveys', targets: [1, 5, 20, 50] },
   { id: 'ads', name: 'Watch Ads', tag: 'Watch ad views', icon: 'play', counter: 'ads', targets: [5, 20, 50, 100] },
   { id: 'quiz', name: 'Quiz & Earn', tag: 'Pass quizzes', icon: 'graduation-cap', counter: 'quiz', targets: [1, 5, 20, 50] },
   { id: 'faucet', name: 'Free Faucet', tag: 'Collect claims', icon: 'droplets', counter: 'faucet', targets: [5, 25, 100, 250] },
@@ -841,11 +848,11 @@ export const REWARD_TRACKS = [
   { id: 'streak', name: 'Streak Keeper', tag: 'Active days in a row', icon: 'flame', counter: 'streak', targets: [3, 7, 14, 30] },
   { id: 'grow', name: 'Grower', tag: 'Grow milestones', icon: 'trending-up', counter: null, targets: [1, 1, 1, 25], counters: ['stakes', 'boosts', 'yields', 'stakedTotal'] },
 ];
-const REWARD_COUNTERS = ['offers', 'surveys', 'ads', 'quiz', 'faucet', 'spin'];
+const REWARD_COUNTERS = ['offers', 'ads', 'quiz', 'faucet', 'spin'];
 
 // Pure stats fold over a proofs array + user doc + referrals — no Firestore.
 export function foldRewardStats(proofs, userDoc, referrals) {
-  const s = { welcome: 1, offers: 0, surveys: 0, ads: 0, quiz: 0, faucet: 0, spin: 0, invites: 0, streak: 0, stakes: 0, boosts: 0, yields: 0, stakedTotal: 0, claimed: {} };
+  const s = { welcome: 1, offers: 0, ads: 0, quiz: 0, faucet: 0, spin: 0, invites: 0, streak: 0, stakes: 0, boosts: 0, yields: 0, stakedTotal: 0, claimed: {} };
   for (const p of (Array.isArray(proofs) ? proofs : [])) {
     const lb = String((p && p.label) || '');
     if (lb === 'ad-view') { s.ads++; s.boosts++; continue; }

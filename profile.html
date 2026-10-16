@@ -94,7 +94,6 @@
 </div>
 <div class="tabs" role="tablist" aria-label="History categories" id="cat-tabs">
 <button class="on" data-cat="all" role="tab" aria-selected="true">Offers</button>
-<button data-cat="surveys" role="tab" aria-selected="false">Surveys</button>
 <button data-cat="referrals" role="tab" aria-selected="false">Referrals</button>
 </div>
 <div style="display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 4px">
@@ -138,7 +137,6 @@ import { requireAuth } from './js/guard.js';
   function matchCat(p){
     if(cat==='all')return true;
     var l=((p.label||p.title||'')+'').toLowerCase();
-    if(cat==='surveys')return /survey|opinion|poll|panel/.test(l);
     if(cat==='rewards')return /cashout|bonus|reward|lottery/.test(l);
     return false;
   }

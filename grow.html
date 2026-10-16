@@ -275,10 +275,8 @@ import { requireAuth } from './js/guard.js';
     try{document.getElementById('boost-btn').classList.toggle('attn',!mining);}catch(_){}
     var boosted=mining&&state.boostUntilMs>now;
     var perDay=dayYield(state.invested,boosted?INVEST_BOOST_APR:INVEST_BASE_APR);
-    var rateMin=convertUSD(perDay/1440,cur);
-    var rateStr='+'+symbolFor(cur)+rateMin.toFixed(4)+'/min live';
     var sub=mining
-      ?'Growing <b>'+moneyPrec(perDay,4)+'/day</b> · <b>'+rateStr+'</b> · unclaimed <b>'+moneyPrec(totalYield,6)+'</b> · shift ends in <b>'+fmtClock(state.mineUntilMs-now)+'</b>'
+      ?'Growing <b>'+moneyPrec(perDay,4)+'/day</b> · unclaimed <b>'+moneyPrec(totalYield,6)+'</b> · shift ends in <b>'+fmtClock(state.mineUntilMs-now)+'</b>'
       :'Mining paused — watch an ad to start a 6h shift · unclaimed <b>'+moneyPrec(totalYield,6)+'</b>';
     document.getElementById('tick-sub').innerHTML=sub;
     var badge=document.getElementById('apr-badge');

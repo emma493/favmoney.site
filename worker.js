@@ -1,5 +1,5 @@
 // Favmoney Cloudflare Worker: static assets + offerwall postback receivers
-// (Golden Goose, OGAds, CPA Grip).
+// (Golden Goose, OGAds, CPA Grip, MyLead).
 //
 // Routes:
 //   GET /api/gg-postback?p1={p1}&p2={p2}&event_id={event_id}&event={event}
@@ -8,13 +8,22 @@
 //   GET|POST /api/ogads-postback (uid via aff_sub4, key via ?key=)
 //   GET|POST /api/cpagrip-postback?payout={payout}&offer={offer_id}&subid={tracking_id}
 //     (CPA Grip POSTs password/payout/offer_id/tracking_id; GET tokens also read)
+//   GET /api/mylead-postback?transaction_id={id}&player_id={uid}
+//     &payout_decimal={eur}&currency={cur}&status={status}
+//     (MyLead signs via X-MyLead-Security-Hash header + MYLEAD_POSTBACK_KEY)
+//   POST /api/notify-cashout {idToken, cashoutId, type, displayAmount}
+//     (member/admin cashout mail via Resend; type received|paid)
 // Everything else falls through to static assets (env.ASSETS).
 //
 // Required secrets (never commit — dashboard or `wrangler secret put <NAME>`):
 //   GG_POSTBACK_KEY            shared secret you append as &key= in GG dashboard
 //   OGADS_POSTBACK_KEY         shared secret for OGAds global postback
 //   CPAGRIP_POSTBACK_KEY       password set on CPA Grip Global Postback page
+//   MYLEAD_POSTBACK_KEY        MyLead postback verification security key
 //   FIREBASE_SERVICE_ACCOUNT   full service-account JSON (client_email + private_key)
+//   RESEND_API_KEY             Resend sending key for cashout mail
+// Optional vars (wrangler.jsonc [vars]):
+//   MAIL_FROM (default 'Favmoney <payments@favmoney.site>')
 // Optional vars (wrangler.jsonc [vars]):
 //   FIREBASE_PROJECT_ID (default 'favmoney'), GG_SHARE (default 0.7),
 //   GG_MAX_PAYOUT (default 20), GG_CREDIT_EVENTS (default 'redeem,iclick'),
@@ -521,6 +530,391 @@ async function handleCpagripPostback(request, env) {
   }
 }
 
+// ---------- MyLead offerwall postback (player_id wall, GET) ----------
+// Wall opens in a new tab with ?player_id=<uid>; approved conversions GET
+// back here with transaction_id / player_id / payout_decimal / currency /
+// status (+ optional destination_program_name for the ledger label).
+// Verification: X-MyLead-Security-Hash header compared against a hash of the
+// received postback URL + MYLEAD_POSTBACK_KEY.
+// NOTE (unconfirmed): default scheme below is SHA-1 hex over (url + key).
+// Every hit logs url + received + expected so one test postback pins the
+// exact recipe; flip MYLEAD_HASH to the winner if it differs.
+export function myleadShare(env) {
+  return Number((env && env.MYLEAD_SHARE) || 0.7);
+}
+
+export function myleadMaxPayout(env) {
+  return Number((env && env.MYLEAD_MAX_PAYOUT) || 20);
+}
+
+export function myleadEurUsd(env) {
+  const r = Number((env && env.MYLEAD_EURUSD) || 1.08);
+  return r > 0 ? r : 1.08;
+}
+
+export function myleadUserAmount(payoutEur, share, cap, rate) {
+  const s = Number(share == null ? 0.7 : share);
+  const c = Number(cap == null ? 20 : cap);
+  const r = Number(rate == null || !(rate > 0) ? 1.08 : rate);
+  const usd = Number(payoutEur || 0) * r;
+  const amt = Math.round(usd * s * 100) / 100;
+  if (!(amt > 0)) return 0;
+  return Math.min(amt, c);
+}
+
+export function myleadEventId(uid, txId) {
+  return 'ml-' + String(uid || '') + '-' + String(txId || '0').slice(0, 64);
+}
+
+function mlPostbackParams(url) {
+  const u = new URL(url);
+  const q = u.searchParams;
+  return {
+    txId: (q.get('transaction_id') || '').slice(0, 64),
+    uid: (q.get('player_id') || '').slice(0, 128),
+    payout: Number(q.get('payout_decimal') || 0),
+    currency: (q.get('currency') || 'EUR').slice(0, 8).toUpperCase(),
+    status: (q.get('status') || '').slice(0, 32).toLowerCase(),
+    offerName: (q.get('destination_program_name') || '').slice(0, 128)
+  };
+}
+
+function hexOf(buf) {
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function myleadVerifyHash(url, received, key) {
+  const u = new URL(url);
+  const full = u.origin + u.pathname + u.search;
+  const data = full + String(key || '');
+  const digest = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(data));
+  return { expected: hexOf(digest), full };
+}
+
+async function handleMyleadPostback(request, env) {
+  const p = mlPostbackParams(request.url);
+  const received = request.headers.get('X-MyLead-Security-Hash') || '';
+  const secret = (env && env.MYLEAD_POSTBACK_KEY) || '';
+  if (!secret) {
+    console.log('mylead-postback: MYLEAD_POSTBACK_KEY not configured; url=' + request.url + ' hash=' + received);
+    return json({ ok: false, reason: 'setup' }, 500);
+  }
+  const v = await myleadVerifyHash(request.url, received, secret);
+  if (!timingSafeEqual(String(received).toLowerCase(), v.expected)) {
+    console.log('mylead-postback: hash mismatch; url=' + v.full + ' received=' + received + ' expected=' + v.expected);
+    return json({ ok: false, reason: 'auth' }, 401);
+  }
+  if (!p.txId) return json({ ok: false, reason: 'transaction_id' }, 400);
+  if (!isUid(p.uid)) return json({ ok: false, reason: 'uid' }, 400);
+  const projectId = (env && env.FIREBASE_PROJECT_ID) || 'favmoney';
+  const saJson = (env && (env.FIREBASE_SERVICE_ACCOUNT || env.FIREBASE_SERVICE_ACCOUNT_JSON)) || '';
+  if (!saJson) {
+    console.log('mylead-postback: FIREBASE_SERVICE_ACCOUNT not configured');
+    return json({ ok: false, reason: 'setup' }, 500);
+  }
+  const eventId = myleadEventId(p.uid, p.txId);
+  try {
+    const token = await googleAccessToken(saJson);
+    const seen = await fsGet(projectId, token, 'ml_events/' + encodeURIComponent(eventId));
+    if (seen) return text('OK');
+    if (p.status !== 'approved') {
+      await fsCreate(projectId, token, 'ml_events', eventId, {
+        uid: S(p.uid), provider: S('mylead'), eventId: S(eventId),
+        txId: S(p.txId), status: S(p.status || 'unknown'),
+        offerName: S(p.offerName), at: T()
+      });
+      return text('OK');
+    }
+    if (!(p.payout > 0)) return json({ ok: false, reason: 'payout' }, 400);
+    const rate = p.currency === 'USD' ? 1 : myleadEurUsd(env);
+    const amount = myleadUserAmount(p.payout, myleadShare(env), myleadMaxPayout(env), rate);
+    if (!(amount > 0)) return json({ ok: false, reason: 'payout' }, 400);
+    const baseFields = {
+      uid: S(p.uid), provider: S('mylead'), eventId: S(eventId), txId: S(p.txId),
+      offerName: S(p.offerName), profit: N(p.payout), currency: S(p.currency),
+      amount: N(amount), at: T()
+    };
+    const created = await fsCreate(projectId, token, 'ml_events', eventId, { ...baseFields, status: S('processing') });
+    if (created && created.conflict) return text('OK');
+    const wallet = await fsGet(projectId, token, 'wallets/' + encodeURIComponent(p.uid));
+    const wf = (wallet && wallet.fields) || {};
+    const pending = Number((wf.pending && (wf.pending.doubleValue || wf.pending.integerValue)) || 0);
+    const lifetime = Number((wf.lifetime && (wf.lifetime.doubleValue || wf.lifetime.integerValue)) || 0);
+    const invested = wf.invested || { doubleValue: 1 };
+    const walletFields = {
+      pending: N(Math.round((pending + amount) * 100) / 100),
+      lifetime: N(Math.round((lifetime + amount) * 100) / 100),
+      invested,
+      lastLabel: S('play:offers'),
+      updatedAt: T()
+    };
+    if (wallet) {
+      await fsPatch(projectId, token, 'wallets/' + encodeURIComponent(p.uid), walletFields, ['pending', 'lifetime', 'invested', 'lastLabel', 'updatedAt']);
+    } else {
+      await fsCreate(projectId, token, 'wallets', p.uid, {
+        ...walletFields, investedAt: N(Date.now()), boostUntil: N(0)
+      });
+    }
+    await fsCreate(projectId, token, 'proofs', '', {
+      uid: S(p.uid), amount: N(amount), label: S('play:offers'), status: S('pending'), at: T(),
+      provider: S('mylead'), eventId: S(eventId), offerName: S(p.offerName), profit: N(p.payout)
+    });
+    try {
+      await fsCreate(projectId, token, 'notifications', 'notif-' + eventId, {
+        uid: S(p.uid), kind: S('offer-credit'), title: S('Offer approved'),
+        body: S('+$' + amount.toFixed(2) + ' from MyLead'), link: S('profile.html'),
+        read: B(false), at: T()
+      });
+    } catch (_) {}
+    await fsPatch(projectId, token, 'ml_events/' + encodeURIComponent(eventId), { status: S('credited'), amount: N(amount) }, ['status', 'amount']);
+    try {
+      const uref = 'users/' + encodeURIComponent(p.uid);
+      const u = await fsGet(projectId, token, uref);
+      const uf = (u && u.fields) || {};
+      const earned = Number((uf.taskEarned && (uf.taskEarned.doubleValue || uf.taskEarned.integerValue)) || 0);
+      await fsPatch(projectId, token, uref, {
+        taskEarned: N(Math.round((earned + amount) * 100) / 100),
+        updatedAt: T()
+      }, ['taskEarned', 'updatedAt']);
+    } catch (_) {}
+    return text('OK');
+  } catch (e) {
+    console.log('mylead-postback error: ' + (e && e.message ? e.message : e));
+    return json({ ok: false, reason: 'write' }, 502);
+  }
+}
+
+// ---------- cashout mail (Resend) ----------
+// POST /api/notify-cashout { idToken, cashoutId, type: received|paid, displayAmount? }
+// Verifies the Firebase ID token via identitytoolkit (web key is public by
+// design, same value the client ships), checks ownership (received: caller
+// owns the cashout; paid: caller holds an admin seat), then sends one mail
+// per (cashout,type) — mailLog/{cashoutId}_{type} makes retries idempotent.
+// Cashout writes never depend on mail; every failure path returns ok:false
+// but the client treats mail as fire-and-forget.
+function webApiKey(env) {
+  return (env && env.FIREBASE_WEB_API_KEY) || 'AIzaSyBbPQlrTQHFk6XBPEDUrE7a3gIMNvvlric';
+}
+
+async function verifyIdToken(idToken, env) {
+  const t = String(idToken || '');
+  if (t.length < 100) return null;
+  try {
+    const res = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + encodeURIComponent(webApiKey(env)), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken: t })
+    });
+    if (!res.ok) return null;
+    const data = await resJson(res, 'idtoken');
+    const u = data && Array.isArray(data.users) ? data.users[0] : null;
+    if (!u || !u.localId) return null;
+    return { uid: String(u.localId), email: String(u.email || '') };
+  } catch (_) { return null; }
+}
+
+function maskDest(dest) {
+  const s = String(dest || '').trim();
+  if (!s) return '—';
+  const at = s.indexOf('@');
+  if (at > 0) {
+    const local = s.slice(0, at), domain = s.slice(at + 1);
+    return (local.charAt(0) || '*') + '•••@' + domain;
+  }
+  const digits = s.replace(/\D/g, '');
+  if (digits.length >= 6) return '••••' + digits.slice(-4);
+  if (s.length <= 8) return s.charAt(0) + '•••';
+  return s.slice(0, 4) + '…' + s.slice(-4);
+}
+
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// Pure builders — unit-testable, no platform APIs.
+export function cashoutMail(type, d) {
+  const amount = String(d.displayAmount || ('$' + Number(d.usd || 0).toFixed(2)));
+  const method = String(d.method || 'your method');
+  const dest = maskDest(d.dest);
+  const id = String(d.cashoutId || '—');
+  const date = String(d.dateUtc || '');
+  const appUrl = 'https://favmoney.site';
+  if (type === 'paid') {
+    return {
+      subject: 'Your ' + amount + ' has been sent via ' + method + ' · Favmoney',
+      text:
+        'Hi ' + d.name + ',\n\n' +
+        'Good news — your withdrawal has been paid.\n\n' +
+        'Amount: ' + amount + '\n' +
+        'Method: ' + method + '\n' +
+        'Destination: ' + dest + '\n' +
+        'Request ID: ' + id + '\n' +
+        'Paid: ' + date + '\n\n' +
+        'Depending on the rail, arrival can take a few minutes to a few hours. ' +
+        'Track it anytime: ' + appUrl + '/withdrawals.html\n\n' +
+        "If this wasn't you, contact support immediately.\n\n" +
+        "— The Favmoney team\n" +
+        "Security note: we'll never ask for your password or keys. This is a notification-only address.",
+      html:
+        '<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#222">' +
+        '<h2 style="margin:0 0 8px">Hi ' + escHtml(d.name) + ',</h2>' +
+        '<p><strong>Good news — your withdrawal has been paid.</strong></p>' +
+        '<table style="border-collapse:collapse;width:100%;margin:12px 0"><tbody>' +
+        '<tr><td style="padding:6px 10px;color:#666">Amount</td><td style="padding:6px 10px"><strong>' + escHtml(amount) + '</strong></td></tr>' +
+        '<tr><td style="padding:6px 10px;color:#666">Method</td><td style="padding:6px 10px">' + escHtml(method) + '</td></tr>' +
+        '<tr><td style="padding:6px 10px;color:#666">Destination</td><td style="padding:6px 10px">' + escHtml(dest) + '</td></tr>' +
+        '<tr><td style="padding:6px 10px;color:#666">Request ID</td><td style="padding:6px 10px">' + escHtml(id) + '</td></tr>' +
+        '<tr><td style="padding:6px 10px;color:#666">Paid</td><td style="padding:6px 10px">' + escHtml(date) + '</td></tr>' +
+        '</tbody></table>' +
+        '<p>Depending on the rail, arrival can take a few minutes to a few hours. ' +
+        '<a href="' + appUrl + '/withdrawals.html">Track it here</a>.</p>' +
+        "<p>If this wasn't you, contact support immediately.</p>" +
+        '<p style="color:#888;font-size:12px">— The Favmoney team<br>Security note: we\'ll never ask for your password or keys. This is a notification-only address.</p>' +
+        '</div>'
+    };
+  }
+  return {
+    subject: 'Withdrawal received — ' + amount + ' via ' + method + ' · Favmoney',
+    text:
+      'Hi ' + d.name + ',\n\n' +
+      "We've received your withdrawal request. It is now under review.\n\n" +
+      'Amount: ' + amount + '\n' +
+      'Method: ' + method + '\n' +
+      'Destination: ' + dest + '\n' +
+      'Request ID: ' + id + '\n' +
+      'Requested: ' + date + '\n\n' +
+      'What happens next: review usually completes within a few hours, and payout lands within 24 hours of your request. ' +
+      'Track status anytime: ' + appUrl + '/withdrawals.html\n\n' +
+      "If you didn't request this, contact support immediately.\n\n" +
+      '— The Favmoney team\n' +
+      "Security note: we'll never ask for your password or keys. This is a notification-only address."
+    ,
+    html:
+      '<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#222">' +
+      '<h2 style="margin:0 0 8px">Hi ' + escHtml(d.name) + ',</h2>' +
+      "<p><strong>We've received your withdrawal request.</strong> It is now under review.</p>" +
+      '<table style="border-collapse:collapse;width:100%;margin:12px 0"><tbody>' +
+      '<tr><td style="padding:6px 10px;color:#666">Amount</td><td style="padding:6px 10px"><strong>' + escHtml(amount) + '</strong></td></tr>' +
+      '<tr><td style="padding:6px 10px;color:#666">Method</td><td style="padding:6px 10px">' + escHtml(method) + '</td></tr>' +
+      '<tr><td style="padding:6px 10px;color:#666">Destination</td><td style="padding:6px 10px">' + escHtml(dest) + '</td></tr>' +
+      '<tr><td style="padding:6px 10px;color:#666">Request ID</td><td style="padding:6px 10px">' + escHtml(id) + '</td></tr>' +
+      '<tr><td style="padding:6px 10px;color:#666">Requested</td><td style="padding:6px 10px">' + escHtml(date) + '</td></tr>' +
+      '</tbody></table>' +
+      '<p><strong>What happens next:</strong> review usually completes within a few hours, and payout lands <strong>within 24 hours</strong> of your request. ' +
+      '<a href="' + appUrl + '/withdrawals.html">Track status here</a>.</p>' +
+      "<p>If you didn't request this, contact support immediately.</p>" +
+      '<p style="color:#888;font-size:12px">— The Favmoney team<br>Security note: we\'ll never ask for your password or keys. This is a notification-only address.</p>' +
+      '</div>'
+  };
+}
+
+async function resendSend(env, msg) {
+  const key = (env && env.RESEND_API_KEY) || '';
+  if (!key) throw new Error('RESEND_API_KEY not configured');
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: (env && env.MAIL_FROM) || 'Favmoney <payments@favmoney.site>',
+      to: [msg.to],
+      subject: msg.subject,
+      html: msg.html,
+      text: msg.text
+    })
+  });
+  if (!res.ok) {
+    const t = await res.text().catch(function () { return ''; });
+    throw new Error('resend ' + res.status + ': ' + String(t).slice(0, 120));
+  }
+  return resJson(res, 'resend');
+}
+
+function restNum(doc, field) {
+  try {
+    const f = doc && doc.fields && doc.fields[field];
+    if (!f) return 0;
+    if (typeof f.doubleValue === 'number') return f.doubleValue;
+    if (typeof f.integerValue === 'string') return Number(f.integerValue);
+    return Number(f.doubleValue || 0);
+  } catch (_) { return 0; }
+}
+
+async function handleNotifyCashout(request, env) {
+  let body = null;
+  try { body = await request.json(); } catch (_) { return json({ ok: false, reason: 'body' }, 400); }
+  const type = String((body && body.type) || '');
+  if (type !== 'received' && type !== 'paid') return json({ ok: false, reason: 'type' }, 400);
+  const cashoutId = String((body && body.cashoutId) || '').slice(0, 128);
+  if (!cashoutId) return json({ ok: false, reason: 'cashoutId' }, 400);
+  const me = await verifyIdToken(body && body.idToken, env);
+  if (!me) return json({ ok: false, reason: 'auth' }, 401);
+  if (!((env && env.RESEND_API_KEY) || '')) return json({ ok: false, reason: 'setup' }, 500);
+  const projectId = (env && env.FIREBASE_PROJECT_ID) || 'favmoney';
+  const saJson = (env && (env.FIREBASE_SERVICE_ACCOUNT || env.FIREBASE_SERVICE_ACCOUNT_JSON)) || '';
+  if (!saJson) return json({ ok: false, reason: 'setup' }, 500);
+  try {
+    const token = await googleAccessToken(saJson);
+    const co = await fsGet(projectId, token, 'cashouts/' + encodeURIComponent(cashoutId));
+    if (!co) return json({ ok: false, reason: 'unknown' }, 404);
+    const ownerUid = restStr(co, 'uid');
+    if (type === 'received') {
+      if (!ownerUid || ownerUid !== me.uid) return json({ ok: false, reason: 'auth' }, 403);
+    } else {
+      // paid: caller must hold an admin seat (owner console session).
+      let admin = false;
+      for (const seat of ['seat1', 'seat2']) {
+        try {
+          const s = await fsGet(projectId, token, 'admin/' + seat);
+          if (s && restStr(s, 'uid') === me.uid) { admin = true; break; }
+        } catch (_) {}
+      }
+      if (!admin) return json({ ok: false, reason: 'auth' }, 403);
+    }
+    // Idempotency: one mail per (cashout, type).
+    try {
+      const seen = await fsGet(projectId, token, 'mailLog/' + encodeURIComponent(cashoutId + '_' + type));
+      if (seen) return json({ ok: true, deduped: true });
+    } catch (_) {}
+    const amount = restNum(co, 'amount');
+    const method = restStr(co, 'method') || 'your method';
+    const dest = restStr(co, 'dest');
+    let to = '', name = 'there', currency = 'USD';
+    try {
+      const u = await fsGet(projectId, token, 'users/' + encodeURIComponent(ownerUid));
+      to = restStr(u, 'email') || me.email;
+      const em = to || me.email || '';
+      name = (em.split('@')[0] || 'there').slice(0, 24);
+      const cu = restStr(u, 'currency');
+      if (/^[A-Z]{3}$/.test(cu)) currency = cu;
+    } catch (_) { to = me.email; }
+    if (!to || to.indexOf('@') < 0) return json({ ok: false, reason: 'noemail' }, 400);
+    let display = String((body && body.displayAmount) || '').slice(0, 40);
+    if (!display) display = '$' + amount.toFixed(2) + (currency !== 'USD' ? ' (USD ' + amount.toFixed(2) + ')' : '');
+    let atIso = '';
+    try {
+      const at = co.fields && co.fields.at;
+      atIso = (at && (at.timestampValue || '')) || '';
+    } catch (_) {}
+    let dateUtc = atIso;
+    try { if (atIso) dateUtc = new Date(atIso).toUTCString(); } catch (_) {}
+    const mail = cashoutMail(type, {
+      name, displayAmount: display, method, dest,
+      cashoutId, dateUtc: dateUtc || new Date().toUTCString(),
+      usd: amount
+    });
+    await resendSend(env, { to, subject: mail.subject, html: mail.html, text: mail.text });
+    try {
+      await fsCreate(projectId, token, 'mailLog', cashoutId + '_' + type, {
+        uid: S(ownerUid), type: S(type), to: S(to), at: T()
+      });
+    } catch (_) {}
+    return json({ ok: true });
+  } catch (e) {
+    console.log('notify-cashout error: ' + (e && e.message ? e.message : e));
+    return json({ ok: false, reason: 'send' }, 502);
+  }
+}
+
 // ---------- request handler ----------
 export default {
   async fetch(request, env, ctx) {
@@ -546,6 +940,14 @@ export default {
       try { return await handleCpagripPostback(request, env); }
       catch (e) {
         console.log('cpagrip-postback error: ' + (e && e.message ? e.message : e));
+        return json({ ok: false, reason: 'write' }, 502);
+      }
+    }
+    if (url.pathname === '/api/mylead-postback' || url.pathname === '/api/mylead-postback/') {
+      if (request.method !== 'GET') return json({ ok: false, reason: 'method' }, 405);
+      try { return await handleMyleadPostback(request, env); }
+      catch (e) {
+        console.log('mylead-postback error: ' + (e && e.message ? e.message : e));
         return json({ ok: false, reason: 'write' }, 502);
       }
     }

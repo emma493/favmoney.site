@@ -100,15 +100,15 @@ if (window.FavLoader) FavLoader.hold();
   var toast = document.getElementById('toast'), tm = null;
   function show(m){ toast.textContent = m; toast.classList.add('show'); clearTimeout(tm); tm = setTimeout(function(){ toast.classList.remove('show'); }, 3400); }
   function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-  function ggProvider(){
-    for(var gi = 0; gi < OFFER_PROVIDERS.length; gi++){ if(OFFER_PROVIDERS[gi].id === 'gg') return OFFER_PROVIDERS[gi]; }
+  function providerById(pid){
+    for(var gi = 0; gi < OFFER_PROVIDERS.length; gi++){ if(OFFER_PROVIDERS[gi].id === pid) return OFFER_PROVIDERS[gi]; }
     return null;
   }
-  // Golden Goose card HTML (gg.agency only: own SmartLink, tag and 70% pill).
-  // Rendered standalone in #provider-list, or spliced third into the offers
+  function ggProvider(){ return providerById('gg'); }
+  // Provider card HTML (own link, tag and 70% pill per provider).
+  // Rendered standalone in #provider-list, or spliced into the offers
   // stream — same markup, same link, both places never at once.
-  function ggCardHTML(){
-    var p = ggProvider();
+  function providerCardHTML(p){
     if(!p) return '';
     var ready = !!p.base && !!uid;
     var img = p.img ? '<div class="oc-asset"><img src="' + esc(p.img) + '" alt="" loading="lazy" decoding="async"></div>' : '';
@@ -124,6 +124,7 @@ if (window.FavLoader) FavLoader.hold();
       + '<p class="oc-desc">' + esc(p.desc || p.tag || '') + '</p>'
       + '<div class="oc-base"><div class="oc-time"><small>Provider</small><b>' + esc(p.tag || '') + '</b></div>' + btn + '</div></div></div>';
   }
+  function ggCardHTML(){ return providerCardHTML(ggProvider()); }
   // The standalone container only shows when GG is NOT merged into the
   // offers stream (guests, empty offers, link not configured).
   function syncProviderContainer(){
@@ -139,7 +140,7 @@ if (window.FavLoader) FavLoader.hold();
     var setup = document.getElementById('gg-setup');
     if(setup) setup.style.display = (gg && !gg.base) ? '' : 'none';
     list.innerHTML = OFFER_PROVIDERS.map(function(p){
-      if(p && p.id === 'gg') return ggCardHTML();
+      if(p && (p.id === 'gg' || p.id === 'mylead')) return providerCardHTML(p);
       var ready = !!p.base && !!uid;
       var img = p.img ? '<div class="oc-asset"><img src="' + esc(p.img) + '" alt="" loading="lazy" decoding="async"></div>' : '';
       var btn;
@@ -183,10 +184,17 @@ if (window.FavLoader) FavLoader.hold();
         + '<p class="oc-desc">' + esc(o.adcopy || '') + '</p>'
         + '<div class="oc-base og-base"><button class="btn btn-green" data-ogads="' + esc(o.link) + '" data-offer="' + o.offerid + '" style="min-height:48px">Start</button></div></div></div>';
     });
-    // Golden Goose (gg.agency) rides third in the offers stream — same card,
-    // same SmartLink, never duplicated with the standalone container.
-    var gg = uid ? ggCardHTML() : '';
-    if(gg) cards.splice(Math.min(2, cards.length), 0, gg);
+    // Provider cards ride fixed slots in the offers stream: Golden Goose
+    // (gg.agency) third, MyLead (mylead.global) fourth — same cards, same
+    // links, never duplicated with the standalone container.
+    var slots = [];
+    if(uid){
+      var gg = ggCardHTML();
+      if(gg) slots.push({at:2, html:gg});
+      var ml = providerCardHTML(providerById('mylead'));
+      if(ml) slots.push({at:3, html:ml});
+    }
+    slots.forEach(function(s){ cards.splice(Math.min(s.at, cards.length), 0, s.html); });
     list.innerHTML = cards.join('');
     syncProviderContainer();
   }

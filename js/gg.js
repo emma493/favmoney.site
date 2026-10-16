@@ -8,6 +8,10 @@
 // query params; uid/source/site are appended automatically.
 export const GG_PROMO_BASE = 'https://jhuweq.com/cl/8e606e488b499750';
 
+// MyLead offerwall (iframe wall opened in a NEW TAB, never embedded).
+// The Firebase uid travels as ?player_id= so conversions attribute back.
+export const MYLEAD_WALL_URL = 'https://reward-me.eu/597dbb1a-c964-11f1-973a-8a5fb7be40ea';
+
 export const OFFER_PROVIDERS = [
   {
     id: 'gg',
@@ -17,6 +21,15 @@ export const OFFER_PROVIDERS = [
     cta: 'Open offers',
     img: 'images/offers-and-apps.png',
     base: GG_PROMO_BASE
+  },
+  {
+    id: 'mylead',
+    name: 'MyLead',
+    tag: 'mylead.global · Offerwall',
+    desc: 'Complete offerwall deals from mylead.global. You keep 70% of each approved payout.',
+    cta: 'Open wall',
+    base: MYLEAD_WALL_URL,
+    playerParam: 'player_id'
   }
 ];
 
@@ -27,6 +40,9 @@ export function providerClickUrl(provider, uid) {
   const id = String((uid || '')).slice(0, 128);
   if (!id) return '';
   const sep = base.indexOf('?') >= 0 ? '&' : '?';
+  if (provider && provider.playerParam) {
+    return base + sep + encodeURIComponent(provider.playerParam) + '=' + encodeURIComponent(id);
+  }
   return base + sep + 'p1=' + encodeURIComponent(id)
     + '&p2=' + encodeURIComponent(provider.id || 'gg')
     + '&source=' + encodeURIComponent('favmoney')

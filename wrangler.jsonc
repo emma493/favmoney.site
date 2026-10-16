@@ -13,6 +13,9 @@
     "GG_CREDIT_EVENTS": "redeem,iclick",
     "OGADS_SHARE": "0.7",
     "OGADS_MAX_PAYOUT": "20",
+    "MYLEAD_SHARE": "0.7",
+    "MYLEAD_MAX_PAYOUT": "20",
+    "MYLEAD_EURUSD": "1.08",
     "CPAGRIP_SHARE": "0.7",
     "CPAGRIP_MAX_PAYOUT": "20"
   },

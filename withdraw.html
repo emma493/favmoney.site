@@ -186,10 +186,19 @@ import { requireAuth } from './js/guard.js';
     try{
       var fw=await getWallet(uid);
       if(denom>Number(fw.pending)){show('Insufficient balance ('+formatUSD(Number(fw.pending),cur())+').');return;}
-      await requestCashout(uid,{method:sel,methodKind:m0.kind||'unknown',country:userCountry,amount:denom,dest:dest});
+      var __cid=null;
+      try{__cid=await requestCashout(uid,{method:sel,methodKind:m0.kind||'unknown',country:userCountry,amount:denom,dest:dest});}
+      catch(err){show('Request failed — check connection and Firestore rules.');return;}
       try{track('cashout_request',{method:sel});}catch(_){}
       avail=Math.round((Number(fw.pending)-denom)*100)/100;
       paintHero();renderMethods();renderDenoms();
+      // Receipt email (fire-and-forget — cashout already succeeded).
+      if(__cid){
+        try{
+          var __tkn=await auth.currentUser.getIdToken();
+          fetch('/api/notify-cashout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idToken:__tkn,cashoutId:__cid,type:'received',displayAmount:formatUSD(denom,cur())})});
+        }catch(_){}
+      }
       try{var fw2=await getWallet(uid);try{document.getElementById('chip-bal').textContent=formatUSD(fw2.pending);}catch(_){}}catch(_){}
       show('Cashout requested: '+formatUSD(denom,cur())+' via '+sel+'.');
     }catch(err){show('Request failed — check connection and Firestore rules.');}

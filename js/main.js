@@ -62,6 +62,13 @@
   });
   document.querySelectorAll('[data-lang]').forEach(function (btn) {
     btn.addEventListener('click', function () {
+      try {
+        if (window.FavI18n && window.FavI18n.cycle) {
+          var l = window.FavI18n.cycle();
+          showToast(l === 'zh-CN' ? '已切换到中文。' : 'Switched to English.');
+          return;
+        }
+      } catch (e) {}
       showToast('English is the current language. More languages coming soon.');
     });
   });

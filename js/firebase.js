@@ -115,7 +115,7 @@ export async function submitProof(uid, data) {
 }
 
 export async function requestCashout(uid, data) {
-  await addDoc(collection(db, 'cashouts'), {
+  const ref = await addDoc(collection(db, 'cashouts'), {
     uid, ...data, status: 'review', at: serverTimestamp()
   });
   const wref = doc(db, 'wallets', uid);
@@ -123,6 +123,7 @@ export async function requestCashout(uid, data) {
     pending: increment(-Number(data.amount || 0)),
     updatedAt: serverTimestamp()
   });
+  try { return ref.id; } catch (_) { return null; }
 }
 
 // ---- Favmoney profile fields (replaces localStorage: streak, started, claimed) ----

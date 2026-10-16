@@ -919,6 +919,14 @@ async function handleNotifyCashout(request, env) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    if (url.pathname === '/api/notify-cashout' || url.pathname === '/api/notify-cashout/') {
+      if (request.method !== 'POST') return json({ ok: false, reason: 'method' }, 405);
+      try { return await handleNotifyCashout(request, env); }
+      catch (e) {
+        console.log('notify-cashout error: ' + (e && e.message ? e.message : e));
+        return json({ ok: false, reason: 'send' }, 502);
+      }
+    }
     if (url.pathname === '/api/ogads-offers' || url.pathname === '/api/ogads-offers/') {
       if (request.method !== 'GET') return json({ ok: false, reason: 'method' }, 405);
       try { return await handleOgadsOffers(request, env); }

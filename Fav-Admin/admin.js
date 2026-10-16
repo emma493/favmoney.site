@@ -499,6 +499,13 @@ if (window.FavLoader) FavLoader.hold();
     try {
       await updateDoc(doc(db, 'cashouts', id), { status: to });
       await audit(to === 'paid' ? 'payout-paid' : 'payout-rejected', id, 0, to);
+      // Paid email (fire-and-forget — decision already recorded).
+      if (to === 'paid') {
+        try {
+          var __tk = auth.currentUser ? await auth.currentUser.getIdToken() : '';
+          if (__tk) fetch('/api/notify-cashout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken: __tk, cashoutId: id, type: 'paid' }) });
+        } catch (_) {}
+      }
       // Member bell feed (best-effort, never blocks the decision).
       try {
         var csnap = await getDoc(doc(db, 'cashouts', id));

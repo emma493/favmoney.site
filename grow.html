@@ -32,6 +32,15 @@
   <style>
     .tick{font-size:clamp(34px,6vw,52px);font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.1;margin:6px 0 2px}
     .tick small{font-size:.45em;color:var(--faint);font-weight:700}
+    .tick .odig{display:inline-block;height:1em;overflow:hidden;vertical-align:top}
+    .tick .oreel{display:block;transition:transform .22s ease-out;will-change:transform}
+    .tick .oreel>span{display:block;height:1em;line-height:1}
+    .tick.noanim .oreel{transition:none}
+    .tick.still{opacity:.6}
+    .tick.still .oreel{transition:none}
+    .boost-pill.attn{animation:ctaPulse 1.6s ease-in-out infinite}
+    @keyframes ctaPulse{0%,100%{box-shadow:0 0 0 0 rgba(1,214,118,.45)}50%{box-shadow:0 0 0 10px rgba(1,214,118,0)}}
+    @media (prefers-reduced-motion:reduce){.boost-pill.attn{animation:none}.tick .oreel{transition:none}}
     .apr-badge{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:#06240f;background:var(--green);border-radius:999px;padding:4px 14px}
     .apr-badge.boost{background:linear-gradient(135deg,#ffd75e,#ff9d3c);color:#3a2200}
     .apr-badge svg{width:14px;height:14px}
@@ -162,8 +171,6 @@
 </div>
 <div class="ad-timer"><span id="ad-msg">Keep this view visible…</span><b id="ad-count">20s</b></div>
 <div class="prog" style="margin:0 0 8px"><i id="ad-bar" style="width:0%"></i></div>
-<button class="btn btn-green btn-block" id="ad-resume" style="display:none">Resume viewing</button>
-<button class="btn btn-green btn-block" id="ad-back" style="display:none">Back to ad</button>
 <a class="btn btn-green btn-block" id="ad-openlink" href="#" target="_blank" rel="noopener sponsored nofollow" style="display:none">Open ad in new tab</a>
 <div class="ad-foot">
 <button class="btn btn-green btn-block" id="ad-go" style="display:none">Continue</button>
@@ -178,7 +185,6 @@
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveState, settleInvest, stakeInvest, unstakeAll, activateBoost, activateMining, fetchUserDocs, computeYield, utcDayStr, track, getUnclaimedRewards, INVEST_BASE_APR, INVEST_BOOST_APR, INVEST_BOOST_MS, MINE_SHIFT_MS, INVEST_SEED } from './js/firebase.js';
 import { SPONSOR_URL } from './js/ptc-catalog.js';
-import { createRewardedView } from './js/rewarded-view.js';
 import { formatUSD, convertUSD, currentCountry, symbolFor, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 import { requireAuth } from './js/guard.js';
 (function(){
@@ -210,18 +216,59 @@ import { requireAuth } from './js/guard.js';
   // getLiveState). Without it a reload would drop all unsettled yield and the
   // ticker would snap back to principal (e.g. 1.000000). Yield stays virtual
   // until Claim persists it via settleInvest.
+  // Odometer: balance digits are rolling reels (paint-only; settled values
+  // stay authoritative). Reels rebuild only when integer width or currency
+  // changes; big jumps (claim/stake/refresh) snap without spinning.
+  var odoKey='',odoCache=[],odoLast=NaN;
+  function paintOdo(shown,cur){
+    var el=document.getElementById('tick');
+    if(!el)return;
+    var s=Number(shown).toFixed(7);
+    var parts=s.split('.'),ip=parts[0],fp=parts[1];
+    var key=ip.length+':'+cur;
+    var snap=!isFinite(odoLast)||Math.abs(Number(shown)-odoLast)>0.5||key!==odoKey;
+    if(key!==odoKey){
+      var h='',i;
+      for(i=0;i<ip.length;i++)h+='<span class="odig" aria-hidden="true"><span class="oreel"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></span></span>';
+      h+='<span aria-hidden="true">.</span>';
+      for(i=0;i<fp.length;i++)h+='<span class="odig" aria-hidden="true"><span class="oreel"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></span></span>';
+      h+=' <small>'+cur+'</small>';
+      el.innerHTML=h;
+      odoKey=key;odoCache=[];
+    }
+    if(snap)el.classList.add('noanim');
+    var reels=el.querySelectorAll('.oreel');
+    var digits=(ip+fp).split(''),k;
+    for(k=0;k<digits.length&&k<reels.length;k++){
+      var dg=+digits[k];
+      if(odoCache[k]!==dg){odoCache[k]=dg;reels[k].style.transform='translateY('+(-dg)+'em)';}
+    }
+    if(snap){void el.offsetWidth;el.classList.remove('noanim');}
+    odoLast=Number(shown);
+    try{el.setAttribute('aria-label',Number(shown).toFixed(2)+' '+cur);}catch(_){}
+  }
+  function liveShown(){
+    var now=Date.now();
+    var r=computeYield(state.invested, investAnchor, now, state.boostUntilMs, null, null, state.mineUntilMs);
+    var totalYield=anchorAccrued+r.yield;
+    return {shown:convertUSD(state.invested+totalYield,currentCountry().currency),totalYield:totalYield,now:now};
+  }
   function paintLive(){
     if(!state)return;
     var now=Date.now();
     var mining=state.mineUntilMs>now;
-    var r=computeYield(state.invested, investAnchor, now, state.boostUntilMs, null, null, state.mineUntilMs);
-    var totalYield=anchorAccrued+r.yield;
-    var shown=convertUSD(state.invested+totalYield,currentCountry().currency);
-    document.getElementById('tick').innerHTML=shown.toFixed(7)+' <small>'+(currentCountry().currency||'USD')+'</small>';
+    var lv=liveShown();
+    var totalYield=lv.totalYield,shown=lv.shown;
+    var cur=currentCountry().currency||'USD';
+    paintOdo(shown,cur);
+    try{document.getElementById('tick').classList.toggle('still',!mining);}catch(_){}
+    try{document.getElementById('boost-btn').classList.toggle('attn',!mining);}catch(_){}
     var boosted=mining&&state.boostUntilMs>now;
     var perDay=dayYield(state.invested,boosted?INVEST_BOOST_APR:INVEST_BASE_APR);
+    var rateMin=convertUSD(perDay/1440,cur);
+    var rateStr='+'+symbolFor(cur)+rateMin.toFixed(4)+'/min live';
     var sub=mining
-      ?'Growing <b>'+moneyPrec(perDay,4)+'/day</b> at current rate · unclaimed <b>'+moneyPrec(totalYield,6)+'</b> · shift ends in <b>'+fmtClock(state.mineUntilMs-now)+'</b>'
+      ?'Growing <b>'+moneyPrec(perDay,4)+'/day</b> · <b>'+rateStr+'</b> · unclaimed <b>'+moneyPrec(totalYield,6)+'</b> · shift ends in <b>'+fmtClock(state.mineUntilMs-now)+'</b>'
       :'Mining paused — watch an ad to start a 6h shift · unclaimed <b>'+moneyPrec(totalYield,6)+'</b>';
     document.getElementById('tick-sub').innerHTML=sub;
     var badge=document.getElementById('apr-badge');
@@ -267,6 +314,9 @@ import { requireAuth } from './js/guard.js';
   }
   function tickLoop(){
     var now=Date.now();
+    // Fast path: advance the odometer reels every frame while live. Text,
+    // buttons and rates repaint at the slower cadence below.
+    if(state&&!reduced){try{var lvf=liveShown();paintOdo(lvf.shown,currentCountry().currency||'USD');}catch(e){}}
     if(now-lastPaint>(reduced?5000:250)){lastPaint=now;try{paintLive();}catch(e){}}
     raf=requestAnimationFrame(tickLoop);
   }
@@ -356,33 +406,62 @@ import { requireAuth } from './js/guard.js';
     await refresh();
   }});
   /* ---- rewarded view: 20s new-tab sponsor view, then boost ---- */
-  var grv=createRewardedView({
-    key:'grow',
-    notify:show,
-    onChange:function(s){ paintGrowModal(s); },
-    onCredit:function(){
-      var startShift=!(state&&state.mineUntilMs-Date.now()>0);
-      var p=startShift?activateMining(uid):activateBoost(uid);
-      return p.then(function(r){
-        if(!r.ok){
-          if(r.reason==='full')return {ok:false,message:(startShift?'Shift tank already full.':'Boost tank already full.')};
-          if(r.reason==='noshift')return {ok:false,message:'Shift ended - watch again to restart mining.'};
-          return {ok:false,retryable:true,message:(startShift?'Mining start failed - check connection and rules.':'Boost failed - check connection and rules.')};
-        }
-        try{track(startShift?'invest_shift':'invest_boost');}catch(_){}
-        show(startShift?'Mining started - 6h shift at 10,000% APR.':'Boost lit - 15,000% APR for 1 hour.');
-        return refresh().then(function(){return {ok:true};});
-      }).catch(function(){return {ok:false,retryable:true,message:'Boost failed - check connection and rules.'};});
-    }
-  });
-  try{ grv.restore(); }catch(_){}
-  function grvSnap(){ try{ return grv?grv.snapshot():null; }catch(_){ return null; } }
-  function grvBusy(){ var s=grvSnap(); return !!(s&&(s.status==='viewing'||s.status==='paused'||s.status==='crediting')); }
+  // Open-credit flow: boost button shows instructions + a real tap-to-open
+  // link. Tapping it opens the ad AND starts/boosts instantly.
+  var growCrediting=false, growPopup=null;
+  function growModalOpen(on){ try{document.getElementById('ad-modal').classList.toggle('open',!!on);}catch(_){} }
+  function setGrowModal(title,text){
+    try{document.getElementById('ad-title').textContent=title;}catch(_){}
+    try{document.getElementById('ad-text').textContent=text;}catch(_){}
+    try{document.getElementById('ad-msg').textContent='';}catch(_){}
+    try{document.getElementById('ad-count').textContent='';}catch(_){}
+    try{document.getElementById('ad-bar').style.width='0%';}catch(_){}
+  }
+  function showGrowIntro(){
+    setGrowModal('Favmoney booster break','Tap the button below to open the ad in a new tab. Your mining shift starts (or boost lights) the moment it opens.');
+    try{var ol=document.getElementById('ad-openlink');ol.href=SPONSOR_URL;ol.style.display='';ol.style.pointerEvents='';ol.style.opacity='';}catch(_){}
+    growModalOpen(true);
+  }
+  function showGrowGranted(title,text){
+    setGrowModal(title,text);
+    try{document.getElementById('ad-openlink').style.display='none';}catch(_){}
+    growModalOpen(true);
+  }
+  function doGrowCredit(){
+    if(growCrediting||!uid)return;
+    growCrediting=true;
+    try{var ol0=document.getElementById('ad-openlink');ol0.style.pointerEvents='none';ol0.style.opacity='.6';}catch(_){}
+    var startShift=!(state&&state.mineUntilMs-Date.now()>0);
+    var p=startShift?activateMining(uid):activateBoost(uid);
+    p.then(function(r){
+      growCrediting=false;
+      try{var ol2=document.getElementById('ad-openlink');ol2.style.pointerEvents='';ol2.style.opacity='';}catch(_){}
+      if(!r.ok){
+        if(r.reason==='full'){ growPopup={title:'Favmoney booster break',text:(startShift?'Shift tank already full.':'Boost tank already full.')}; showGrowGranted(growPopup.title,growPopup.text); }
+        else if(r.reason==='noshift'){ growPopup={title:'Favmoney booster break',text:'Shift ended - watch again to restart mining.'}; showGrowGranted(growPopup.title,growPopup.text); }
+        else{ growPopup=null; show('Boost failed - check connection and try again.'); }
+        return refresh();
+      }
+      try{track(startShift?'invest_shift':'invest_boost');}catch(_){}
+      show(startShift?'Mining started - 6h shift at 10,000% APR.':'Boost lit - 15,000% APR for 1 hour.');
+      growPopup={title:(startShift?'Mining started!':'Boost lit!'),text:(startShift?'6h shift at 10,000% APR.':'15,000% APR for 1 hour.')};
+      return refresh().then(function(){ showGrowGranted(growPopup.title,growPopup.text); });
+    }).catch(function(){
+      growCrediting=false;
+      try{var ol3=document.getElementById('ad-openlink');ol3.style.pointerEvents='';ol3.style.opacity='';}catch(_){}
+      growPopup=null; show('Boost failed - check connection and try again.');
+    });
+  }
+  // Dismissed by Close: stay hidden until the credit result (or a fresh
+  // start). Without this the 1s tick re-opens the modal right after Close,
+  // making it unclosable mid-view.
+  var modalDismissed=false;
   function paintGrowModal(s){
     var veil=document.getElementById('ad-modal');
     if(!veil)return;
     function set(id,txt){try{document.getElementById(id).textContent=txt;}catch(_){}}
     function showEl(id,on){try{document.getElementById(id).style.display=on?'':'none';}catch(_){}}
+    if(modalDismissed&&(!s||s.status!=='credited')){veil.classList.remove('open');return;}
     if(!s||s.status==='idle'||(s.status==='viewing'&&!s.soft)){veil.classList.remove('open');return;}
     var req=s.secs||20;
     var done=Math.min(Number(s.accumMs||0),Number(s.requiredMs||req*1000));
@@ -425,6 +504,7 @@ import { requireAuth } from './js/guard.js';
       set('ad-msg','Verifying...');set('ad-count','');
       showEl('ad-resume',false);
     }else if(s.status==='credited'){
+      modalDismissed=false;
       set('ad-title','Boost ready!');
       set('ad-text','Your view is verified - boost applied.');
       set('ad-msg','Done');set('ad-count','');
@@ -434,23 +514,22 @@ import { requireAuth } from './js/guard.js';
   document.getElementById('boost-btn').addEventListener('click',function(){
     if(!uid){show('Sign in to mine.');return;}
     if(state&&state.mineUntilMs-Date.now()>0&&state.boostUntilMs-Date.now()>55*60000){show('Boost tank already full.');return;}
-    if(grvBusy()){show('Finish your current view first - one at a time.');return;}
-    var r=grv.start({id:'grow-boost',url:SPONSOR_URL,secs:20});
-    if(!r||!r.ok){show('Could not start the view - try again.');return;}
-    show(r.blocked?'Popup blocked - tap Resume to open the ad.':'Ad opened in a new tab - timer runs in the background.');
+    if(growCrediting){show('Starting your boost...');return;}
+    showGrowIntro();
   });
   document.getElementById('ad-close').addEventListener('click',function(){
-    // Dismiss only: a running/paused view keeps counting invisibly.
-    // Only a finished grant is cleared.
-    try{document.getElementById('ad-modal').classList.remove('open');}catch(_){}
-    try{grv.dismissSoft();}catch(_){}
-    var s=grvSnap();
-    if(s&&s.status==='credited'){try{grv.abandon();}catch(_){}}
+    growModalOpen(false);
+    growPopup=null;
   });
-  document.getElementById('ad-resume').addEventListener('click',function(){try{grv.resume();}catch(_){}});
-  document.getElementById('ad-back').addEventListener('click',function(){try{grv.resume();grv.dismissSoft();}catch(_){}});
-  // Raw tap-to-open link: a real user-gesture navigation no blocker stops.
-  document.getElementById('ad-openlink').addEventListener('click',function(){try{grv.assumeOpen();}catch(_){}});
+  document.getElementById('ad-openlink').addEventListener('click',function(){
+    // Real user-gesture navigation proceeds (never blocked) AND the boost
+    // starts at this same tap - no timers, no tracking.
+    doGrowCredit();
+  });
+  // Granted popup follows the user: pops on return unless dismissed.
+  document.addEventListener('visibilitychange',function(){
+    try{ if(!document.hidden&&growPopup) showGrowGranted(growPopup.title,growPopup.text); }catch(_){}
+  });
   document.querySelectorAll('.faq-item button').forEach(function(b){
     b.addEventListener('click',function(){b.closest('.faq-item').classList.toggle('open');});
   });

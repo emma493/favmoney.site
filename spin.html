@@ -164,8 +164,6 @@
 <div style="text-align:center"><h3 id="spin-ad-title">Bonus spin break</h3><p id="spin-ad-text" style="color:var(--muted);font-size:14px;margin:8px 0 0">Sponsored views open in a new tab - your spin grants automatically.</p></div>
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--muted);margin:14px 0 8px"><span id="spin-ad-msg">Keep this view visible…</span><b id="spin-ad-count" style="color:#8ff0bd">20s</b></div>
 <div class="prog" style="margin:0 0 8px"><i id="spin-ad-bar" style="width:0%"></i></div>
-<button class="btn btn-green btn-block" id="spin-ad-resume" style="display:none">Resume viewing</button>
-<button class="btn btn-green btn-block" id="spin-ad-back" style="display:none">Back to ad</button>
 <a class="btn btn-green btn-block" id="spin-ad-openlink" href="#" target="_blank" rel="noopener sponsored nofollow" style="display:none">Open ad in new tab</a>
 <button class="btn btn-green btn-block" id="spin-ad-go" style="display:none">Continue</button>
 <button class="btn btn-ghost btn-block" id="spin-ad-close" style="margin-top:8px">Close</button>
@@ -250,7 +248,6 @@
 import { auth, onAuthStateChanged, getWallet, getUserDoc, fetchUserDocs, getUnclaimedRewards, getSpinState, playSpin, track, SPIN_AD_DAILY_CAP } from './js/firebase.js';
 import { formatUSD, convertUSD, symbolFor, currentCountry, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 import { SPONSOR_URL } from './js/ptc-catalog.js';
-import { createRewardedView } from './js/rewarded-view.js';
 import { requireAuth } from './js/guard.js';
 (function(){
   window.__favSpinBooted=true;
@@ -368,23 +365,23 @@ import { requireAuth } from './js/guard.js';
   // Rewarded views (shared controller): bonus spins open the sponsor in a
   // NEW TAB (never iframed) with a background timer. Time met auto-plays
   // the bonus spin; early return shows paused + Resume.
-  var srv=createRewardedView({
-    key:'spin',
-    notify:show,
-    onChange:function(s){ paintSpinModal(s); },
-    onCredit:function(){
-      return refresh().then(function(){
-        if(!spinState||(spinState.adLeft||0)<=0)return {ok:false,message:'Bonus spins done for today - back at midnight UTC.'};
-        return doSpin('ad').then(function(){ return {ok:true}; },function(){
-          return {ok:false,retryable:true,message:'Spin failed - check connection.'};
-        });
-      });
-    }
-  });
-  try{ srv.restore(); }catch(_){}
-  function srvSnap(){ try{ return srv?srv.snapshot():null; }catch(_){ return null; } }
-  function srvBusy(){ var s=srvSnap(); return !!(s&&(s.status==='viewing'||s.status==='paused'||s.status==='crediting')); }
-  function paintSpinModal(s){
+  // Open-credit flow: bonus button shows instructions + a real tap-to-open
+  // link. Tapping it opens the ad AND plays the bonus spin instantly.
+  var spinCrediting=false;
+  function spinModalOpen(on){ try{document.getElementById('spin-ad-modal').classList.toggle('open',!!on);}catch(_){} }
+  function setSpinModal(title,text){
+    try{document.getElementById('spin-ad-title').textContent=title;}catch(_){}
+    try{document.getElementById('spin-ad-text').textContent=text;}catch(_){}
+    try{document.getElementById('spin-ad-msg').textContent='';}catch(_){}
+    try{document.getElementById('spin-ad-count').textContent='';}catch(_){}
+    try{document.getElementById('spin-ad-bar').style.width='0%';}catch(_){}
+  }
+  function showSpinIntro(){
+    setSpinModal('Bonus spin break','Tap the button below to open the ad in a new tab. Your bonus spin plays the moment it opens.');
+    try{var ol=document.getElementById('spin-ad-openlink');ol.href=SPONSOR_URL;ol.style.display='';ol.style.pointerEvents='';ol.style.opacity='';}catch(_){}
+    spinModalOpen(true);
+  }
+  function paintSpinModalGONE(s){
     var veil=document.getElementById('spin-ad-modal');
     if(!veil)return;
     function set(id,txt){try{document.getElementById(id).textContent=txt;}catch(_){}}
@@ -471,22 +468,23 @@ import { requireAuth } from './js/guard.js';
   document.getElementById('extra-btn').addEventListener('click',function(){
     if(!spinState||spinning)return;
     if((spinState.adLeft||0)<=0){show('Bonus spins done for today - back at midnight UTC.');return;}
-    if(srvBusy()){show('Finish your current view first - one at a time.');return;}
-    var r=srv.start({id:'spin-bonus',url:SPONSOR_URL,secs:20});
-    if(!r||!r.ok){show('Could not start the view - try again.');return;}
-    show(r.blocked?'Popup blocked - tap Resume to open the ad.':'Ad opened in a new tab - timer runs in the background.');
+    if(spinCrediting){show('Spinning your bonus...');return;}
+    showSpinIntro();
   });
-  document.getElementById('spin-ad-resume').addEventListener('click',function(){try{srv.resume();}catch(_){}});
-  document.getElementById('spin-ad-back').addEventListener('click',function(){try{srv.resume();srv.dismissSoft();}catch(_){}});
-  // Raw tap-to-open link: a real user-gesture navigation no blocker stops.
-  document.getElementById('spin-ad-openlink').addEventListener('click',function(){try{srv.assumeOpen();}catch(_){}});
+  document.getElementById('spin-ad-openlink').addEventListener('click',function(){
+    // Real user-gesture navigation proceeds (never blocked) AND the bonus
+    // spin plays at this same tap - no timers, no tracking.
+    if(spinCrediting||!uid)return;
+    spinCrediting=true;
+    try{this.style.pointerEvents='none';this.style.opacity='.6';}catch(_){}
+    spinModalOpen(false);
+    refresh().then(function(){
+      if(!spinState||(spinState.adLeft||0)<=0){show('Bonus spins done for today - back at midnight UTC.');spinCrediting=false;return;}
+      doSpin('ad').then(function(){spinCrediting=false;},function(){spinCrediting=false;});
+    }).catch(function(){spinCrediting=false;show('Spin failed - check connection.');});
+  });
   document.getElementById('spin-ad-close').addEventListener('click',function(){
-    // Dismiss only: a running/paused view keeps counting invisibly.
-    // Only a finished grant is cleared.
-    try{document.getElementById('spin-ad-modal').classList.remove('open');}catch(_){}
-    try{srv.dismissSoft();}catch(_){}
-    var s=srvSnap();
-    if(s&&s.status==='credited'){try{srv.abandon();}catch(_){}}
+    spinModalOpen(false);
   });
   document.querySelectorAll('.faq-item button').forEach(function(b){
     b.addEventListener('click',function(){b.closest('.faq-item').classList.toggle('open');});

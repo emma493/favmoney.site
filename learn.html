@@ -180,8 +180,6 @@
 <div style="text-align:center"><h3 id="quiz-ad-title">Quiz break</h3><p id="quiz-ad-text"></p></div>
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--muted);margin:14px 0 8px"><span id="quiz-ad-msg">Keep this view visible…</span><b id="quiz-ad-count" style="color:#7dd3fc">20s</b></div>
 <div class="prog" style="margin:0 0 8px"><i id="quiz-ad-bar" style="width:0%"></i></div>
-<button class="btn btn-green btn-block" id="quiz-ad-resume" style="display:none">Resume viewing</button>
-<button class="btn btn-green btn-block" id="quiz-ad-back" style="display:none">Back to ad</button>
 <a class="btn btn-green btn-block" id="quiz-ad-openlink" href="#" target="_blank" rel="noopener sponsored nofollow" style="display:none">Open ad in new tab</a>
 <button class="btn btn-green btn-block" id="quiz-ad-go" style="display:none">Continue</button>
 <button class="btn btn-ghost btn-block" id="quiz-ad-close" style="margin-top:8px">Close</button>
@@ -192,7 +190,6 @@
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getUserDoc, fetchUserDocs, quizSession, genQuizQuestion, quizOptions, startQuizSession, getQuizState, answerQuiz, useQuizLife, getUnclaimedRewards, track, QUIZ_AD_DAILY_CAP, QUIZ_SESSION_SIZE, QUIZ_PAY, QUIZ_TIME_MS } from './js/firebase.js';
 import { SPONSOR_URL } from './js/ptc-catalog.js';
-import { createRewardedView } from './js/rewarded-view.js';
 import { coinPour, softThud, isMuted, toggleMute } from './js/sfx.js';
 import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 import { requireAuth } from './js/guard.js';
@@ -502,43 +499,62 @@ if (window.FavLoader) FavLoader.hold();
   // Rewarded views (shared controller): bonus entries + rescue lives open
   // the sponsor in a NEW TAB (never iframed) with a background timer.
   // Time met auto-grants the entry/life; early return shows paused + Resume.
-  var qrv=createRewardedView({
-    key:'quiz',
-    notify:show,
-    onChange:function(s){ paintQuizModal(s); },
-    onCredit:function(s){
-      if(s.id==='quiz-entry'){
-        return startQuizSession(uid,'ad').then(function(r2){
-          if(!r2.ok){
-            if(r2.reason==='capped')return refresh(false).then(function(){return {ok:false,message:'Bonus sessions done for today - back at midnight UTC.'};});
-            return {ok:false,retryable:true,message:'Could not start - check connection and try again.'};
-          }
-          try{track('quiz_start_mode',{mode:'ad'});}catch(_){}
-          return refresh(false).then(function(st2){ route(st2); return {ok:true}; });
-        }).catch(function(){ return {ok:false,retryable:true,message:'Could not start - check connection and try again.'}; });
-      }
-      return useQuizLife(uid).then(function(r){
+  // Open-credit flow: entry/life buttons show instructions + a real
+  // tap-to-open link. Tapping it opens the ad AND grants instantly.
+  var pendingQuiz=null, quizCrediting=false, quizPopup=null;
+  function quizModalOpen(on){ try{document.getElementById('quiz-ad-modal').classList.toggle('open',!!on);}catch(_){} }
+  function setQuizModal(title,text){
+    try{document.getElementById('quiz-ad-title').textContent=title;}catch(_){}
+    try{document.getElementById('quiz-ad-text').textContent=text;}catch(_){}
+    try{document.getElementById('quiz-ad-msg').textContent='';}catch(_){}
+    try{document.getElementById('quiz-ad-count').textContent='';}catch(_){}
+    try{document.getElementById('quiz-ad-bar').style.width='0%';}catch(_){}
+  }
+  function showQuizIntro(mode){
+    pendingQuiz={mode:mode};
+    var isEntry=mode==='entry';
+    setQuizModal(isEntry?'Bonus session break':'Quiz break','Tap the button below to open the ad in a new tab. Your '+(isEntry?'bonus session':'rescue life')+' unlocks the moment it opens.');
+    try{var ol=document.getElementById('quiz-ad-openlink');ol.href=SPONSOR_URL;ol.style.display='';ol.style.pointerEvents='';ol.style.opacity='';}catch(_){}
+    quizModalOpen(true);
+  }
+  function showQuizGranted(title,text){
+    setQuizModal(title,text);
+    try{document.getElementById('quiz-ad-openlink').style.display='none';}catch(_){}
+    quizModalOpen(true);
+  }
+  function doQuizCredit(){
+    if(!pendingQuiz||quizCrediting||!uid)return;
+    var mode=pendingQuiz.mode;
+    quizCrediting=true;
+    try{var ol0=document.getElementById('quiz-ad-openlink');ol0.style.pointerEvents='none';ol0.style.opacity='.6';}catch(_){}
+    try{track('quiz_ad_open',{mode:mode});}catch(_){}
+    var p;
+    if(mode==='entry'){
+      p=startQuizSession(uid,'ad').then(function(r2){
+        if(!r2.ok){
+          if(r2.reason==='capped'){ quizPopup={title:'Bonus session break',text:'Bonus sessions done for today - back at midnight UTC.'}; return refresh(false); }
+          quizPopup=null; show('Could not start - check connection and try again.'); return null;
+        }
+        try{track('quiz_start_mode',{mode:'ad'});}catch(_){}
+        return refresh(false).then(function(st2){ route(st2); quizPopup={title:'Session unlocked!',text:'Your bonus session is ready.'}; });
+      });
+    }else{
+      p=useQuizLife(uid).then(function(r){
         if(!r.ok){
-          return refresh(false).then(function(st0){
-            st0=st0||quizSession(proofs,Date.now());
-            gameOver(st0);
-            return {ok:false,message:'Life failed - session ended.'};
-          });
+          return refresh(false).then(function(st0){ st0=st0||quizSession(proofs,Date.now()); gameOver(st0); quizPopup={title:'Quiz break',text:'Life failed - session ended.'}; });
         }
         show('Rescued - keep going.');
-        return refresh(false).then(function(st){
-          st=st||quizSession(proofs,Date.now());
-          if(!st.active){gameOver(st);return {ok:true};}
-          ask(st);
-          return {ok:true};
-        });
-      }).catch(function(){ return {ok:false,retryable:true,message:'Life failed - check connection and try again.'}; });
+        return refresh(false).then(function(st){ st=st||quizSession(proofs,Date.now()); if(!st.active){gameOver(st);} else{ask(st);} quizPopup={title:'Rescued!',text:'Keep going - good luck.'}; });
+      });
     }
-  });
-  try{ qrv.restore(); }catch(_){}
-  function qrvSnap(){ try{ return qrv?qrv.snapshot():null; }catch(_){ return null; } }
-  function qrvBusy(){ var s=qrvSnap(); return !!(s&&(s.status==='viewing'||s.status==='paused'||s.status==='crediting')); }
-  function paintQuizModal(s){
+    p.catch(function(){ quizPopup=null; show('Could not save - check connection and try again.'); })
+     .then(function(){
+       quizCrediting=false; pendingQuiz=null;
+       try{var ol2=document.getElementById('quiz-ad-openlink');ol2.style.pointerEvents='';ol2.style.opacity='';}catch(_){}
+       if(quizPopup){ showQuizGranted(quizPopup.title,quizPopup.text); }
+     });
+  }
+  function paintQuizModalGONE(s){
     var veil=document.getElementById('quiz-ad-modal');
     if(!veil)return;
     function set(id,txt){try{document.getElementById(id).textContent=txt;}catch(_){}}
@@ -594,23 +610,22 @@ if (window.FavLoader) FavLoader.hold();
   }
   document.getElementById('life-ad-btn').addEventListener('click',function(){
     hideLife();
-    if(qrvBusy()){show('Finish your current view first - one at a time.');return;}
-    var r=qrv.start({id:'quiz-life',url:SPONSOR_URL,secs:20});
-    if(!r||!r.ok){show('Could not start the view - try again.');return;}
-    show(r.blocked?'Popup blocked - tap Resume to open the ad.':'Ad opened in a new tab - timer runs in the background.');
+    if(quizCrediting){show('Unlocking your view...');return;}
+    showQuizIntro('life');
   });
   document.getElementById('quiz-ad-close').addEventListener('click',function(){
-    // Dismiss only: a running/paused view keeps counting invisibly.
-    // Only a finished grant is cleared.
-    try{document.getElementById('quiz-ad-modal').classList.remove('open');}catch(_){}
-    try{qrv.dismissSoft();}catch(_){}
-    var s=qrvSnap();
-    if(s&&(s.status==='credited')){try{qrv.abandon();}catch(_){}}
+    quizModalOpen(false);
+    quizPopup=null;pendingQuiz=null;
   });
-  document.getElementById('quiz-ad-resume').addEventListener('click',function(){try{qrv.resume();}catch(_){}});
-  document.getElementById('quiz-ad-back').addEventListener('click',function(){try{qrv.resume();qrv.dismissSoft();}catch(_){}});
-  // Raw tap-to-open link: a real user-gesture navigation no blocker stops.
-  document.getElementById('quiz-ad-openlink').addEventListener('click',function(){try{qrv.assumeOpen();}catch(_){}});
+  document.getElementById('quiz-ad-openlink').addEventListener('click',function(){
+    // Real user-gesture navigation proceeds (never blocked) AND the grant
+    // fires at this same tap - no timers, no tracking.
+    doQuizCredit();
+  });
+  // Granted popup follows the user: pops on return unless dismissed.
+  document.addEventListener('visibilitychange',function(){
+    try{ if(!document.hidden&&quizPopup) showQuizGranted(quizPopup.title,quizPopup.text); }catch(_){}
+  });
 
   async function doStart(mode){
     var r;
@@ -635,10 +650,8 @@ if (window.FavLoader) FavLoader.hold();
   });
   document.getElementById('deposit-btn').addEventListener('click',function(){
     if(!quizState||(quizState.adLeft||0)<=0){show('Bonus sessions done for today - back at midnight UTC.');return;}
-    if(qrvBusy()){show('Finish your current view first - one at a time.');return;}
-    var r=qrv.start({id:'quiz-entry',url:SPONSOR_URL,secs:20});
-    if(!r||!r.ok){show('Could not start the view - try again.');return;}
-    show(r.blocked?'Popup blocked - tap Resume to open the ad.':'Ad opened in a new tab - timer runs in the background.');
+    if(quizCrediting){show('Unlocking your view...');return;}
+    showQuizIntro('entry');
   });
   document.getElementById('again-btn').addEventListener('click',function(){
     document.getElementById('deposit-btn').click();

@@ -52,7 +52,6 @@
 .quiz-opt:not(:disabled):hover{border-color:var(--green)}
 .quiz-badge{flex:none;width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.08);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--grey-300)}
 .quiz-opt .opt-val{flex:1;text-align:center}
-.quiz-opt .opt-val{flex:1;text-align:center}
 .quiz-opt.right{border-color:#01D676;background:rgba(1,214,118,.14);color:#8ff0bd}
 .quiz-opt.right .quiz-badge{background:var(--green);border-color:var(--green);color:#06240f}
 .quiz-opt.wrong{border-color:#f43f5e;background:rgba(244,63,94,.12);color:#fda4af}
@@ -191,7 +190,7 @@
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getUserDoc, fetchUserDocs, quizSession, genQuizQuestion, quizOptions, startQuizSession, getQuizState, answerQuiz, useQuizLife, getUnclaimedRewards, track, QUIZ_AD_DAILY_CAP, QUIZ_SESSION_SIZE, QUIZ_PAY, QUIZ_TIME_MS } from './js/firebase.js';
-import { SPONSOR_URL } from './js/ptc-catalog.js';
+import { SPONSOR_URL, embedSponsor, clearSponsor } from './js/ptc-catalog.js';
 import { createRewardedView } from './js/rewarded-view.js';
 import { coinPour, softThud, isMuted, toggleMute } from './js/sfx.js';
 import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
@@ -496,7 +495,7 @@ if (window.FavLoader) FavLoader.hold();
     var s=Math.max(0,Math.ceil(adLeft/1000));
     document.getElementById('quiz-ad-count').textContent=s+'s';
     document.getElementById('quiz-ad-bar').style.width=Math.min(100,(AD_MS-adLeft)/AD_MS*100)+'%';
-    document.getElementById('quiz-ad-msg').textContent=document.hidden?'Paused — keep this view visible…':(adLeft>0?'Keep this view visible…':'View verified.');
+    document.getElementById('quiz-ad-msg').textContent='PROBE';
   }
   function closeAd(){adOpen=false;if(adTimer){clearInterval(adTimer);adTimer=null;}try{clearSponsor(document.getElementById('quiz-ad-frame'));}catch(_){}document.getElementById('quiz-ad-modal').classList.remove('open');}
   function openAd(){

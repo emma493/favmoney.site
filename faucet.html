@@ -56,7 +56,7 @@
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
 <div class="back-row"><a class="back-btn" href="earn.html" aria-label="Back to Earn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg><span>Earn</span></a></div>
 <h1 class="dash-title">Free Faucet</h1>
-<p>Claim a free <b data-usd="0.15">$0.15</b> drip every <b>hour</b> — <b>10 drips per batch</b>, up to <b>4 batches a day</b>. No deposit, timer-verified.</p>
+<p>Claim a free <b data-usd="0.15">$0.15</b> drip every <b>5 minutes</b> — <b>10 drips per batch</b>, up to <b>4 batches a day</b>. No deposit, timer-verified.</p>
 <div class="bonus-card" id="faucet-card">
 <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
 <div><div class="big" id="faucet-amount" data-usd="0.15" style="font-size:28px;font-weight:800;color:#ffd75e;font-variant-numeric:tabular-nums">$0.15</div>
@@ -120,8 +120,9 @@ if (window.FavLoader) FavLoader.hold();
       if(bar)bar.style.width='100%';
     }else{
       btn.disabled=true;btn.textContent='Next in '+msToClock(s.waitMs);
-      st.textContent='Next drip in '+msToClock(s.waitMs)+'.';
-      if(bar)bar.style.width=Math.min(100,Math.round((FAUCET_INTERVAL_MS-s.waitMs)/FAUCET_INTERVAL_MS*100))+'%';
+      st.textContent=s.batchWait?('Batch done — next 10 unlock in '+msToClock(s.waitMs)+'.'):('Next drip in '+msToClock(s.waitMs)+'.');
+      var span=(Number(s.waitTotal)||FAUCET_INTERVAL_MS);
+      if(bar)bar.style.width=Math.min(100,Math.round((span-s.waitMs)/span*100))+'%';
     }
     if(sub)sub.textContent=s.remainingToday+' claims left today · resets UTC midnight.';
   }

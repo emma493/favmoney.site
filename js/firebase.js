@@ -464,18 +464,20 @@ export async function playSpin(uid, mode, rand) {
   return { ok: true, prize };
 }
 
-// ---- Free Faucet: $0.15 drip per 1-hour claim, rolling batches of 10 ----
+// ---- Free Faucet: $0.15 drip per 5-minute claim, rolling batches of 10 ----
 // Timer-only anti-bot at launch: visible countdown + cooldown enforced on a
 // re-read of the user's own proofs before every pay (same pattern as
 // claimMilestone), so double-taps and stale tabs cannot double-pay. Claims
 // flow through creditReward(uid, 0.15, 'play:faucet') so the Rewards faucet
 // track, Grow taskEarned/stakeable ceiling, and referral commission all pick
 // them up with no rules change (status 'pending' passes with any label).
-// Batch model: claim -> 1h wait -> claim, 10 drips per batch. Exhausting a
-// batch flows into the normal 1h drip wait, which IS the fresh batch.
+// Batch model: claim every 5 min, 10 drips per batch. Exhausting a batch
+// starts a 1-hour wait, after which the next batch of 10 unlocks — up to
+// 4 batches, then capped until UTC midnight.
 // Bounded: 4 batches x 10 x $0.15 = $6.00/user/UTC-day.
 export const FAUCET_AMOUNT = 0.15;
-export const FAUCET_INTERVAL_MS = 60 * 60000;
+export const FAUCET_INTERVAL_MS = 5 * 60000;
+export const FAUCET_BATCH_WAIT_MS = 60 * 60000;
 export const FAUCET_BATCH_SIZE = 10;
 export const FAUCET_BATCHES_PER_DAY = 4;
 export const FAUCET_DAILY_CAP = FAUCET_BATCH_SIZE * FAUCET_BATCHES_PER_DAY;
@@ -497,8 +499,11 @@ export function proofMs(p, nowMs) {
 }
 
 // Pure faucet state from an array of proof rows — no Firestore.
-// Returns { ready, waitMs, claimedToday, remainingToday, lastClaimMs,
-//   resetMs, batch (1-based), inBatch (0..size), batchSize, batchesPerDay }.
+// Returns { ready, waitMs, waitTotal, batchWait, claimedToday,
+//   remainingToday, lastClaimMs, resetMs, batch (1-based), inBatch (0..size),
+//   batchSize, batchesPerDay }.
+// Timing: 5 min between drips inside a batch; finishing a batch (10th,
+// 20th, 30th claim) starts a 1-hour wait for the next batch.
 export function faucetState(proofs, nowMs) {
   const now = Number(nowMs || Date.now());
   const today = utcDayStr(now);
@@ -509,13 +514,16 @@ export function faucetState(proofs, nowMs) {
     if (ms > last) last = ms;
     if (utcDayStr(ms) === today) todayN++;
   }
-  const waitMs = Math.max(0, last + FAUCET_INTERVAL_MS - now);
+  const batchDone = todayN > 0 && todayN % FAUCET_BATCH_SIZE === 0;
+  const waitTotal = batchDone ? FAUCET_BATCH_WAIT_MS : FAUCET_INTERVAL_MS;
+  const waitMs = Math.max(0, last + waitTotal - now);
   const remainingToday = Math.max(0, FAUCET_DAILY_CAP - todayN);
   const batch = Math.min(FAUCET_BATCHES_PER_DAY, Math.floor(todayN / FAUCET_BATCH_SIZE) + 1);
   const inBatch = Math.min(FAUCET_BATCH_SIZE, todayN % FAUCET_BATCH_SIZE);
   return {
     ready: waitMs <= 0 && remainingToday > 0,
-    waitMs, claimedToday: todayN, remainingToday, lastClaimMs: last,
+    waitMs, waitTotal, batchWait: batchDone,
+    claimedToday: todayN, remainingToday, lastClaimMs: last,
     capped: remainingToday <= 0,
     resetMs: spinResetMs(now),
     batch, inBatch, batchSize: FAUCET_BATCH_SIZE, batchesPerDay: FAUCET_BATCHES_PER_DAY

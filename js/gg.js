@@ -19,7 +19,7 @@ export const OFFER_PROVIDERS = [
     tag: 'gg.agency · Mobile offers',
     desc: 'Complete mobile offers from gg.agency. You keep 70% of each approved payout.',
     cta: 'Open offers',
-    img: 'images/offers-and-apps.png',
+    img: 'images/goldengoose.png',
     base: GG_PROMO_BASE
   },
   {
@@ -28,6 +28,7 @@ export const OFFER_PROVIDERS = [
     tag: 'mylead.global · Offerwall',
     desc: 'Complete offerwall deals from mylead.global. You keep 70% of each approved payout.',
     cta: 'Open wall',
+    img: 'images/mylead.png',
     base: MYLEAD_WALL_URL,
     playerParam: 'player_id'
   }

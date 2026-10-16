@@ -106,8 +106,8 @@
 <p style="color:var(--muted);font-size:14px;margin:0 0 16px">One free 30-question session per day. Correct answers pay <span data-usd="0.10">$0.10</span> each to your main balance — up to <span data-usd="3">$3.00</span> a session. Wrong twice and the session ends.</p>
 <p id="quiz-status" aria-live="polite" style="font-size:14px;font-weight:700;color:#8ff0bd;margin:0 0 12px">Loading your sessions…</p>
 <div style="display:flex;gap:8px;flex-wrap:wrap">
-<button class="btn btn-green" id="free-btn" style="min-height:48px;min-width:220px;flex:1">Start free quiz</button>
-<button class="btn btn-ghost" id="deposit-btn" style="min-height:48px;min-width:220px;flex:1">Watch ad · Play (10 left)</button>
+<button class="btn btn-green" id="free-btn" style="min-height:48px;min-width:220px;flex:1" disabled>Start free quiz</button>
+<button class="btn btn-ghost" id="deposit-btn" style="min-height:48px;min-width:220px;flex:1" disabled>Watch ad · Play</button>
 </div>
 <p class="hint" id="quiz-hint" style="text-align:center;margin:10px 0 0">Free session resets at midnight UTC. Bonus sessions reset daily.</p>
 </div>
@@ -255,21 +255,29 @@ if (window.FavLoader) FavLoader.hold();
     var st=document.getElementById('quiz-status'), fb=document.getElementById('free-btn'),
         eb=document.getElementById('deposit-btn'), hint=document.getElementById('quiz-hint');
     if(!st||!fb||!eb)return;
-    if(quizState.freeLeft>0){
+    // Swap, never grey-out: the free button only exists while free remains.
+    // Once used it vanishes and the ad button takes over as the primary CTA.
+    var hasFree=quizState.freeLeft>0;
+    var left=(quizState.adLeft!=null?quizState.adLeft:QUIZ_AD_DAILY_CAP);
+    var hasBonus=left>0;
+    if(hasFree){
       st.textContent='1 free session ready — good luck';
       st.style.color='#8ff0bd';
       fb.textContent='Start free quiz';
       fb.disabled=false;
+      fb.style.display='';
+      eb.style.display='';
+      eb.classList.remove('btn-green');eb.classList.add('btn-ghost');
     }else{
       st.textContent='Next free in '+msToClock(quizState.resetMs);
       st.style.color='#ffd75e';
-      fb.textContent='Free used today';
-      fb.disabled=true;
+      fb.style.display='none';
+      eb.style.display=hasBonus?'':'none';
+      if(hasBonus){eb.classList.remove('btn-ghost');eb.classList.add('btn-green');}
     }
-    var left=(quizState.adLeft!=null?quizState.adLeft:QUIZ_AD_DAILY_CAP);
-    eb.textContent=left>0?('Watch ad · Play ('+left+' of '+QUIZ_AD_DAILY_CAP+' left)'):('Bonus done · back at midnight UTC');
-    eb.disabled=left<=0;
-    if(hint)hint.textContent=quizState.freeLeft>0
+    eb.textContent=hasBonus?('Watch ad · Play ('+left+' left)'):('Bonus done · back at midnight UTC');
+    eb.disabled=!hasBonus;
+    if(hint)hint.textContent=hasFree
       ?('Free session ready · '+left+' bonus sessions left today.')
       :('Free session back in '+msToClock(quizState.resetMs)+' · '+left+' bonus sessions left.');
   }
@@ -456,18 +464,24 @@ if (window.FavLoader) FavLoader.hold();
     document.getElementById('over-earned').textContent='+'+money(st?st.earned:0);
     document.getElementById('over-sub').textContent='You answered '+c+' of '+a+' correctly.'+(done?'':' Timed-out questions score zero — play again below.');
     var fab=document.getElementById('free-again-btn'), ab=document.getElementById('again-btn'), os=document.getElementById('over-status');
-    if(quizState&&quizState.freeLeft>0){
-      if(fab)fab.style.display='';
-      if(os)os.textContent='Your free session is still available.';
-    }else{
-      if(fab)fab.style.display='none';
-      if(os&&quizState)os.textContent='Next free in '+msToClock(quizState.resetMs)+' · bonus sessions via ads.';
-      else if(os)os.textContent='';
-    }
+    var hasFree=!!(quizState&&quizState.freeLeft>0);
+    var aleft=(quizState&&quizState.adLeft!=null)?quizState.adLeft:QUIZ_AD_DAILY_CAP;
+    if(fab)fab.style.display=hasFree?'':'none';
     if(ab){
-      var aleft=(quizState&&quizState.adLeft!=null)?quizState.adLeft:QUIZ_AD_DAILY_CAP;
-      ab.textContent=aleft>0?('Watch ad · Play again ('+aleft+' left)'):('Bonus done for today');
-      ab.disabled=aleft<=0;
+      if(aleft>0){
+        ab.style.display='';
+        ab.textContent='Watch ad · Play again ('+aleft+' left)';
+        ab.disabled=false;
+        if(hasFree){ab.classList.remove('btn-green');ab.classList.add('btn-ghost');}
+        else{ab.classList.remove('btn-ghost');ab.classList.add('btn-green');}
+      }else{
+        ab.style.display='none';
+      }
+    }
+    if(os){
+      if(hasFree)os.textContent='Your free session is still available.';
+      else if(quizState)os.textContent='Next free in '+msToClock(quizState.resetMs)+(aleft>0?' · bonus sessions via ads.':' · back at midnight UTC.');
+      else os.textContent='';
     }
     clearOp();
     showZone('quiz-over');

@@ -268,7 +268,7 @@ import { requireAuth } from './js/guard.js';
     var now=Date.now();
     var mining=state.mineUntilMs>now;
     var lv=liveShown();
-    var totalYield=lv.totalYield,shown=lv.shown;
+    var shown=lv.shown;
     var cur=currentCountry().currency||'USD';
     paintNum(shown,cur);
     try{document.getElementById('tick').classList.toggle('still',!mining);}catch(_){}
@@ -276,8 +276,8 @@ import { requireAuth } from './js/guard.js';
     var boosted=mining&&state.boostUntilMs>now;
     var perDay=dayYield(state.invested,boosted?INVEST_BOOST_APR:INVEST_BASE_APR);
     var sub=mining
-      ?'Growing <b>'+moneyPrec(perDay,4)+'/day</b> · unclaimed <b>'+moneyPrec(totalYield,6)+'</b> · shift ends in <b>'+fmtClock(state.mineUntilMs-now)+'</b>'
-      :'Mining paused — watch an ad to start a 6h shift · unclaimed <b>'+moneyPrec(totalYield,6)+'</b>';
+      ?'Growing <b>'+moneyPrec(perDay,4)+'/day</b> · shift ends in <b>'+fmtClock(state.mineUntilMs-now)+'</b>'
+      :'Mining paused — watch an ad to start a 6h shift';
     document.getElementById('tick-sub').innerHTML=sub;
     var badge=document.getElementById('apr-badge');
     document.getElementById('apr-text').textContent=(boosted?'15,000% BOOSTED':(mining?'10,000% APR':'PAUSED'));

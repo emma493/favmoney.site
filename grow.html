@@ -32,15 +32,13 @@
   <style>
     .tick{font-size:clamp(34px,6vw,52px);font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.1;margin:6px 0 2px}
     .tick small{font-size:.45em;color:var(--faint);font-weight:700}
-    .tick .odig{display:inline-block;height:1em;overflow:hidden;vertical-align:top}
-    .tick .oreel{display:block;transition:transform .22s ease-out;will-change:transform}
-    .tick .oreel>span{display:block;height:1em;line-height:1}
-    .tick.noanim .oreel{transition:none}
+    .tick .frac{display:inline-block}
+    .tick .frac.bump{animation:fracBump .38s ease-out}
+    @keyframes fracBump{0%{transform:translateY(42%);opacity:.3;color:#8ff0bd}100%{transform:none;opacity:1}}
     .tick.still{opacity:.6}
-    .tick.still .oreel{transition:none}
     .boost-pill.attn{animation:ctaPulse 1.6s ease-in-out infinite}
     @keyframes ctaPulse{0%,100%{box-shadow:0 0 0 0 rgba(1,214,118,.45)}50%{box-shadow:0 0 0 10px rgba(1,214,118,0)}}
-    @media (prefers-reduced-motion:reduce){.boost-pill.attn{animation:none}.tick .oreel{transition:none}}
+    @media (prefers-reduced-motion:reduce){.boost-pill.attn{animation:none}.tick .frac.bump{animation:none}}
     .apr-badge{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:#06240f;background:var(--green);border-radius:999px;padding:4px 14px}
     .apr-badge.boost{background:linear-gradient(135deg,#ffd75e,#ff9d3c);color:#3a2200}
     .apr-badge svg{width:14px;height:14px}
@@ -216,36 +214,48 @@ import { requireAuth } from './js/guard.js';
   // getLiveState). Without it a reload would drop all unsettled yield and the
   // ticker would snap back to principal (e.g. 1.000000). Yield stays virtual
   // until Claim persists it via settleInvest.
-  // Odometer: balance digits are rolling reels (paint-only; settled values
-  // stay authoritative). Reels rebuild only when integer width or currency
-  // changes; big jumps (claim/stake/refresh) snap without spinning.
-  var odoKey='',odoCache=[],odoLast=NaN;
-  function paintOdo(shown,cur){
+  // Plain-text live number (paint-only; settled values stay authoritative).
+  // Six decimals so the far-right digit visibly runs while mining; the
+  // fraction flashes on change for motion. No clipping tricks — the number
+  // copies as clean text. Structure rebuilds only on integer-width or
+  // currency change; text nodes update in place every frame.
+  var numKey='',lastFrac=null,lastBumpMs=0,elInt=null,elFrac=null;
+  function paintNum(shown,cur){
     var el=document.getElementById('tick');
     if(!el)return;
-    var s=Number(shown).toFixed(7);
-    var parts=s.split('.'),ip=parts[0],fp=parts[1];
+    var s=Number(shown).toFixed(6);
+    var dot=s.indexOf('.'),ip=s.slice(0,dot),fp=s.slice(dot+1);
     var key=ip.length+':'+cur;
-    var snap=!isFinite(odoLast)||Math.abs(Number(shown)-odoLast)>0.5||key!==odoKey;
-    if(key!==odoKey){
-      var h='',i;
-      for(i=0;i<ip.length;i++)h+='<span class="odig" aria-hidden="true"><span class="oreel"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></span></span>';
-      h+='<span aria-hidden="true">.</span>';
-      for(i=0;i<fp.length;i++)h+='<span class="odig" aria-hidden="true"><span class="oreel"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span></span></span>';
-      h+=' <small>'+cur+'</small>';
-      el.innerHTML=h;
-      odoKey=key;odoCache=[];
+    if(key!==numKey){
+      el.innerHTML='';
+      elInt=document.createTextNode(ip+'.');
+      elFrac=document.createElement('span');
+      elFrac.className='frac';
+      elFrac.setAttribute('aria-hidden','true');
+      elFrac.textContent=fp;
+      el.appendChild(elInt);
+      el.appendChild(elFrac);
+      el.appendChild(document.createTextNode(' '));
+      var sm=document.createElement('small');
+      sm.textContent=cur;
+      el.appendChild(sm);
+      numKey=key;lastFrac=fp;lastBumpMs=0;
+      try{el.setAttribute('aria-label',Number(shown).toFixed(2)+' '+cur);}catch(_){}
+      return;
     }
-    if(snap)el.classList.add('noanim');
-    var reels=el.querySelectorAll('.oreel');
-    var digits=(ip+fp).split(''),k;
-    for(k=0;k<digits.length&&k<reels.length;k++){
-      var dg=+digits[k];
-      if(odoCache[k]!==dg){odoCache[k]=dg;reels[k].style.transform='translateY('+(-dg)+'em)';}
+    if(elInt)elInt.nodeValue=ip+'.';
+    if(elFrac&&lastFrac!==fp){
+      elFrac.textContent=fp;lastFrac=fp;
+      if(!reduced){
+        var nowMs=Date.now();
+        if(nowMs-lastBumpMs>400){
+          lastBumpMs=nowMs;
+          elFrac.classList.remove('bump');
+          void elFrac.offsetWidth;
+          elFrac.classList.add('bump');
+        }
+      }
     }
-    if(snap){void el.offsetWidth;el.classList.remove('noanim');}
-    odoLast=Number(shown);
-    try{el.setAttribute('aria-label',Number(shown).toFixed(2)+' '+cur);}catch(_){}
   }
   function liveShown(){
     var now=Date.now();
@@ -260,7 +270,7 @@ import { requireAuth } from './js/guard.js';
     var lv=liveShown();
     var totalYield=lv.totalYield,shown=lv.shown;
     var cur=currentCountry().currency||'USD';
-    paintOdo(shown,cur);
+    paintNum(shown,cur);
     try{document.getElementById('tick').classList.toggle('still',!mining);}catch(_){}
     try{document.getElementById('boost-btn').classList.toggle('attn',!mining);}catch(_){}
     var boosted=mining&&state.boostUntilMs>now;
@@ -316,7 +326,7 @@ import { requireAuth } from './js/guard.js';
     var now=Date.now();
     // Fast path: advance the odometer reels every frame while live. Text,
     // buttons and rates repaint at the slower cadence below.
-    if(state&&!reduced){try{var lvf=liveShown();paintOdo(lvf.shown,currentCountry().currency||'USD');}catch(e){}}
+    if(state&&!reduced){try{var lvf=liveShown();paintNum(lvf.shown,currentCountry().currency||'USD');}catch(e){}}
     if(now-lastPaint>(reduced?5000:250)){lastPaint=now;try{paintLive();}catch(e){}}
     raf=requestAnimationFrame(tickLoop);
   }

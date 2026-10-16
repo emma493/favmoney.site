@@ -228,14 +228,14 @@ export function getAd(adId, nowMs) {
   return null;
 }
 
-// Same-page sponsor surface: load url into a sandboxed iframe. The sandbox
-// (no allow-top-navigation) traps frame-busting ads inside the frame — the
-// app page can never be navigated away. Call with the modal's iframe on open,
-// clearSponsor() on close so nothing keeps playing. Returns true on success.
+// Same-page sponsor surface: load url into a sandboxed iframe. Sandbox set
+// matches the proven shortieshub surface (allow-same-origin included) so ad
+// scripts that touch storage without guards don't die on an opaque origin.
+// No allow-top-navigation: framed pages can never navigate the app.
 export function embedSponsor(frame, url) {
   try {
     if (!frame) return false;
-    frame.setAttribute('sandbox', 'allow-scripts allow-popups allow-forms');
+    frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms');
     frame.setAttribute('referrerpolicy', 'no-referrer');
     frame.setAttribute('title', 'Sponsored view');
     frame.src = String(url || SPONSOR_URL);

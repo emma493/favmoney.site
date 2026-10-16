@@ -269,8 +269,7 @@ async function handleOgadsPostback(request, env) {
       await fsPatch(projectId, token, 'wallets/' + encodeURIComponent(p.uid), walletFields, ['pending', 'lifetime', 'invested', 'lastLabel', 'updatedAt']);
     } else {
       await fsCreate(projectId, token, 'wallets', p.uid, {
-        ...walletFields, investedAt: N(Date.now()), boostUntil: N(0),
-        diamonds: N(0), lastDiamondAdAt: N(0), lastDiamondPassiveAt: N(Date.now())
+        ...walletFields, investedAt: N(Date.now()), boostUntil: N(0)
       });
     }
     await fsCreate(projectId, token, 'proofs', '', {
@@ -384,8 +383,7 @@ export default {
         await fsPatch(projectId, token, 'wallets/' + encodeURIComponent(p.p1), walletFields, ['pending', 'lifetime', 'invested', 'lastLabel', 'updatedAt']);
       } else {
         await fsCreate(projectId, token, 'wallets', p.p1, {
-          ...walletFields, investedAt: N(Date.now()), boostUntil: N(0),
-          diamonds: N(0), lastDiamondAdAt: N(0), lastDiamondPassiveAt: N(Date.now())
+          ...walletFields, investedAt: N(Date.now()), boostUntil: N(0)
         });
       }
       await fsCreate(projectId, token, 'proofs', '', {

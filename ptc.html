@@ -38,12 +38,22 @@
 .ptc-veil{position:fixed;inset:0;z-index:90;background:rgba(10,11,22,.9);display:none;align-items:center;justify-content:center;padding:20px}
 .ptc-veil.open{display:flex}
 .ptc-box{width:min(480px,100%);background:linear-gradient(180deg,#232544,#181a30);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:var(--shadow-xl)}
-.ptc-stage{padding:24px;text-align:center}
-.ptc-stage h3{margin:0 0 6px;font-size:18px}
-.ptc-stage p{margin:0;color:var(--muted);font-size:13px}
 .ptc-foot{padding:0 20px 20px}
 .ptc-timer{display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px}
 .ptc-timer b{color:#ffd75e}
+/* framed sponsor surface: shortieshub-style overlay — timer, progress and
+   badge float above the frame (pointer-events:none) so only the frame's own
+   content and our buttons are interactive */
+.ptc-framewrap{position:relative;margin:0 0 8px;border-radius:12px;overflow:hidden;background:#0d0e1d;min-height:260px}
+.ptc-framewrap iframe{display:block;width:100%;height:260px;border:0;background:#0d0e1d;position:relative;z-index:1}
+.ptc-overlay{position:absolute;top:0;left:0;right:0;z-index:10;pointer-events:none;padding:10px 12px 14px;background:linear-gradient(180deg,rgba(10,11,22,.85),transparent)}
+.ptc-overlay .ptc-timer{margin-bottom:6px;text-shadow:0 1px 4px rgba(0,0,0,.9)}
+.ptc-badge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.08em;color:#fff;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:3px 8px;margin-bottom:8px}
+.ptc-loading{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:linear-gradient(110deg,#0d0e1d 30%,#171a33 45%,#0d0e1d 60%);background-size:200% 100%;animation:ptcShimmer 1.4s linear infinite;color:var(--muted);font-size:13px;font-weight:700}
+@keyframes ptcShimmer{to{background-position:-200% 0}}
+.ptc-frame-fallback{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#0d0e1d;text-align:center;padding:20px}
+.ptc-frame-fallback p{margin:0;color:var(--muted);font-size:13px}
+.ptc-frame-fallback .btn{min-height:48px}
 </style>
 </head>
 <body>
@@ -88,14 +98,13 @@
 </main>
 <div class="ptc-veil" id="ptc-modal" role="dialog" aria-label="Sponsored view">
 <div class="ptc-box">
-<div class="ptc-stage">
-<h3 id="ptc-title">Sponsored view</h3>
-<p id="ptc-text">Your sponsored view plays below.</p>
+<div class="ptc-foot" style="padding-top:20px">
+<div class="ptc-framewrap">
+<iframe id="ptc-frame" title="Sponsored view" loading="lazy"></iframe>
+<div class="ptc-overlay"><span class="ptc-badge">SPONSORED</span><div class="ptc-timer"><span id="ptc-msg">Keep this view visible…</span><b id="ptc-count">40s</b></div><div class="prog" style="margin:0"><i id="ptc-bar" style="width:0%"></i></div></div>
+<div class="ptc-loading" id="ptc-loading"><span>Loading sponsored view…</span></div>
+<div class="ptc-frame-fallback" id="ptc-frame-fallback" hidden><p>Sponsored view didn't load inside the app.</p><a id="ptc-anchor-big" href="#" target="_blank" rel="noopener sponsored nofollow" class="btn btn-green">Open sponsor in new tab</a></div>
 </div>
-<div class="ptc-foot">
-<div class="ptc-timer"><span id="ptc-msg">Keep this view visible…</span><b id="ptc-count">40s</b></div>
-<div class="prog" style="margin:0 0 8px"><i id="ptc-bar" style="width:0%"></i></div>
-<div style="margin:0 0 8px;border-radius:12px;overflow:hidden;background:#0d0e1d"><iframe id="ptc-frame" title="Sponsored view" loading="lazy" style="display:block;width:100%;height:260px;border:0;background:#0d0e1d"></iframe></div>
 <p id="ptc-fallback" style="font-size:11px;color:var(--faint);margin:0 0 12px;text-align:center">Blank? <a id="ptc-anchor" href="#" target="_blank" rel="noopener sponsored nofollow" style="color:#8ff0bd;font-weight:700">Open in new tab</a></p>
 <button class="btn btn-green btn-block" id="ptc-claim" style="display:none">Claim</button>
 <button class="btn btn-ghost btn-block" id="ptc-close" style="margin-top:8px">Close</button>
@@ -160,18 +169,43 @@ if (window.FavLoader) FavLoader.hold();
     document.getElementById('ptc-bar').style.width=Math.min(100,(activeAd.secs*1000-viewLeft)/(activeAd.secs*1000)*100)+'%';
     document.getElementById('ptc-msg').textContent=document.hidden?'Paused — keep this view visible…':(viewLeft>0?'Keep this view visible…':'View verified.');
   }
+  // Frame load lifecycle: shimmer until the sponsor answers; if it never
+  // does within 8s (blocked/blank endpoint), swap to the new-tab fallback
+  // instead of a black box. Outcome is logged for diagnosis.
+  var frameTimer=null;
+  function frameLoading(){
+    try{document.getElementById('ptc-loading').style.display='';}catch(_){}
+    try{document.getElementById('ptc-frame-fallback').hidden=true;}catch(_){}
+    if(frameTimer)clearTimeout(frameTimer);
+    frameTimer=setTimeout(function(){
+      frameTimer=null;
+      try{document.getElementById('ptc-loading').style.display='none';}catch(_){}
+      try{document.getElementById('ptc-frame-fallback').hidden=false;}catch(_){}
+      try{console.warn('[ptc] sponsor frame did not answer in 8s — showing new-tab fallback');}catch(_){}
+    },8000);
+  }
+  function frameReady(){
+    if(frameTimer){clearTimeout(frameTimer);frameTimer=null;}
+    try{document.getElementById('ptc-loading').style.display='none';}catch(_){}
+    try{console.info('[ptc] sponsor frame loaded');}catch(_){}
+  }
+  try{
+    document.getElementById('ptc-frame').addEventListener('load',function(){if(viewOpen)frameReady();});
+  }catch(_){}
   function closeView(){
     viewOpen=false;activeAd=null;
     if(viewTimer){clearInterval(viewTimer);viewTimer=null;}
+    if(frameTimer){clearTimeout(frameTimer);frameTimer=null;}
+    try{document.getElementById('ptc-frame-fallback').hidden=true;}catch(_){}
     try{clearSponsor(document.getElementById('ptc-frame'));}catch(_){}
     document.getElementById('ptc-modal').classList.remove('open');
   }
   function openView(ad){
     activeAd=ad;viewLeft=ad.secs*1000;viewOpen=true;
-    document.getElementById('ptc-title').textContent=ad.title;
-    document.getElementById('ptc-text').textContent='Keep this page visible for '+ad.secs+'s while the sponsored view plays, then claim '+money(ad.pay)+'.';
     try{embedSponsor(document.getElementById('ptc-frame'),ad.url);}catch(_){}
     try{document.getElementById('ptc-anchor').href=ad.url;}catch(_){}
+    try{document.getElementById('ptc-anchor-big').href=ad.url;}catch(_){}
+    frameLoading();
     document.getElementById('ptc-claim').style.display='none';
     document.getElementById('ptc-claim').textContent='Claim '+money(ad.pay);
     document.getElementById('ptc-modal').classList.add('open');

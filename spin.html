@@ -159,6 +159,18 @@
 </div>
 </div>
 
+<div class="spin-veil" id="spin-ad-modal" role="dialog" aria-label="Sponsored view for a bonus spin">
+<div class="spin-box" style="text-align:left">
+<div style="text-align:center"><h3>Bonus spin break</h3><p style="color:var(--muted);font-size:14px;margin:8px 0 0">Keep this view visible for 20s, then continue to spin.</p></div>
+<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--muted);margin:14px 0 8px"><span id="spin-ad-msg">Keep this view visible…</span><b id="spin-ad-count" style="color:#8ff0bd">20s</b></div>
+<div class="prog" style="margin:0 0 8px"><i id="spin-ad-bar" style="width:0%"></i></div>
+<div style="margin:0 0 8px;border-radius:12px;overflow:hidden;background:#0d0e1d"><iframe id="spin-ad-frame" title="Sponsored view" loading="lazy" style="display:block;width:100%;height:260px;border:0;background:#0d0e1d"></iframe></div>
+<p style="font-size:11px;color:var(--faint);margin:0 0 12px;text-align:center">Sponsored view above · blank? <a id="spin-ad-anchor" href="https://www.profitableratecpmnetwork.com/ahct9uhb?key=f4da12d7aaa67cd61f6a1196381da654" target="_blank" rel="noopener sponsored nofollow" style="color:#8ff0bd;font-weight:700">Open in new tab</a></p>
+<button class="btn btn-green btn-block" id="spin-ad-go" style="display:none">Continue · spin now</button>
+<button class="btn btn-ghost btn-block" id="spin-ad-close" style="margin-top:8px">Close</button>
+</div>
+</div>
+
 <footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="earn.html">Earn</a> · <a href="withdraw.html">Cashout</a></span></div></div></footer>
 <nav class="mobilenav" aria-label="Mobile"><a href="earn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="grow.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Grow</a><a href="invite.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M18 8v6M15 11h6"/></svg>Invite</a><a href="rewards.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="12" rx="1.5"/><path d="M4 13h16M12 9v12M12 9S7.5 9 6 7.5 5.5 4.8 7 4.5 12 9 12 9Zm0 0s4.5 0 6-1.5S18.5 4.8 17 4.5 12 9 12 9Z"/></svg>Rewards<span class="navdot" id="navdot-rewards" style="display:none"></span></a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
 <div class="toast" id="toast" role="status"></div>
@@ -236,12 +248,13 @@
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getUserDoc, fetchUserDocs, getUnclaimedRewards, getSpinState, playSpin, track, SPIN_AD_DAILY_CAP } from './js/firebase.js';
 import { formatUSD, convertUSD, symbolFor, currentCountry, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
+import { embedSponsor, clearSponsor } from './js/ptc-catalog.js';
 import { requireAuth } from './js/guard.js';
 (function(){
   window.__favSpinBooted=true;
   if(window.FavLoader)FavLoader.hold();
   setTimeout(function(){if(document.documentElement.getAttribute('data-auth')==='member'&&window.FavLoader)FavLoader.pageReady();},6000);
-  var uid=null, spinning=false, stopChest=null, unclaimedN=0, spinState=null, reduced=false;
+  var uid=null, spinning=false, unclaimedN=0, spinState=null, reduced=false;
   try{reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}
   // Wheel art paints instantly via the classic script above; reuse it here.
   var SEGS=(window.FavSpin&&window.FavSpin.SEGS)||[];
@@ -304,23 +317,24 @@ import { requireAuth } from './js/guard.js';
     else{st.textContent='Next free in '+msToClock(spinState.resetMs);st.classList.add('cool');}
     sb.textContent=spinState.tickets>0?'Spin (ticket)':(spinState.freeLeft>0?'Spin free':'Spin free (used)');
     sb.disabled=spinning||(spinState.freeLeft<=0&&spinState.tickets<=0);
-    eb.textContent='Extra spin · '+DIAMOND_COST_SPIN+' diamonds ('+spinState.diamonds+')';
-    eb.disabled=spinning||spinState.diamonds<DIAMOND_COST_SPIN;
-    document.getElementById('spin-hint').textContent=spinState.freeLeft>0?'Free spin resets at midnight UTC. Diamonds come from the floating chest.':('Free spin back in '+msToClock(spinState.resetMs)+' · extra spins always available for diamonds.');
+    var left=(spinState.adLeft!=null?spinState.adLeft:SPIN_AD_DAILY_CAP);
+    eb.textContent=left>0?('Watch ad · Spin ('+left+' of '+SPIN_AD_DAILY_CAP+' left)'):('Bonus done · back at midnight UTC');
+    eb.disabled=spinning||left<=0;
+    document.getElementById('spin-hint').textContent=spinState.freeLeft>0?('Free spin ready · '+left+' bonus spins left today.'):('Free spin back in '+msToClock(spinState.resetMs)+' · '+left+' bonus spins left.');
   }
   setInterval(function(){if(spinState&&spinState.freeLeft<=0&&spinState.tickets<=0){spinState.resetMs=Math.max(0,spinState.resetMs-1000);paintState();}},1000);
   async function refresh(){
     if(!uid)return;
     try{
       spinState=await getSpinState(uid);
-      paintDualChip(spinState.pending, spinState.diamonds);
+      try{document.getElementById('chip-bal').textContent=formatUSD(spinState.pending);}catch(_){}
       paintState();
       try{paintBadges(await getUnclaimedRewards(uid));}catch(_){}
     }catch(e){}
     try{
       var proofs=await fetchUserDocs(uid,'proofs',100);
       var spins=proofs.filter(function(p){return /^spin-/.test(p.label||'');});
-      var used=spins.filter(function(p){return /^(spin-win|spin-diamond|spin-ticket)$/.test(p.label);}).length;
+      var used=spins.filter(function(p){return /^(spin-win|spin-ticket)$/.test(p.label);}).length;
       var won=spins.filter(function(p){return p.label==='spin-win';}).reduce(function(s,p){return s+Number(p.amount||0);},0);
       document.getElementById('s-used').textContent=used;
       document.getElementById('s-won').textContent=money(won);
@@ -331,9 +345,8 @@ import { requireAuth } from './js/guard.js';
         body.innerHTML=rows.map(function(p){
           var nm='Spin', tp='—';
           if(p.label==='spin-win'){nm=money(p.amount);tp='Cash';}
-          else if(p.label==='spin-diamond'){nm='+'+(p.diamonds||5)+' diamonds';tp='Chips';}
           else if(p.label==='spin-ticket'){nm='Free spin';tp='Ticket';}
-          else if(p.label==='spin-extra'){nm='−'+DIAMOND_COST_SPIN+' diamonds';tp='Cost';}
+          else if(p.label==='spin-ad'){nm='Ad spin';tp='Entry';}
           else if(p.label==='spin-free'){nm='Free used';tp='Entry';}
           return '<tr><td>'+nm+'</td><td>'+tp+'</td><td><span class="pill paid">Done</span></td><td>'+relDate(p.at)+'</td></tr>';
         }).join('');
@@ -342,15 +355,41 @@ import { requireAuth } from './js/guard.js';
   }
   function openVeil(prize){
     var k=document.getElementById('veil-kicker'), a=document.getElementById('veil-amount'), s=document.getElementById('veil-sub');
-    a.className='big '+(prize.kind==='cash'?'cash':(prize.kind==='diamonds'?'dia':'ticket'));
+    a.className='big '+(prize.kind==='cash'?'cash':'ticket');
     if(prize.kind==='cash'){k.textContent=prize.amount>=1?'Jackpot!':'You won';a.textContent=money(prize.amount);s.textContent='Added to available.';}
-    else if(prize.kind==='diamonds'){k.textContent='You won';a.textContent='+'+prize.diamonds+' diamonds';s.textContent='Chips for extra spins — cash untouched.';}
     else{k.textContent='You won';a.textContent='Free Spin';s.textContent='A ticket was added — spin again, on the house.';}
     document.getElementById('spin-veil').classList.add('open');
   }
   function closeVeil(){document.getElementById('spin-veil').classList.remove('open');}
   document.getElementById('veil-close').addEventListener('click',closeVeil);
   document.getElementById('veil-again').addEventListener('click',function(){closeVeil();var b=document.getElementById('spin-btn');if(b&&!b.disabled)b.click();});
+  var SPIN_AD_MS=20000, spinAdLeft=SPIN_AD_MS, spinAdTimer=null, spinAdOpen=false, spinAdBusy=false;
+  function paintSpinAd(){
+    var s=Math.max(0,Math.ceil(spinAdLeft/1000));
+    document.getElementById('spin-ad-count').textContent=s+'s';
+    document.getElementById('spin-ad-bar').style.width=Math.min(100,(SPIN_AD_MS-spinAdLeft)/SPIN_AD_MS*100)+'%';
+    document.getElementById('spin-ad-msg').textContent=document.hidden?'Paused — keep this view visible…':(spinAdLeft>0?'Keep this view visible…':'View verified.');
+  }
+  function closeSpinAd(){spinAdOpen=false;if(spinAdTimer){clearInterval(spinAdTimer);spinAdTimer=null;}try{clearSponsor(document.getElementById('spin-ad-frame'));}catch(_){}document.getElementById('spin-ad-modal').classList.remove('open');}
+  function openSpinAd(){
+    document.getElementById('spin-ad-modal').classList.add('open');
+    document.getElementById('spin-ad-go').style.display='none';
+    try{embedSponsor(document.getElementById('spin-ad-frame'));}catch(_){}
+    spinAdLeft=SPIN_AD_MS;spinAdOpen=true;paintSpinAd();
+    if(spinAdTimer)clearInterval(spinAdTimer);
+    spinAdTimer=setInterval(function(){
+      if(!spinAdOpen)return;
+      if(!document.hidden)spinAdLeft-=250;
+      paintSpinAd();
+      if(spinAdLeft<=0){clearInterval(spinAdTimer);spinAdTimer=null;document.getElementById('spin-ad-go').style.display='';}
+    },250);
+  }
+  document.getElementById('spin-ad-close').addEventListener('click',closeSpinAd);
+  document.getElementById('spin-ad-go').addEventListener('click',function(){
+    closeSpinAd();
+    if(spinAdBusy||spinning)return;spinAdBusy=true;
+    doSpin('ad').then(function(){spinAdBusy=false;}).catch(function(){spinAdBusy=false;});
+  });
   async function doSpin(mode){
     if(spinning||!uid)return;
     spinning=true;paintState();
@@ -360,7 +399,7 @@ import { requireAuth } from './js/guard.js';
     if(!r.ok){
       spinning=false;
       if(r.reason==='nofree')show('Free spin used — next one at midnight UTC.');
-      else if(r.reason==='funds')show('Need '+DIAMOND_COST_SPIN+' diamonds — tap the chest.');
+      else if(r.reason==='capped')show('Bonus spins done for today — back at midnight UTC.');
       else if(r.reason==='tickets')show('No ticket spins left.');
       else show('Spin failed — check connection and rules.');
       await refresh();return;
@@ -369,7 +408,6 @@ import { requireAuth } from './js/guard.js';
     animateTo(r.prize.id, async function(){
       var res=document.getElementById('spin-result');
       if(r.prize.kind==='cash'){res.textContent='Won '+money(r.prize.amount)+' — added to available.';}
-      else if(r.prize.kind==='diamonds'){res.textContent='Won +'+r.prize.diamonds+' diamonds.';}
       else{res.textContent='Won a free re-spin.';}
       res.classList.add('win');
       spinning=false;
@@ -384,9 +422,9 @@ import { requireAuth } from './js/guard.js';
     return doSpin(mode);
   });
   document.getElementById('extra-btn').addEventListener('click',function(){
-    var __b=this;
-    if(window.FavLoader){return FavLoader.withButton(__b,function(){return doSpin('extra');});}
-    return doSpin('extra');
+    if(!spinState||spinning)return;
+    if((spinState.adLeft||0)<=0){show('Bonus spins done for today — back at midnight UTC.');return;}
+    openSpinAd();
   });
   document.querySelectorAll('.faq-item button').forEach(function(b){
     b.addEventListener('click',function(){b.closest('.faq-item').classList.toggle('open');});
@@ -401,10 +439,6 @@ import { requireAuth } from './js/guard.js';
       document.getElementById('chip-name').textContent=(user.email||'Member').split('@')[0];
       try{adoptUserCountry(await getUserDoc(uid));}catch(_){}
       paintWheelLabels();paintMoney();
-      try{
-        if(stopChest){try{stopChest();}catch(_){}}
-        stopChest=startDiamondChest(uid,{onBalance:function(){refresh();}});
-      }catch(e){}
       await refresh();
       if(window.FavLoader)FavLoader.pageReady();
   });

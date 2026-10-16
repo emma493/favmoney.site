@@ -115,19 +115,18 @@
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
 <div class="back-row"><a class="back-btn" href="earn.html" aria-label="Back to Earn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg><span>Earn</span></a></div>
 <h1 class="dash-title">Quiz & Earn</h1>
-<p>One <b>free session every day</b>. Extra sessions cost <b>10 diamonds</b>. Pick an operator, solve <b>30 math sprints</b> against a 10-second timer — <b data-usd="0.10">$0.10</b> per correct answer. One rescue life per session.</p>
+<p>One <b>free session every day</b>, plus up to <b>10 bonus sessions</b> via short ads. Pick an operator, solve <b>30 math sprints</b> against a 10-second timer — <b data-usd="0.10">$0.10</b> per correct answer. One rescue life per session.</p>
 
 <div id="member-zone" style="display:none">
 <div class="bonus-card" id="quiz-entry" style="display:none">
 <h2 style="margin:0 0 6px;font-size:20px">Start a session</h2>
 <p style="color:var(--muted);font-size:14px;margin:0 0 16px">One free 30-question session per day. Correct answers pay <span data-usd="0.10">$0.10</span> each to your main balance — up to <span data-usd="3">$3.00</span> a session. Wrong twice and the session ends.</p>
 <p id="quiz-status" aria-live="polite" style="font-size:14px;font-weight:700;color:#8ff0bd;margin:0 0 12px">Loading your sessions…</p>
-<p style="font-size:14px;margin:0 0 14px">Your diamonds: <b id="quiz-diamonds" style="color:#7dd3fc">0</b></p>
 <div style="display:flex;gap:8px;flex-wrap:wrap">
 <button class="btn btn-green" id="free-btn" style="min-height:48px;min-width:220px;flex:1">Start free quiz</button>
-<button class="btn btn-ghost" id="deposit-btn" style="min-height:48px;min-width:220px;flex:1">Extra session · 10 diamonds</button>
+<button class="btn btn-ghost" id="deposit-btn" style="min-height:48px;min-width:220px;flex:1">Watch ad · Play (10 left)</button>
 </div>
-<p class="hint" id="quiz-hint" style="text-align:center;margin:10px 0 0">Free session resets at midnight UTC. Diamonds come from the floating chest.</p>
+<p class="hint" id="quiz-hint" style="text-align:center;margin:10px 0 0">Free session resets at midnight UTC. Bonus sessions reset daily.</p>
 </div>
 
 <div class="bonus-card" id="quiz-ops" style="display:none">
@@ -166,21 +165,21 @@
 <p id="over-status" style="font-size:13px;font-weight:700;color:var(--muted);margin:0 0 12px"></p>
 <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
 <button class="btn btn-green" id="free-again-btn" style="min-height:48px;min-width:220px;display:none">Play free session</button>
-<button class="btn btn-ghost" id="again-btn" style="min-height:48px;min-width:220px">Play again · 10 diamonds</button>
+<button class="btn btn-ghost" id="again-btn" style="min-height:48px;min-width:220px">Watch ad · Play again</button>
 </div>
 </div>
 </div>
 
 <h2 style="font-size:20px;margin:26px 0 0">How it works</h2>
 <div class="quest-row"><div class="qico">1</div><div class="qmid"><b>Take your free session</b><div style="font-size:13px;color:var(--muted)">One free 30-question session per UTC day. The entry card counts down to midnight when used.</div></div></div>
-<div class="quest-row"><div class="qico">2</div><div class="qmid"><b>Want more? Spend diamonds</b><div style="font-size:13px;color:var(--muted)">Extra sessions cost 10 diamonds from the floating chest. Free and paid sessions pay the same <span data-usd="0.10">$0.10</span> per correct answer.</div></div></div>
+<div class="quest-row"><div class="qico">2</div><div class="qmid"><b>Want more? Watch an ad</b><div style="font-size:13px;color:var(--muted)">Up to 10 bonus sessions a day — one short ad per session. Free and bonus sessions pay the same <span data-usd="0.10">$0.10</span> per correct answer.</div></div></div>
 <div class="quest-row"><div class="qico">3</div><div class="qmid"><b>Answers credit instantly</b><div style="font-size:13px;color:var(--muted)">Cash lands in available. Wrong twice and the session ends — one rescue life per session via a 20-second view.</div></div></div>
 
 <h2 style="font-size:20px;margin:30px 0 0">Good to know</h2>
 <div class="faq" style="margin-top:14px">
 <div class="faq-item"><button>When does my free session reset?<span class="plus">+</span></button><div class="a"><div><p>At midnight UTC. The countdown on the entry card shows exactly how long until the next free session.</p></div></div></div>
-<div class="faq-item"><button>Do free answers pay the same?<span class="plus">+</span></button><div class="a"><div><p>Yes. Free and diamond sessions both pay <span data-usd="0.10">$0.10</span> per correct answer, up to <span data-usd="3">$3.00</span> for a perfect 30.</p></div></div></div>
-<div class="faq-item"><button>Can I lose diamonds or cash playing?<span class="plus">+</span></button><div class="a"><div><p>No. Wrong answers just end the session after the second miss. The only cost is the 10-diamond extra-session fee; free sessions cost nothing.</p></div></div></div>
+<div class="faq-item"><button>Do bonus answers pay the same?<span class="plus">+</span></button><div class="a"><div><p>Yes. Free and bonus sessions both pay <span data-usd="0.10">$0.10</span> per correct answer, up to <span data-usd="3">$3.00</span> for a perfect 30.</p></div></div></div>
+<div class="faq-item"><button>Can I lose cash playing?<span class="plus">+</span></button><div class="a"><div><p>No. Wrong answers just end the session after the second miss. Bonus sessions cost one short ad view each; free sessions cost nothing.</p></div></div></div>
 </div>
 
 <h2 style="font-size:20px;margin:26px 0 0">Recent correct answers</h2>
@@ -214,15 +213,14 @@
 
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet, getUserDoc, fetchUserDocs, quizSession, genQuizQuestion, quizOptions, startQuizSession, getQuizState, answerQuiz, useQuizLife, getUnclaimedRewards, track, QUIZ_ENTRY_COST, QUIZ_SESSION_SIZE, QUIZ_PAY, QUIZ_TIME_MS } from './js/firebase.js';
-import { paintDualChip, startDiamondChest } from './js/diamonds.js';
+import { auth, onAuthStateChanged, getWallet, getUserDoc, fetchUserDocs, quizSession, genQuizQuestion, quizOptions, startQuizSession, getQuizState, answerQuiz, useQuizLife, getUnclaimedRewards, track, QUIZ_AD_DAILY_CAP, QUIZ_SESSION_SIZE, QUIZ_PAY, QUIZ_TIME_MS } from './js/firebase.js';
 import { embedSponsor, clearSponsor } from './js/ptc-catalog.js';
 import { coinPour, softThud, isMuted, toggleMute } from './js/sfx.js';
 import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 import { requireAuth } from './js/guard.js';
 if (window.FavLoader) FavLoader.hold();
 (function () {
-  var uid=null, stopChest=null, proofs=[], diamonds=0, quizState=null;
+  var uid=null, proofs=[], quizState=null;
   var curOp=null, cur=null, busy=false, qTimer=null, qLeft=QUIZ_TIME_MS;
   var RING_C=113.1;
   var toast=document.getElementById('toast'), tm=null;
@@ -287,11 +285,12 @@ if (window.FavLoader) FavLoader.hold();
       fb.textContent='Free used today';
       fb.disabled=true;
     }
-    eb.textContent='Extra session · '+QUIZ_ENTRY_COST+' diamonds ('+diamonds+')';
-    eb.disabled=diamonds<QUIZ_ENTRY_COST;
+    var left=(quizState.adLeft!=null?quizState.adLeft:QUIZ_AD_DAILY_CAP);
+    eb.textContent=left>0?('Watch ad · Play ('+left+' of '+QUIZ_AD_DAILY_CAP+' left)'):('Bonus done · back at midnight UTC');
+    eb.disabled=left<=0;
     if(hint)hint.textContent=quizState.freeLeft>0
-      ?'Free session resets at midnight UTC. Diamonds come from the floating chest.'
-      :('Free session back in '+msToClock(quizState.resetMs)+' · extra sessions always available for diamonds.');
+      ?('Free session ready · '+left+' bonus sessions left today.')
+      :('Free session back in '+msToClock(quizState.resetMs)+' · '+left+' bonus sessions left.');
   }
   setInterval(function(){
     if(quizState&&quizState.freeLeft<=0){quizState.resetMs=Math.max(0,quizState.resetMs-1000);paintQuizState();}
@@ -314,9 +313,7 @@ if (window.FavLoader) FavLoader.hold();
     var st=quizSession(proofs,Date.now());
     try{
       var w=await getWallet(uid);
-      diamonds=w.diamonds;
-      document.getElementById('quiz-diamonds').textContent=String(diamonds);
-      if(repaintChip)paintDualChip(w.pending,w.diamonds);
+      if(repaintChip)try{document.getElementById('chip-bal').textContent=formatUSD(w.pending);}catch(_){}
     }catch(e){}
     try{quizState=await getQuizState(uid);}catch(e){}
     paintQuizState();
@@ -503,10 +500,14 @@ if (window.FavLoader) FavLoader.hold();
       if(os)os.textContent='Your free session is still available.';
     }else{
       if(fab)fab.style.display='none';
-      if(os&&quizState)os.textContent='Next free in '+msToClock(quizState.resetMs)+' · extras always available.';
+      if(os&&quizState)os.textContent='Next free in '+msToClock(quizState.resetMs)+' · bonus sessions via ads.';
       else if(os)os.textContent='';
     }
-    if(ab)ab.textContent='Play again · '+QUIZ_ENTRY_COST+' diamonds';
+    if(ab){
+      var aleft=(quizState&&quizState.adLeft!=null)?quizState.adLeft:QUIZ_AD_DAILY_CAP;
+      ab.textContent=aleft>0?('Watch ad · Play again ('+aleft+' left)'):('Bonus done for today');
+      ab.disabled=aleft<=0;
+    }
     clearOp();
     showZone('quiz-over');
   }
@@ -522,10 +523,10 @@ if (window.FavLoader) FavLoader.hold();
   });
 
   // --- rescue ad: 20 visible seconds, house promos (third-party rewarded
-  // ads plug into the Continue callback later, same as chest/Grow) ---
+  // ads plug into the Continue callback later, same as Grow) ---
   var ADS=[
     ['Invite pays both ways','Friends get '+formatUSD(1)+' instantly, you get '+formatUSD(0.5)+' instantly. Your link lives on the Invite page.'],
-    ['Cash out from '+formatUSD(20),'PayPal, Visa prepaid and crypto. Diamonds stay in games — cash stays withdrawable.'],
+    ['Cash out from '+formatUSD(20),'PayPal, Visa prepaid and crypto. Cash stays withdrawable.'],
     ['Grow your earnings','Stake task earnings on the Grow page and watch the ticker climb, boosted by ad views.']
   ];
   var adIdx=0, AD_MS=20000, adLeft=AD_MS, adTimer=null, adOpen=false, adBusy=false;
@@ -552,15 +553,32 @@ if (window.FavLoader) FavLoader.hold();
       if(adLeft<=0){clearInterval(adTimer);adTimer=null;document.getElementById('quiz-ad-go').style.display='';}
     },250);
   }
-  document.getElementById('life-ad-btn').addEventListener('click',function(){hideLife();openAd();});
+  document.getElementById('life-ad-btn').addEventListener('click',function(){hideLife();document.getElementById('quiz-ad-title').textContent='Quiz break';document.getElementById('quiz-ad-go').textContent='Continue · rescue me';document.getElementById('quiz-ad-go').setAttribute('data-mode','life');openAd();});
   document.getElementById('quiz-ad-close').addEventListener('click',async function(){
     closeAd();
     var st=await refresh(false);
     gameOver(st||quizSession(proofs,Date.now()));
   });
   document.getElementById('quiz-ad-go').addEventListener('click',async function(){
+    var entryMode=this.getAttribute('data-mode')||'life';
+    this.removeAttribute('data-mode');
     closeAd();
     if(adBusy)return;adBusy=true;
+    if(entryMode==='entry'){
+      var r2;
+      try{r2=await startQuizSession(uid,'ad');}catch(e){r2={ok:false,reason:'write'};}
+      adBusy=false;
+      if(!r2.ok){
+        if(r2.reason==='capped')show('Bonus sessions done for today — back at midnight UTC.');
+        else show('Could not start — check connection and try again.');
+        await refresh(false);
+        return;
+      }
+      try{track('quiz_start_mode',{mode:'ad'});}catch(_){}
+      var st2=await refresh(false);
+      route(st2);
+      return;
+    }
     var r;
     try{r=await useQuizLife(uid);}catch(e){r={ok:false,reason:'write'};}
     adBusy=false;
@@ -576,7 +594,7 @@ if (window.FavLoader) FavLoader.hold();
     var r;
     try{r=await startQuizSession(uid,mode);}catch(e){r={ok:false,reason:'write'};}
     if(!r.ok){
-      if(r.reason==='funds')show('Need 10 diamonds — tap the floating chest to earn them free.');
+      if(r.reason==='capped')show('Bonus sessions done for today — back at midnight UTC.');
       else if(r.reason==='nofree')show('Free session used — next one at midnight UTC.');
       else if(r.reason==='active'){var st=await refresh(false);route(st);return;}
       else show('Could not start — check connection and try again.');
@@ -584,7 +602,7 @@ if (window.FavLoader) FavLoader.hold();
       return;
     }
     try{track('quiz_start_mode',{mode:r.mode||mode});}catch(_){}
-    try{var w=await getWallet(uid);paintDualChip(w.pending,w.diamonds);}catch(e){}
+    try{var w=await getWallet(uid);try{document.getElementById('chip-bal').textContent=formatUSD(w.pending);}catch(e){}
     var st2=await refresh(false);
     route(st2);
   }
@@ -594,9 +612,12 @@ if (window.FavLoader) FavLoader.hold();
     return doStart('free');
   });
   document.getElementById('deposit-btn').addEventListener('click',function(){
-    var b=this;
-    if(window.FavLoader){return FavLoader.withButton(b,function(){return doStart('extra');});}
-    return doStart('extra');
+    if(!quizState||(quizState.adLeft||0)<=0){show('Bonus sessions done for today — back at midnight UTC.');return;}
+    document.getElementById('quiz-ad-title').textContent='Bonus session break';
+    document.getElementById('quiz-ad-text').textContent='Keep this view visible for 20s, then continue to play.';
+    document.getElementById('quiz-ad-go').textContent='Continue · play now';
+    document.getElementById('quiz-ad-go').setAttribute('data-mode','entry');
+    openAd();
   });
   document.getElementById('again-btn').addEventListener('click',function(){
     document.getElementById('deposit-btn').click();
@@ -630,11 +651,9 @@ if (window.FavLoader) FavLoader.hold();
       document.getElementById('chip-name').textContent=(user.email||'Member').split('@')[0];
       try{
         var w=await getWallet(uid);
-        paintDualChip(w.pending,w.diamonds);
+        try{document.getElementById('chip-bal').textContent=formatUSD(w.pending);}catch(_){}
         try{adoptUserCountry(await getUserDoc(uid));}catch(_){}
         paintMoney();
-        if(stopChest){try{stopChest();}catch(_){}}
-        stopChest=startDiamondChest(uid,{onBalance:function(w2){paintDualChip(w2.pending,w2.diamonds);diamonds=w2.diamonds;try{document.getElementById('quiz-diamonds').textContent=String(diamonds);}catch(_){}paintQuizState();}});
         try{await getUnclaimedRewards(uid);}catch(_){}
       }catch(e){}
       var st=await refresh(false);

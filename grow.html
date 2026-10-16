@@ -162,10 +162,10 @@
 </div>
 <div class="ad-timer"><span id="ad-msg">Keep this view visible…</span><b id="ad-count">20s</b></div>
 <div class="prog" style="margin:0 0 8px"><i id="ad-bar" style="width:0%"></i></div>
-<div style="margin:0 0 8px;border-radius:12px;overflow:hidden;background:#0d0e1d"><iframe id="ad-frame" title="Sponsored view" loading="lazy" style="display:block;width:100%;height:260px;border:0;background:#0d0e1d"></iframe></div>
-<p style="font-size:11px;color:var(--faint);margin:0 0 12px;text-align:center">Sponsored view above · blank? <a id="ad-anchor" href="https://www.profitableratecpmnetwork.com/ahct9uhb?key=f4da12d7aaa67cd61f6a1196381da654" target="_blank" rel="noopener sponsored nofollow" style="color:#8ff0bd;font-weight:700">Open in new tab</a></p>
+<button class="btn btn-green btn-block" id="ad-resume" style="display:none">Resume viewing</button>
+<a class="btn btn-green btn-block" id="ad-openlink" href="#" target="_blank" rel="noopener sponsored nofollow" style="display:none">Open ad in new tab</a>
 <div class="ad-foot">
-<button class="btn btn-green btn-block" id="ad-go" style="display:none">Continue · light my boost</button>
+<button class="btn btn-green btn-block" id="ad-go" style="display:none">Continue</button>
 <button class="btn btn-ghost btn-block" id="ad-close" style="margin-top:8px">Close</button>
 </div>
 </div>
@@ -176,7 +176,8 @@
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveState, settleInvest, stakeInvest, unstakeAll, activateBoost, activateMining, fetchUserDocs, computeYield, utcDayStr, track, getUnclaimedRewards, INVEST_BASE_APR, INVEST_BOOST_APR, INVEST_BOOST_MS, MINE_SHIFT_MS, INVEST_SEED } from './js/firebase.js';
-import { embedSponsor, clearSponsor } from './js/ptc-catalog.js';
+import { SPONSOR_URL } from './js/ptc-catalog.js';
+import { createRewardedView } from './js/rewarded-view.js';
 import { formatUSD, convertUSD, currentCountry, symbolFor, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 import { requireAuth } from './js/guard.js';
 (function(){
@@ -353,66 +354,89 @@ import { requireAuth } from './js/guard.js';
     show('Unstaked '+money(r.amount)+' to available. Seed keeps growing.');
     await refresh();
   }});
-  /* ---- ad viewer: 20 visible seconds, focus-enforced, then boost ---- */
-  var AD_MS=20000, adLeft=AD_MS, adTimer=null, adOpen=false;
-  var ADS=[
-    ['Invite pays both ways',function(){return 'Invite friends: they get '+formatUSD(1)+' instantly, you get '+formatUSD(0.5)+' instantly. Your link lives on the Invite page.';}],
-    ['Cash out from '+formatUSD(20),'PayPal, Visa prepaid and crypto. Reviewed promptly, tracked in My Withdrawals.'],
-    ['Streaks grow earnings','One ad starts a 6h mining shift at 10,000% APR. Watch again mid-shift to boost to 15,000% for an hour.']
-  ];
-  var adIdx=0;
-  function openAd(){
+  /* ---- rewarded view: 20s new-tab sponsor view, then boost ---- */
+  var grv=createRewardedView({
+    key:'grow',
+    notify:show,
+    onChange:function(s){ paintGrowModal(s); },
+    onCredit:function(){
+      var startShift=!(state&&state.mineUntilMs-Date.now()>0);
+      var p=startShift?activateMining(uid):activateBoost(uid);
+      return p.then(function(r){
+        if(!r.ok){
+          if(r.reason==='full')return {ok:false,message:(startShift?'Shift tank already full.':'Boost tank already full.')};
+          if(r.reason==='noshift')return {ok:false,message:'Shift ended - watch again to restart mining.'};
+          return {ok:false,retryable:true,message:(startShift?'Mining start failed - check connection and rules.':'Boost failed - check connection and rules.')};
+        }
+        try{track(startShift?'invest_shift':'invest_boost');}catch(_){}
+        show(startShift?'Mining started - 6h shift at 10,000% APR.':'Boost lit - 15,000% APR for 1 hour.');
+        return refresh().then(function(){return {ok:true};});
+      }).catch(function(){return {ok:false,retryable:true,message:'Boost failed - check connection and rules.'};});
+    }
+  });
+  try{ grv.restore(); }catch(_){}
+  function grvSnap(){ try{ return grv?grv.snapshot():null; }catch(_){ return null; } }
+  function grvBusy(){ var s=grvSnap(); return !!(s&&(s.status==='viewing'||s.status==='paused'||s.status==='crediting')); }
+  function paintGrowModal(s){
+    var veil=document.getElementById('ad-modal');
+    if(!veil)return;
+    function set(id,txt){try{document.getElementById(id).textContent=txt;}catch(_){}}
+    function showEl(id,on){try{document.getElementById(id).style.display=on?'':'none';}catch(_){}}
+    if(!s||s.status==='idle'||s.status==='viewing'){veil.classList.remove('open');return;}
+    var req=s.secs||20;
+    var done=Math.min(Number(s.accumMs||0),Number(s.requiredMs||req*1000));
+    var pct=req>0?Math.min(100,done/(req*1000)*100):0;
+    var left=Math.max(0,Math.ceil(((Number(s.requiredMs||req*1000))-done)/1000));
+    try{document.getElementById('ad-bar').style.width=pct+'%';}catch(_){}
+    veil.classList.add('open');
+    try{
+      var ol=document.getElementById('ad-openlink');
+      if(ol){ ol.href=SPONSOR_URL; ol.style.display='none'; }
+    }catch(_){}
+    showEl('ad-go',false);
+    if(s.status==='paused'){
+      set('ad-title','Favmoney booster break');
+      if(s.error)set('ad-text',s.error);
+      else if(s.tabClosed)set('ad-text','The ad tab was closed - that time does not count. Tap Resume to keep earning.');
+      else set('ad-text','Paused at '+Math.floor(done/1000)+'s of '+req+'s. Tap Resume to continue.');
+      set('ad-msg','Paused');set('ad-count',left+'s left');
+      showEl('ad-resume',true);
+      try{
+        var ol2=document.getElementById('ad-openlink');
+        var live=false;
+        try{ live=!!(grv&&grv.hasHandle&&grv.hasHandle()); }catch(_){}
+        if(ol2) ol2.style.display=(s.tabClosed||s.error||!live)?'':'none';
+      }catch(_){}
+    }else if(s.status==='crediting'){
+      set('ad-title','Favmoney booster break');
+      set('ad-text','Verifying your view.');
+      set('ad-msg','Verifying...');set('ad-count','');
+      showEl('ad-resume',false);
+    }else if(s.status==='credited'){
+      set('ad-title','Boost ready!');
+      set('ad-text','Your view is verified - boost applied.');
+      set('ad-msg','Done');set('ad-count','');
+      showEl('ad-resume',false);
+    }
+  }
+  document.getElementById('boost-btn').addEventListener('click',function(){
     if(!uid){show('Sign in to mine.');return;}
     if(state&&state.mineUntilMs-Date.now()>0&&state.boostUntilMs-Date.now()>55*60000){show('Boost tank already full.');return;}
-    adIdx=(adIdx+1)%ADS.length;
-    document.getElementById('ad-title').textContent=ADS[adIdx][0];
-    var adText=ADS[adIdx][1];
-    document.getElementById('ad-text').textContent=(typeof adText==='function')?adText():adText;
-    document.getElementById('ad-modal').classList.add('open');
-    document.getElementById('ad-go').style.display='none';
-    try{embedSponsor(document.getElementById('ad-frame'));}catch(_){}
-    adLeft=AD_MS;adOpen=true;paintAd();
-    if(adTimer)clearInterval(adTimer);
-    adTimer=setInterval(function(){
-      if(!adOpen)return;
-      if(!document.hidden){adLeft-=250;}
-      paintAd();
-      if(adLeft<=0){clearInterval(adTimer);adTimer=null;document.getElementById('ad-go').style.display='';document.getElementById('ad-msg').textContent='View verified.';}
-    },250);
-  }
-  function paintAd(){
-    var s=Math.max(0,Math.ceil(adLeft/1000));
-    document.getElementById('ad-count').textContent=s+'s';
-    document.getElementById('ad-bar').style.width=Math.min(100,(AD_MS-adLeft)/AD_MS*100)+'%';
-    if(document.hidden)document.getElementById('ad-msg').textContent='Paused — keep this view visible…';
-    else if(adLeft>0)document.getElementById('ad-msg').textContent='Keep this view visible…';
-  }
-  function closeAd(){
-    adOpen=false;
-    if(adTimer){clearInterval(adTimer);adTimer=null;}
-    try{clearSponsor(document.getElementById('ad-frame'));}catch(_){}
-    document.getElementById('ad-modal').classList.remove('open');
-  }
-  document.getElementById('boost-btn').addEventListener('click',openAd);
-  document.getElementById('ad-close').addEventListener('click',closeAd);
-  document.getElementById('ad-go').addEventListener('click',function(){var __b=this;
-    // The 20s in-page view was already verified by timer; the sponsor ran
-    // in the sandboxed frame above. Continue starts a shift, or lights the
-    // boost when a shift is already running.
-    if(window.FavLoader){return FavLoader.withButton(__b,function(){return __boostWork();});}return __boostWork();async function __boostWork(){
-    closeAd();
-    var startShift=!(state&&state.mineUntilMs-Date.now()>0);
-    var r=startShift?await activateMining(uid):await activateBoost(uid);
-    if(!r.ok){
-      if(r.reason==='full')show(startShift?'Shift tank already full.':'Boost tank already full.');
-      else if(r.reason==='noshift')show('Shift ended — watch again to restart mining.');
-      else show(startShift?'Mining start failed — check connection and rules.':'Boost failed — check connection and rules.');
-      return;
-    }
-    try{track(startShift?'invest_shift':'invest_boost');}catch(_){}
-    show(startShift?'Mining started — 6h shift at 10,000% APR.':'Boost lit — 15,000% APR for 1 hour.');
-    await refresh();
-  }});
+    if(grvBusy()){show('Finish your current view first - one at a time.');return;}
+    var r=grv.start({id:'grow-boost',url:SPONSOR_URL,secs:20});
+    if(!r||!r.ok){show('Could not start the view - try again.');return;}
+    show(r.blocked?'Popup blocked - tap Resume to open the ad.':'Ad opened in a new tab - timer runs in the background.');
+  });
+  document.getElementById('ad-close').addEventListener('click',function(){
+    // Dismiss only: a running/paused view keeps counting invisibly.
+    // Only a finished grant is cleared.
+    try{document.getElementById('ad-modal').classList.remove('open');}catch(_){}
+    var s=grvSnap();
+    if(s&&s.status==='credited'){try{grv.abandon();}catch(_){}}
+  });
+  document.getElementById('ad-resume').addEventListener('click',function(){try{grv.resume();}catch(_){}});
+  // Raw tap-to-open link: a real user-gesture navigation no blocker stops.
+  document.getElementById('ad-openlink').addEventListener('click',function(){try{grv.assumeOpen();}catch(_){}});
   document.querySelectorAll('.faq-item button').forEach(function(b){
     b.addEventListener('click',function(){b.closest('.faq-item').classList.toggle('open');});
   });

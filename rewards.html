@@ -152,7 +152,7 @@ import { requireAuth } from './js/guard.js';
     if(t.id==='grow'){if(i===3)return 'Big staker — '+money(25)+' staked total';return GROW_TITLES[i];}
     var u=UNITS[t.id]||['task','tasks'];
     var n=tr.target+(tr.target===1?' '+u[0]:' '+u[1]);
-    return 'Tier '+(i+1)+' · '+n;
+    return n;
   }
   function tierProgress(t,tr){
     if(t.id==='grow'&&tr.target===25)return money(Math.min(tr.progress,tr.target),0)+' / '+money(tr.target,0);
@@ -209,28 +209,32 @@ import { requireAuth } from './js/guard.js';
   }
   function cardHTML(t){
     var rank=trackRank(t);
-    var claimable=t.tiers.filter(function(x){return x.unlocked&&!x.claimed;});
-    var claimedN=t.tiers.filter(function(x){return x.claimed;}).length;
-    var allDone=t.tiers.length>0&&claimedN>=t.tiers.length;
-    var pill=allDone?'<span class="ms-count done">All claimed</span>':(claimable.length>0?'<span class="ms-count">'+claimable.length+' to claim</span>':'<span class="ms-count" style="color:var(--muted);background:rgba(255,255,255,.05);border-color:var(--line)">In progress</span>');
-    var body=claimable.map(function(tr){
-      var i=t.tiers.indexOf(tr);
-      return '<div class="tier"><div class="tinfo"><b style="font-size:13px">'+tierLabel(t,i,tr)+'</b><small>pays '+money(tr.amount)+'</small></div><button class="btn btn-green" data-claim="'+t.id+':'+i+'">Claim '+money(tr.amount)+'</button></div>';
-    }).join('');
-    if(!claimable.length&&!allDone){
-      for(var i=0;i<t.tiers.length;i++){
-        if(!t.tiers[i].claimed){
-          var tr=t.tiers[i];
-          var pct=tr.target>0?Math.min(100,Math.round(tr.progress/tr.target*100)):0;
-          body='<div class="tier locked"><div class="tinfo"><b style="font-size:13px">Next up: '+tierLabel(t,i,tr)+'</b><div class="tbar"><i style="width:'+pct+'%"></i></div><small>'+tierProgress(t,tr)+' · pays '+money(tr.amount)+'</small></div></div>';
-          break;
-        }
+    // One active reward per card: the first unclaimed tier. At most two rows
+    // render — the active reward (progress bar or claim button) plus one
+    // locked "up next" preview. Claimed rewards live in claim history.
+    var active=-1,i;
+    for(i=0;i<t.tiers.length;i++){if(!t.tiers[i].claimed){active=i;break;}}
+    var allDone=active<0;
+    var cur=allDone?null:t.tiers[active];
+    var nxt=(!allDone&&active+1<t.tiers.length)?t.tiers[active+1]:null;
+    var ready=!allDone&&cur.unlocked;
+    var pill=allDone?'<span class="ms-count done">All claimed</span>':(ready?'<span class="ms-count">Reward ready</span>':'<span class="ms-count" style="color:var(--muted);background:rgba(255,255,255,.05);border-color:var(--line)">In progress</span>');
+    var body='';
+    if(!allDone){
+      if(ready){
+        body='<div class="tier"><div class="tinfo"><b style="font-size:13px">'+tierLabel(t,active,cur)+'</b><small>pays '+money(cur.amount)+'</small></div><button class="btn btn-green" data-claim="'+t.id+':'+active+'">Claim '+money(cur.amount)+'</button></div>';
+      }else{
+        var pct=cur.target>0?Math.min(100,Math.round(cur.progress/cur.target*100)):0;
+        body='<div class="tier locked"><div class="tinfo"><b style="font-size:13px">'+tierLabel(t,active,cur)+'</b><div class="tbar"><i style="width:'+pct+'%"></i></div><small>'+tierProgress(t,cur)+' · pays '+money(cur.amount)+'</small></div></div>';
+      }
+      if(nxt){
+        body+='<div class="tier locked" style="opacity:.62"><div class="tinfo"><b style="font-size:13px">Up next: '+tierLabel(t,active+1,nxt)+'</b><small>Unlocks after you claim · pays '+money(nxt.amount)+'</small></div></div>';
       }
     }
     var foot='';
     if(LINKS[t.id])foot='<a class="link-more" href="'+LINKS[t.id][0]+'">'+LINKS[t.id][1]+' <span aria-hidden="true">→</span></a>';
     if(UNLAUNCHED.indexOf(t.id)>=0)foot+='<div style="font-size:12px;color:var(--faint);margin-top:6px">Game opening soon — your progress starts counting then.</div>';
-    return '<div class="ms-card'+(claimable.length>0?' ready':'')+'" data-track="'+t.id+'" data-rank="'+rank+'"><div class="ms-head"><div class="ms-badge rank-'+rank+'"><div class="bd-medal">'+badgeSVG(t)+'</div><div><b>'+t.name+'</b><span class="ms-rank">'+RANKS[rank].name+'</span><span>'+t.tag+'</span></div></div>'+pill+'</div>'+body+foot+'</div>';
+    return '<div class="ms-card'+(ready?' ready':'')+'" data-track="'+t.id+'" data-rank="'+rank+'"><div class="ms-head"><div class="ms-badge rank-'+rank+'"><div class="bd-medal">'+badgeSVG(t)+'</div><div><b>'+t.name+'</b><span class="ms-rank">'+RANKS[rank].name+'</span><span>'+t.tag+'</span></div></div>'+pill+'</div>'+body+foot+'</div>';
   }
   function paintBadges(n){
     unclaimedN=n;
@@ -251,9 +255,15 @@ import { requireAuth } from './js/guard.js';
       document.getElementById('ms-bonus').innerHTML=bonus.map(cardHTML).join('');
       paintBadges(p.unclaimed);
       var un=0,unT=0;
+      // Banner counts only the single active (first-unclaimed) reward per
+      // track, so it never advertises a stack of claimables on one card.
       p.tracks.forEach(function(t){
         if(VISIBLE.indexOf(t.id)<0)return;
-        t.tiers.forEach(function(tr){if(tr.unlocked&&!tr.claimed){un++;unT=Math.round((unT+tr.amount)*100)/100;}});
+        for(var ai=0;ai<t.tiers.length;ai++){
+          if(t.tiers[ai].claimed)continue;
+          if(t.tiers[ai].unlocked){un++;unT=Math.round((unT+t.tiers[ai].amount)*100)/100;}
+          break;
+        }
       });
       paintBadges(un);
       var rb=document.getElementById('ready-banner');

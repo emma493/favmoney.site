@@ -902,8 +902,15 @@ export async function getRewardsProgress(uid) {
     return { ...t, tiers };
   });
   let unclaimed = 0, unclaimedTotal = 0;
+  // One active reward per track: only the first-unclaimed tier can be
+  // claimed. Later tiers unlock strictly after claiming the current one,
+  // so badge counts never advertise a stack of claimables on one card.
   tracks.forEach(function (t) {
-    t.tiers.forEach(function (tr) { if (tr.unlocked && !tr.claimed) { unclaimed++; unclaimedTotal = Math.round((unclaimedTotal + tr.amount) * 100) / 100; } });
+    for (var i = 0; i < t.tiers.length; i++) {
+      if (t.tiers[i].claimed) continue;
+      if (t.tiers[i].unlocked) { unclaimed++; unclaimedTotal = Math.round((unclaimedTotal + t.tiers[i].amount) * 100) / 100; }
+      break;
+    }
   });
   return { tracks, stats, unclaimed, unclaimedTotal };
 }
@@ -915,13 +922,25 @@ export async function getUnclaimedRewards(uid) {
   } catch (_) { return 0; }
 }
 
+// First-unclaimed tier index on a track — the single active reward.
+// The shared lifetime counter keeps counting underneath; only display and
+// claiming advance one step at a time. Returns -1 when all are claimed.
+export function activeTierIdx(claimed, trackId, tierCount) {
+  for (var i = 0; i < tierCount; i++) {
+    if (!claimed[trackId + ':' + i]) return i;
+  }
+  return -1;
+}
+
 // Claim one milestone tier. Re-verifies unlocked + unclaimed server-side-read
 // before writing, so double-clicks and stale tabs cannot double-pay.
+// Tiers unlock strictly in order: claiming tier N requires N-1 claimed.
 export async function claimMilestone(uid, trackId, tierIdx) {
   const t = REWARD_TRACKS.filter(function (x) { return x.id === trackId; })[0];
-  if (!t || !(tierIdx >= 0) || tierIdx > 3) return { ok: false, reason: 'unknown' };
+  if (!t || !(tierIdx >= 0) || tierIdx >= t.targets.length) return { ok: false, reason: 'unknown' };
   const amount = REWARD_TIERS[tierIdx];
   const p = await getRewardsProgress(uid);
+  if (activeTierIdx(p.stats.claimed, trackId, t.targets.length) !== tierIdx) return { ok: false, reason: 'locked' };
   const tr = p.tracks.filter(function (x) { return x.id === trackId; })[0].tiers[tierIdx];
   if (!tr.unlocked) return { ok: false, reason: 'locked' };
   if (tr.claimed) return { ok: false, reason: 'claimed' };

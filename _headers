@@ -1,7 +1,7 @@
 /css/*
   Cache-Control: public, max-age=3600
 /js/*
-  Cache-Control: public, max-age=3600
+  Cache-Control: public, max-age=300
 /assets/*
   Cache-Control: public, max-age=86400
 /images/*

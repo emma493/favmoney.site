@@ -883,6 +883,11 @@ export const REWARD_TRACKS = [
   { id: 'faucet', name: 'Free Faucet', tag: 'Collect claims', icon: 'droplets', counter: 'faucet', targets: [5, 25, 100, 250] },
   { id: 'spin', name: 'Spin the Wheel', tag: 'Use daily spins', icon: 'rotate-cw', counter: 'spin', targets: [3, 7, 14, 30] },
   { id: 'invite', name: 'Inviter', tag: 'Friends joined', icon: 'users', counter: 'invites', targets: [1, 3, 10, 25] },
+  { id: 'share-wa', name: 'WhatsApp Sharer', tag: 'Shares on WhatsApp', icon: 'share', counter: 'share_wa', targets: [3, 5, 10, 25] },
+  { id: 'share-tg', name: 'Telegram Sharer', tag: 'Shares on Telegram', icon: 'share', counter: 'share_tg', targets: [3, 5, 10, 25] },
+  { id: 'share-x', name: 'X Sharer', tag: 'Posts on X', icon: 'share', counter: 'share_x', targets: [3, 5, 10, 25] },
+  { id: 'share-fb', name: 'Facebook Sharer', tag: 'Shares on Facebook', icon: 'share', counter: 'share_fb', targets: [3, 5, 10, 25] },
+  { id: 'share-em', name: 'Email Sharer', tag: 'Shares by email', icon: 'share', counter: 'share_em', targets: [3, 5, 10, 25] },
   { id: 'streak', name: 'Streak Keeper', tag: 'Active days in a row', icon: 'flame', counter: 'streak', targets: [3, 7, 14, 30] },
   { id: 'grow', name: 'Grower', tag: 'Grow milestones', icon: 'trending-up', counter: null, targets: [1, 1, 1, 25], counters: ['stakes', 'boosts', 'yields', 'stakedTotal'] },
 ];
@@ -890,7 +895,7 @@ const REWARD_COUNTERS = ['offers', 'ads', 'quiz', 'faucet', 'spin'];
 
 // Pure stats fold over a proofs array + user doc + referrals — no Firestore.
 export function foldRewardStats(proofs, userDoc, referrals) {
-  const s = { welcome: 1, offers: 0, ads: 0, quiz: 0, faucet: 0, spin: 0, invites: 0, streak: 0, stakes: 0, boosts: 0, yields: 0, stakedTotal: 0, claimed: {} };
+  const s = { welcome: 1, offers: 0, ads: 0, quiz: 0, faucet: 0, spin: 0, invites: 0, streak: 0, stakes: 0, boosts: 0, yields: 0, stakedTotal: 0, share_wa: 0, share_tg: 0, share_x: 0, share_fb: 0, share_em: 0, claimed: {} };
   for (const p of (Array.isArray(proofs) ? proofs : [])) {
     const lb = String((p && p.label) || '');
     if (lb === 'ad-view') { s.ads++; s.boosts++; continue; }
@@ -903,6 +908,10 @@ export function foldRewardStats(proofs, userDoc, referrals) {
     }
     if (lb === 'invest-stake') { s.stakes++; s.stakedTotal = Math.round((s.stakedTotal + Number(p.amount || 0)) * 100) / 100; continue; }
     if (lb === 'invest-yield') { s.yields++; continue; }
+    // Share milestones: one counted tap per channel per cooldown window.
+    // Deep links cannot confirm a send, so taps count (see logShare).
+    var shm = /^share:(wa|tg|x|fb|em)$/.exec(lb);
+    if (shm) { s['share_' + shm[1]]++; continue; }
     if (lb === 'task-reward' && p.milestone) { s.claimed[String(p.milestone)] = true; continue; }
     const m = /^play:([a-z]+)$/.exec(lb);
     // Only play:quiz (correct answers) counts toward the quiz track.
@@ -978,6 +987,36 @@ export async function claimMilestone(uid, trackId, tierIdx) {
     await creditReward(uid, amount, 'task-reward', { milestone: tr.id });
   } catch (_) { return { ok: false, reason: 'write' }; }
   return { ok: true, amount };
+}
+
+// ---- Share milestones: one track per channel (WhatsApp, Telegram, X,
+// Facebook, Email), each climbing [3, 5, 10, 25] on the standard payout
+// ladder. Channel deep links cannot confirm a send, so a tap counts —
+// gated by a per-channel cooldown (client-side, small amounts) plus the
+// sequential claim order shared by all tracks.
+export const SHARE_CHANNELS = ['wa', 'tg', 'x', 'fb', 'em'];
+export const SHARE_NAMES = { wa: 'WhatsApp', tg: 'Telegram', x: 'X', fb: 'Facebook', em: 'Email' };
+export const SHARE_COOLDOWN_MS = 5 * 60000;
+
+export function shareCooldownLeft(channel, nowMs) {
+  try {
+    var last = Number(localStorage.getItem('fav_share_' + channel) || 0);
+    var left = last + SHARE_COOLDOWN_MS - Number(nowMs || Date.now());
+    return left > 0 ? Math.ceil(left) : 0;
+  } catch (_) { return 0; }
+}
+
+// Log one counted share. Never blocks the share sheet itself — a tap inside
+// the cooldown just doesn't write a proof. Amount 0: no wallet movement,
+// no taskEarned, no commission; the proof row is the counter.
+export async function logShare(uid, channel) {
+  if (!uid || SHARE_CHANNELS.indexOf(channel) < 0) return { ok: false, reason: 'unknown' };
+  if (shareCooldownLeft(channel) > 0) return { ok: false, reason: 'cooldown', waitMs: shareCooldownLeft(channel) };
+  try {
+    await creditReward(uid, 0, 'share:' + channel, {});
+  } catch (_) { return { ok: false, reason: 'write' }; }
+  try { localStorage.setItem('fav_share_' + channel, String(Date.now())); } catch (_) {}
+  return { ok: true };
 }
 
 // ---- Grow engine: invest task earnings, live ticker, 6-hour mining shifts ----

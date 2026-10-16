@@ -139,7 +139,12 @@ if (window.FavLoader) FavLoader.hold();
     var gg = ggProvider();
     var setup = document.getElementById('gg-setup');
     if(setup) setup.style.display = (gg && !gg.base) ? '' : 'none';
+    // MyLead renders here ONLY when not merged into the offers stream
+    // (same merged test as syncProviderContainer) — the stream splice is
+    // its single home once offers load, so it can never show twice.
+    var merged = !!uid && !!ogadsCache && ogadsCache.length > 0;
     list.innerHTML = OFFER_PROVIDERS.map(function(p){
+      if(p && p.id === 'mylead' && merged) return '';
       if(p && (p.id === 'gg' || p.id === 'mylead')) return providerCardHTML(p);
       var ready = !!p.base && !!uid;
       var img = p.img ? '<div class="oc-asset"><img src="' + esc(p.img) + '" alt="" loading="lazy" decoding="async"></div>' : '';
@@ -196,7 +201,7 @@ if (window.FavLoader) FavLoader.hold();
     }
     slots.forEach(function(s){ cards.splice(Math.min(s.at, cards.length), 0, s.html); });
     list.innerHTML = cards.join('');
-    syncProviderContainer();
+    try{paintProviders();}catch(_){syncProviderContainer();}
   }
   function paintOgads(){
     var list = document.getElementById('ogads-list'), st = document.getElementById('ogads-status');

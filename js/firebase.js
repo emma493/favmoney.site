@@ -464,16 +464,16 @@ export async function playSpin(uid, mode, rand) {
   return { ok: true, prize };
 }
 
-// ---- Free Faucet: $0.15 drip per 5-min claim, 10 paid claims per UTC day ----
+// ---- Free Faucet: $0.15 drip per 1-hour claim, 10 paid claims per UTC day ----
 // Timer-only anti-bot at launch: visible countdown + cooldown enforced on a
 // re-read of the user's own proofs before every pay (same pattern as
 // claimMilestone), so double-taps and stale tabs cannot double-pay. Claims
 // flow through creditReward(uid, 0.15, 'play:faucet') so the Rewards faucet
 // track, Grow taskEarned/stakeable ceiling, and referral commission all pick
 // them up with no rules change (status 'pending' passes with any label).
-// Max exposure is bounded: 10 x $0.15 = $1.50/user/day.
+// Max exposure is bounded: 10 x $0.15 = $1.50/user/day, paced hourly.
 export const FAUCET_AMOUNT = 0.15;
-export const FAUCET_INTERVAL_MS = 5 * 60000;
+export const FAUCET_INTERVAL_MS = 60 * 60000;
 export const FAUCET_DAILY_CAP = 10;
 
 // Pure: ms timestamp of a proof row. Server Timestamps expose .seconds;

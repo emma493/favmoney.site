@@ -27,6 +27,12 @@
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <style>
+  .oc-hot.faucet-live{font-variant-numeric:tabular-nums}
+  .oc-hot.faucet-live.ready{color:#06240f;background:#01D676}
+  .oc-hot.faucet-live.wait{color:#3a2200;background:linear-gradient(135deg,#ffd75e,#ff9d3c)}
+  .oc-hot.faucet-live.done{color:var(--muted);background:rgba(255,255,255,.06)}
+  </style>
   <style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(20,21,35,.35);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#01D676;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#01D676;border:0;cursor:pointer;align-items:center;justify-content:center;color:#0d1a13;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
   <script src="js/loader.js"></script>
 </head>
@@ -65,7 +71,7 @@
 <a class="oc-card" href="surveys.html"><div class="oc-asset"><img src="images/paid-surveys.png" alt="Clipboard checklist with pencil and growth chart" loading="lazy" decoding="async" width="484" height="515"></div><div class="oc-body"><div class="oc-head"><div class="oc-title"><h2>Paid Surveys</h2><span class="oc-hot">Fast</span></div><div class="oc-pay"><span data-usd="1.5">$1.50</span> - <span data-usd="5">$5.00</span></div></div><p class="oc-desc">Share market research opinions and complete brand feedback questionnaires for instant cash.</p><div class="oc-base"><div class="oc-time"><small>Avg. Time</small><b>3 - 10 mins</b></div><span class="oc-cta">Start Survey <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5l6 6m0 0l-6 6m6-6H3"/></svg></span></div></div></a>
 <a class="oc-card" href="ptc.html"><div class="oc-asset"><img src="images/watch-ads.png" alt="Film reel and clapperboard" loading="lazy" decoding="async" width="484" height="515"></div><div class="oc-body"><div class="oc-head"><div class="oc-title"><h2>Watch Ads</h2><span class="oc-hot">PTC</span></div><div class="oc-pay">Instant Coins</div></div><p class="oc-desc">Watch short video advertisements and promotional clips to accumulate balance continuously.</p><div class="oc-base"><div class="oc-time"><small>Avg. Time</small><b>30 sec - 2 mins</b></div><span class="oc-cta">Watch Now <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5l6 6m0 0l-6 6m6-6H3"/></svg></span></div></div></a>
 <a class="oc-card" href="learn.html"><div class="oc-asset"><img src="images/quiz-and-earn.png" alt="Graduation cap on books with glowing brain and coins" loading="lazy" decoding="async" width="484" height="515"></div><div class="oc-body"><div class="oc-head"><div class="oc-title"><h2>Quiz &amp; Earn</h2><span class="oc-hot">Study</span></div><div class="oc-pay"><span data-usd="0.10">$0.10</span> / answer</div></div><p class="oc-desc">One free session daily, plus 10 bonus sessions via short ads — solve 30 math sprints against the clock, every correct answer pays cash.</p><div class="oc-base"><div class="oc-time"><small>Limit</small><b>1 free daily</b></div><span class="oc-cta">Start Quiz <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5l6 6m0 0l-6 6m6-6H3"/></svg></span></div></div></a>
-<a class="oc-card" href="faucet.html"><div class="oc-asset"><img src="images/free-faucet.png" alt="Water tap dripping into a bowl of gold coins" loading="lazy" decoding="async" width="484" height="515"></div><div class="oc-body"><div class="oc-head"><div class="oc-title"><h2>Free Faucet</h2><span class="oc-hot">Every 5 min</span></div><div class="oc-pay">Free Claims</div></div><p class="oc-desc">Claim free coin rewards on a recurring automated timer without deposits or tasks.</p><div class="oc-base"><div class="oc-time"><small>Status</small><b>Ready to claim</b></div><span class="oc-cta">Claim Now <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5l6 6m0 0l-6 6m6-6H3"/></svg></span></div></div></a>
+<a class="oc-card" href="faucet.html"><div class="oc-asset"><img src="images/free-faucet.png" alt="Water tap dripping into a bowl of gold coins" loading="lazy" decoding="async" width="484" height="515"></div><div class="oc-body"><div class="oc-head"><div class="oc-title"><h2>Free Faucet</h2><span class="oc-hot faucet-live" id="faucet-badge">…</span></div><div class="oc-pay">Free Claims</div></div><p class="oc-desc">Claim free coin rewards every hour — 10 drips a day, no deposits or tasks.</p><div class="oc-base"><div class="oc-time"><small>Status</small><b id="faucet-status">Checking…</b></div><span class="oc-cta">Claim Now <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5l6 6m0 0l-6 6m6-6H3"/></svg></span></div></div></a>
 <a class="oc-card" href="spin.html"><div class="oc-asset"><img src="images/spin-the-wheel.png" alt="Colorful prize wheel with cash multipliers" loading="lazy" decoding="async" width="484" height="515"></div><div class="oc-body"><div class="oc-head"><div class="oc-title"><h2>Spin the Wheel</h2><span class="oc-hot">Bonus</span></div><div class="oc-pay">Win Up to <b>10x</b></div></div><p class="oc-desc">Spin the daily prize wheel to win random balance multipliers and jackpot bonus points.</p><div class="oc-base"><div class="oc-time"><small>Limit</small><b>1 spin daily</b></div><span class="oc-cta">Spin Wheel <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5l6 6m0 0l-6 6m6-6H3"/></svg></span></div></div></a>
 </div>
 </div></section>
@@ -74,14 +80,37 @@
 <nav class="mobilenav" aria-label="Mobile"><a href="earn.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="grow.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Grow</a><a href="invite.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M18 8v6M15 11h6"/></svg>Invite</a><a href="rewards.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="12" rx="1.5"/><path d="M4 13h16M12 9v12M12 9S7.5 9 6 7.5 5.5 4.8 7 4.5 12 9 12 9Zm0 0s4.5 0 6-1.5S18.5 4.8 17 4.5 12 9 12 9Z"/></svg>Rewards<span class="navdot" id="navdot-rewards" style="display:none"></span></a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet, getUserDoc, migrateLocal, wasMigrated, track, getUnclaimedRewards } from './js/firebase.js';
+import { auth, onAuthStateChanged, getWallet, getUserDoc, fetchUserDocs, faucetState, FAUCET_DAILY_CAP, migrateLocal, wasMigrated, track, getUnclaimedRewards } from './js/firebase.js';
 import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 import { requireAuth } from './js/guard.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
-  var uid=null,unclaimedN=0;
+  var uid=null,unclaimedN=0,faucetProofs=[],faucetTimer=null;
   var toast=document.getElementById('toast'),tm=null;
   function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3000);}
+  function msToClock(ms){
+    ms=Math.max(0,ms);var s=Math.ceil(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),ss=s%60;
+    function p(x){return (x<10?'0':'')+x;}
+    if(h>0)return h+':'+p(m)+':'+p(ss);
+    return m+':'+p(ss);
+  }
+  // Live faucet badge on the Free Faucet card: READY / countdown / DONE.
+  function paintFaucet(){
+    var badge=document.getElementById('faucet-badge'),st=document.getElementById('faucet-status');
+    if(!badge||!st)return;
+    var s=faucetState(faucetProofs,Date.now());
+    badge.classList.remove('ready','wait','done');
+    if(s.capped){
+      badge.textContent='DONE';badge.classList.add('done');
+      st.textContent=(FAUCET_DAILY_CAP||10)+' of '+(FAUCET_DAILY_CAP||10)+' claimed · fresh drips in '+msToClock(s.resetMs);
+    }else if(s.ready){
+      badge.textContent='READY';badge.classList.add('ready');
+      st.textContent=s.remainingToday+' of '+(FAUCET_DAILY_CAP||10)+' left today — claim now';
+    }else{
+      badge.textContent=msToClock(s.waitMs);badge.classList.add('wait');
+      st.textContent='Next drip in '+msToClock(s.waitMs)+' · '+s.remainingToday+' of '+(FAUCET_DAILY_CAP||10)+' left';
+    }
+  }
   function paintBadges(n){
     unclaimedN=n;
     var bb=document.getElementById('bell-badge');
@@ -103,6 +132,10 @@ import { requireAuth } from './js/guard.js';
         try{document.getElementById('chip-bal').textContent=formatUSD(w.pending);}catch(_){}
         try{adoptUserCountry(await getUserDoc(uid));}catch(_){}
         paintMoney();
+        try{faucetProofs=await fetchUserDocs(uid,'proofs',100);}catch(_){faucetProofs=[];}
+        paintFaucet();
+        if(faucetTimer)clearInterval(faucetTimer);
+        faucetTimer=setInterval(paintFaucet,1000);
         try{paintBadges(await getUnclaimedRewards(uid));}catch(_){}
         if(window.FavLoader)FavLoader.pageReady();
       }catch(err){document.getElementById('chip-bal').textContent=formatUSD(0);}

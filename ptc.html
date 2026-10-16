@@ -41,19 +41,12 @@
 .ptc-foot{padding:0 20px 20px}
 .ptc-timer{display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:8px}
 .ptc-timer b{color:#ffd75e}
-/* framed sponsor surface: shortieshub-style overlay — timer, progress and
-   badge float above the frame (pointer-events:none) so only the frame's own
-   content and our buttons are interactive */
-.ptc-framewrap{position:relative;margin:0 0 8px;border-radius:12px;overflow:hidden;background:#0d0e1d;min-height:260px}
-.ptc-framewrap iframe{display:block;width:100%;height:260px;border:0;background:#0d0e1d;position:relative;z-index:1}
-.ptc-overlay{position:absolute;top:0;left:0;right:0;z-index:10;pointer-events:none;padding:10px 12px 14px;background:linear-gradient(180deg,rgba(10,11,22,.85),transparent)}
-.ptc-overlay .ptc-timer{margin-bottom:6px;text-shadow:0 1px 4px rgba(0,0,0,.9)}
-.ptc-badge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.08em;color:#fff;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:3px 8px;margin-bottom:8px}
-.ptc-loading{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:linear-gradient(110deg,#0d0e1d 30%,#171a33 45%,#0d0e1d 60%);background-size:200% 100%;animation:ptcShimmer 1.4s linear infinite;color:var(--muted);font-size:13px;font-weight:700}
-@keyframes ptcShimmer{to{background-position:-200% 0}}
-.ptc-frame-fallback{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#0d0e1d;text-align:center;padding:20px}
-.ptc-frame-fallback p{margin:0;color:var(--muted);font-size:13px}
-.ptc-frame-fallback .btn{min-height:48px}
+/* rewarded-view modal: paused bar + resume, crediting, credited + close.
+   The ad itself always opens in a new tab — never iframed. */
+.ptc-stage{padding:24px 20px 6px;text-align:center}
+.ptc-stage h3{margin:0 0 6px;font-size:18px}
+.ptc-stage p{margin:0;color:var(--muted);font-size:13px}
+.ptc-credited{font-size:30px;font-weight:800;color:#01D676;margin:8px 0 0}
 </style>
 </head>
 <body>
@@ -83,7 +76,7 @@
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
 <div class="back-row"><a class="back-btn" href="earn.html" aria-label="Back to Earn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg><span>Earn</span></a></div>
 <h1 class="dash-title">Watch Ads</h1>
-<p>Watch sponsored views right on this page and earn <b><span data-usd="0.10">$0.10</span>–<span data-usd="0.30">$0.30</span></b> per verified view — up to <b>50 times a day</b>. We show <b>30</b> at a time; new ones unlock as you claim.</p>
+<p>Tap <b>Visit</b> to open the ad in a new tab and earn <b><span data-usd="0.10">$0.10</span>–<span data-usd="0.30">$0.30</span></b> per verified view — up to <b>50 times a day</b>. The timer runs in the background and credit lands automatically.</p>
 <div id="member-zone" style="display:none">
 <div class="bonus-card" id="ptc-batch">
 <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
@@ -92,21 +85,21 @@
 </div>
 </div>
 <div id="ptc-list"></div>
-<p class="hint" id="ptc-hint" style="font-size:12px;color:var(--faint);margin:12px 0 0">Sponsored views play on this page. Keep it visible while the timer runs — background tabs don't count.</p>
+<p class="hint" id="ptc-hint" style="font-size:12px;color:var(--faint);margin:12px 0 0">Sponsored links open in a new tab. Keep the ad tab open until the timer finishes — earnings credit automatically. Closing the ad tab pauses it.</p>
 </div>
 </div></section>
 </main>
 <div class="ptc-veil" id="ptc-modal" role="dialog" aria-label="Sponsored view">
 <div class="ptc-box">
-<div class="ptc-foot" style="padding-top:20px">
-<div class="ptc-framewrap">
-<iframe id="ptc-frame" title="Sponsored view" loading="lazy"></iframe>
-<div class="ptc-overlay"><span class="ptc-badge">SPONSORED</span><div class="ptc-timer"><span id="ptc-msg">Keep this view visible…</span><b id="ptc-count">40s</b></div><div class="prog" style="margin:0"><i id="ptc-bar" style="width:0%"></i></div></div>
-<div class="ptc-loading" id="ptc-loading"><span>Loading sponsored view…</span></div>
-<div class="ptc-frame-fallback" id="ptc-frame-fallback" hidden><p>Sponsored view didn't load inside the app.</p><a id="ptc-anchor-big" href="#" target="_blank" rel="noopener sponsored nofollow" class="btn btn-green">Open sponsor in new tab</a></div>
+<div class="ptc-stage">
+<h3 id="ptc-title">Sponsored view</h3>
+<p id="ptc-text">Your ad opened in a new tab.</p>
+<p class="ptc-credited" id="ptc-earned" style="display:none">+$0.00</p>
 </div>
-<p id="ptc-fallback" style="font-size:11px;color:var(--faint);margin:0 0 12px;text-align:center">Blank? <a id="ptc-anchor" href="#" target="_blank" rel="noopener sponsored nofollow" style="color:#8ff0bd;font-weight:700">Open in new tab</a></p>
-<button class="btn btn-green btn-block" id="ptc-claim" style="display:none">Claim</button>
+<div class="ptc-foot">
+<div class="ptc-timer"><span id="ptc-msg">…</span><b id="ptc-count"></b></div>
+<div class="prog" style="margin:0 0 14px"><i id="ptc-bar" style="width:0%"></i></div>
+<button class="btn btn-green btn-block" id="ptc-resume" style="display:none">Resume viewing</button>
 <button class="btn btn-ghost btn-block" id="ptc-close" style="margin-top:8px">Close</button>
 </div>
 </div>
@@ -115,13 +108,13 @@
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getUserDoc, fetchUserDocs, ptcState, claimPtcView, getUnclaimedRewards, track, PTC_DAILY_CAP } from './js/firebase.js';
-import { adsForSlot, slotResetMs, getAd, embedSponsor, clearSponsor, PTC_VISIBLE_COUNT } from './js/ptc-catalog.js';
+import { adsForSlot, slotResetMs, getAd, PTC_VISIBLE_COUNT } from './js/ptc-catalog.js';
+import { createRewardedView } from './js/rewarded-view.js';
 import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 import { requireAuth } from './js/guard.js';
 if (window.FavLoader) FavLoader.hold();
 (function () {
   var uid=null, proofs=[], tickTimer=null, pollTimer=null;
-  var activeAd=null, viewLeft=0, viewTimer=null, viewOpen=false;
   var toast=document.getElementById('toast'), tm=null;
   function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
   function money(n,d){return formatUSD(Number(n||0));}
@@ -132,6 +125,28 @@ if (window.FavLoader) FavLoader.hold();
     return p(m)+':'+p(ss);
   }
   function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  // Shared background-view controller: new-tab open, timestamp timer,
+  // closed-tab pause, auto-credit, credited screen. No claim button.
+  var rv=createRewardedView({
+    key:'ptc',
+    notify:show,
+    onChange:function(s){ paintModal(s); },
+    onCredit:function(s){
+      var ad=s.id?getAd(s.id):null;
+      if(!ad||!uid) return Promise.resolve({ok:false,message:'Claim failed — try again.'});
+      return claimPtcView(uid,ad).then(function(r){
+        if(r.ok){
+          try{track('ptc_claim',{ad:ad.id,amount:r.amount});}catch(_){}
+          return refresh(true).then(function(){return {ok:true,amount:r.amount};});
+        }
+        if(r.reason==='capped') return refresh(false).then(function(){return {ok:false,message:'Daily max reached — back at UTC midnight.'};});
+        if(r.reason==='cooldown') return refresh(false).then(function(){return {ok:false,message:'Too soon — back in '+msToClock(r.waitMs)+'.'};});
+        return {ok:false,retryable:true,message:'Claim failed — check connection and try again.'};
+      }).catch(function(){ return {ok:false,retryable:true,message:'Claim failed — check connection and try again.'}; });
+    }
+  });
+  try{ rv.restore(); }catch(_){}
+  function rvSnap(){ try{ return rv?rv.snapshot():null; }catch(_){ return null; } }
   function paint(){
     if(!uid)return;
     var st=ptcState(proofs, adsForSlot(Date.now()), Date.now());
@@ -153,108 +168,83 @@ if (window.FavLoader) FavLoader.hold();
       list.innerHTML='<div class="ptc-row"><div class="pinfo"><b>No ads right now</b><small>Fresh batch in '+msToClock(slotResetMs(Date.now()))+'.</small></div></div>';
       return;
     }
+    var snap=rvSnap();
+    var busyId=(snap&&(snap.status==='viewing'||snap.status==='paused'||snap.status==='crediting'))?snap.id:null;
     list.innerHTML=head.map(function(a){
       var s2=(st.ads||{})[a.id]||{ready:true,waitMs:0};
       var right;
       if(st.capped)right='<button class="btn btn-ghost" disabled>Done</button>';
+      else if(busyId===a.id){
+        if(snap.status==='viewing')right='<button class="btn btn-ghost" disabled>Viewing… '+Math.floor(Math.min(snap.accumMs,snap.requiredMs)/1000)+'s/'+a.secs+'s</button>';
+        else if(snap.status==='paused')right='<button class="btn btn-green" data-visit="'+esc(a.id)+'">Resume · '+money(a.pay)+'</button>';
+        else right='<button class="btn btn-ghost" disabled>Crediting…</button>';
+      }
       else if(s2.ready)right='<button class="btn btn-green" data-visit="'+esc(a.id)+'">Visit · '+money(a.pay)+'</button>';
       else right='<button class="btn btn-ghost" disabled>Back in '+msToClock(s2.waitMs)+'</button>';
       return '<div class="ptc-row"><div class="pinfo"><b>'+esc(a.title)+'</b><small>'+a.secs+'s view · every '+(a.intervalHrs||24)+'h · Sponsored</small></div><span class="ptc-pay">'+money(a.pay)+'</span>'+right+'</div>';
     }).join('')+((readyAds.length>head.length)?'<p class="hint" style="font-size:12px;color:var(--faint);margin:12px 0 0">+'+(readyAds.length-head.length)+' more unlock as you claim ('+claimed+' of '+(PTC_DAILY_CAP||50)+' done).</p>':'');
   }
-  function paintView(){
-    if(!activeAd)return;
-    var s=Math.max(0,Math.ceil(viewLeft/1000));
-    document.getElementById('ptc-count').textContent=s+'s';
-    document.getElementById('ptc-bar').style.width=Math.min(100,(activeAd.secs*1000-viewLeft)/(activeAd.secs*1000)*100)+'%';
-    document.getElementById('ptc-msg').textContent=document.hidden?'Paused — keep this view visible…':(viewLeft>0?'Keep this view visible…':'View verified.');
-  }
-  // Frame load lifecycle: shimmer until the sponsor answers; if it never
-  // does within 8s (blocked/blank endpoint), swap to the new-tab fallback
-  // instead of a black box. Outcome is logged for diagnosis.
-  var frameTimer=null;
-  function frameLoading(){
-    try{document.getElementById('ptc-loading').style.display='';}catch(_){}
-    try{document.getElementById('ptc-frame-fallback').hidden=true;}catch(_){}
-    if(frameTimer)clearTimeout(frameTimer);
-    frameTimer=setTimeout(function(){
-      frameTimer=null;
-      try{document.getElementById('ptc-loading').style.display='none';}catch(_){}
-      try{document.getElementById('ptc-frame-fallback').hidden=false;}catch(_){}
-      try{console.warn('[ptc] sponsor frame did not answer in 8s — showing new-tab fallback');}catch(_){}
-    },8000);
-  }
-  function frameReady(){
-    if(frameTimer){clearTimeout(frameTimer);frameTimer=null;}
-    try{document.getElementById('ptc-loading').style.display='none';}catch(_){}
-    try{console.info('[ptc] sponsor frame loaded');}catch(_){}
-  }
-  try{
-    document.getElementById('ptc-frame').addEventListener('load',function(){if(viewOpen)frameReady();});
-  }catch(_){}
-  function closeView(){
-    viewOpen=false;activeAd=null;
-    if(viewTimer){clearInterval(viewTimer);viewTimer=null;}
-    if(frameTimer){clearTimeout(frameTimer);frameTimer=null;}
-    try{document.getElementById('ptc-frame-fallback').hidden=true;}catch(_){}
-    try{clearSponsor(document.getElementById('ptc-frame'));}catch(_){}
-    document.getElementById('ptc-modal').classList.remove('open');
-  }
-  function openView(ad){
-    activeAd=ad;viewLeft=ad.secs*1000;viewOpen=true;
-    try{embedSponsor(document.getElementById('ptc-frame'),ad.url);}catch(_){}
-    try{document.getElementById('ptc-anchor').href=ad.url;}catch(_){}
-    try{document.getElementById('ptc-anchor-big').href=ad.url;}catch(_){}
-    frameLoading();
-    document.getElementById('ptc-claim').style.display='none';
-    document.getElementById('ptc-claim').textContent='Claim '+money(ad.pay);
-    document.getElementById('ptc-modal').classList.add('open');
-    paintView();
-    if(viewTimer)clearInterval(viewTimer);
-    viewTimer=setInterval(function(){
-      if(!viewOpen||!activeAd)return;
-      if(!document.hidden)viewLeft-=250;
-      paintView();
-      if(viewLeft<=0){
-        clearInterval(viewTimer);viewTimer=null;
-        document.getElementById('ptc-claim').style.display='';
-        document.getElementById('ptc-msg').textContent='View verified.';
-      }
-    },250);
+  function paintModal(s){
+    var veil=document.getElementById('ptc-modal');
+    if(!veil)return;
+    function set(id,txt){try{document.getElementById(id).textContent=txt;}catch(_){}}
+    function showEl(id,on){try{document.getElementById(id).style.display=on?'':'none';}catch(_){}}
+    if(!s||s.status==='idle'||s.status==='viewing'){veil.classList.remove('open');return;}
+    var ad=s.id?getAd(s.id):null;
+    var req=s.secs||(ad?ad.secs:0)||0;
+    var done=Math.min(Number(s.accumMs||0),Number(s.requiredMs||req*1000));
+    var pct=req>0?Math.min(100,done/(req*1000)*100):0;
+    var left=Math.max(0,Math.ceil(((Number(s.requiredMs||req*1000))-done)/1000));
+    try{document.getElementById('ptc-bar').style.width=pct+'%';}catch(_){}
+    veil.classList.add('open');
+    showEl('ptc-earned',false);
+    if(s.status==='paused'){
+      set('ptc-title',ad?ad.title:'Sponsored view');
+      if(s.error)set('ptc-text',s.error);
+      else if(s.tabClosed)set('ptc-text','The ad tab was closed - that time does not count. Tap Resume to keep earning.');
+      else set('ptc-text','Paused at '+Math.floor(done/1000)+'s of '+req+'s. Tap Resume to continue.');
+      set('ptc-msg','Paused');set('ptc-count',left+'s left');
+      showEl('ptc-resume',true);
+    }else if(s.status==='crediting'){
+      set('ptc-title','Crediting...');set('ptc-text','Verifying your view.');
+      set('ptc-msg','Crediting...');set('ptc-count','');
+      showEl('ptc-resume',false);
+    }else if(s.status==='credited'){
+      set('ptc-title','Earned!');set('ptc-text','Credited to your available balance.');
+      try{var e2=document.getElementById('ptc-earned');e2.textContent='+'+money(s.amount);e2.style.display='';}catch(_){}
+      set('ptc-msg','Done');set('ptc-count','');
+      showEl('ptc-resume',false);
+    }
   }
   document.addEventListener('click',function(e){
     var b=e.target.closest('[data-visit]');
     if(!b||b.disabled||!uid)return;
-    var ad=getAd(b.getAttribute('data-visit'));
+    var adId=b.getAttribute('data-visit');
+    var ad=getAd(adId);
     if(!ad)return;
-    // Same-page view: the sponsor loads in the modal iframe. The fallback
-    // anchor under the frame covers framing-blocked networks.
-    try{track('ptc_view',{ad:ad.id});}catch(_){}
-    openView(ad);
-  });
-  document.getElementById('ptc-close').addEventListener('click',closeView);
-  document.getElementById('ptc-claim').addEventListener('click',function(){
-    var b=this;
-    if(!activeAd)return;
-    var ad=activeAd;
-    function done(){closeView();}
-    if(window.FavLoader){return FavLoader.withButton(b,function(){return doClaim(ad).then(done);});}
-    doClaim(ad).then(done);
-    async function doClaim(a){
-      var r;
-      try{r=await claimPtcView(uid,a);}
-      catch(e){show('Claim failed — check connection and try again.');return;}
-      if(!r.ok){
-        if(r.reason==='capped')show('Daily max reached — back at UTC midnight.');
-        else if(r.reason==='cooldown')show('Too soon — back in '+msToClock(r.waitMs)+'.');
-        else show('Claim failed — check connection and try again.');
-        await refresh(false);
-        return;
-      }
-      try{track('ptc_claim',{ad:a.id,amount:r.amount});}catch(_){}
-      show('Claimed '+money(r.amount)+' to available.');
-      await refresh(true);
+    var cur=rvSnap();
+    // Tapping the active row resumes a paused view.
+    if(cur&&cur.id===adId&&cur.status==='paused'){rv.resume();return;}
+    // One active view at a time - the modal Close never kills a session, so
+    // reaching here with a busy controller means a view is genuinely running.
+    if(cur&&(cur.status==='viewing'||cur.status==='paused'||cur.status==='crediting')){
+      show('Finish your current view first - one at a time.');
+      return;
     }
+    var r=rv.start({id:ad.id,url:ad.url,secs:ad.secs});
+    if(!r||!r.ok){show('Could not start the view - try again.');return;}
+    if(r.blocked){show('Popup blocked - tap Resume to open the ad.');}
+    else{show('Ad opened in a new tab - timer runs in the background.');}
+    try{track('ptc_view',{ad:ad.id});}catch(_){}
+    paint();
+  });
+  document.getElementById('ptc-resume').addEventListener('click',function(){try{rv.resume();}catch(_){}});
+  document.getElementById('ptc-close').addEventListener('click',function(){
+    // Close only dismisses: a running/paused view keeps counting invisibly
+    // (row shows live state). Only a finished credit is cleared.
+    try{document.getElementById('ptc-modal').classList.remove('open');}catch(_){}
+    var s=rvSnap();
+    if(s&&s.status==='credited'){try{rv.abandon();}catch(_){}paint();}
   });
   async function refresh(notify){
     if(!uid)return;
@@ -282,6 +272,7 @@ if (window.FavLoader) FavLoader.hold();
         try{await getUnclaimedRewards(uid);}catch(_){}
       }catch(e){}
       await refresh(false);
+      try{rv.retry();}catch(_){}
       if(tickTimer)clearInterval(tickTimer);
       tickTimer=setInterval(paint,1000);
       if(pollTimer)clearInterval(pollTimer);

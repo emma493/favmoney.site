@@ -56,6 +56,10 @@
     .lb-av i{font-style:normal}
     .lb-av img{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;object-fit:cover}
     .lb-av .crown{position:absolute;top:-9px;right:-7px;width:16px;height:16px;transform:rotate(12deg);filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+    .lb-face{display:flex;line-height:0;width:100%;height:100%}
+    .lb-face svg{width:100%;height:100%;border-radius:50%}
+    .aff-leader .row.lb-open{border-style:dashed}
+    .aff-leader .row.lb-open b{color:var(--muted);font-size:13px}
     .aff-leader .row.lb-you{border-color:rgba(1,214,118,.5);background:rgba(1,214,118,.06)}
     .aff-leader .row.lb-you .lb-av{background:var(--green);color:#06240f}
     .aff-leader .row b{font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -138,17 +142,8 @@
 <div class="quest-row"><div class="qico">3</div><div class="qmid"><b>You earn <span data-usd="0.5">$0.50</span> instantly + commission for life</b><div style="font-size:13px;color:var(--muted)">Cash out from <span data-usd="20">$20.00</span> like any other earning.</div></div></div>
 
 <h2 style="font-size:20px;margin:30px 0 0">Top inviters</h2>
-<div class="aff-leader">
-<div class="row"><span class="rank">1</span><span class="lb-av"><i>A</i><img src="https://randomuser.me/api/portraits/women/44.jpg" alt="" loading="lazy" width="40" height="40" onerror="this.remove()"><svg class="crown" viewBox="0 0 24 24" fill="#FFC93C" aria-hidden="true"><path d="M3 8.5 7 11l5-6.5L17 11l4-2.5L19.5 18h-15L3 8.5z"/></svg></span><span style="flex:1">AVA***</span><b>142 invited</b></div>
-<div class="row"><span class="rank">2</span><span class="lb-av"><i>K</i><img src="https://randomuser.me/api/portraits/men/32.jpg" alt="" loading="lazy" width="40" height="40" onerror="this.remove()"><svg class="crown" viewBox="0 0 24 24" fill="#C9D2E0" aria-hidden="true"><path d="M3 8.5 7 11l5-6.5L17 11l4-2.5L19.5 18h-15L3 8.5z"/></svg></span><span style="flex:1">KOF***</span><b>98 invited</b></div>
-<div class="row"><span class="rank">3</span><span class="lb-av"><i>D</i><img src="https://randomuser.me/api/portraits/men/75.jpg" alt="" loading="lazy" width="40" height="40" onerror="this.remove()"><svg class="crown" viewBox="0 0 24 24" fill="#9BE9FF" aria-hidden="true"><path d="M3 8.5 7 11l5-6.5L17 11l4-2.5L19.5 18h-15L3 8.5z"/></svg></span><span style="flex:1">DER***</span><b>61 invited</b></div>
-<div class="row"><span class="rank">4</span><span class="lb-av"><i>A</i><img src="https://randomuser.me/api/portraits/women/68.jpg" alt="" loading="lazy" width="40" height="40" onerror="this.remove()"></span><span style="flex:1">AMA***</span><b>44 invited</b></div>
-<div class="row lb-you"><span class="rank">5</span><span class="lb-av"><i>Y</i></span><span style="flex:1">YOU</span><b id="lb-you">0 invited</b></div>
-<div class="row"><span class="rank">6</span><span class="lb-av"><i>E</i><img src="https://randomuser.me/api/portraits/women/12.jpg" alt="" loading="lazy" width="40" height="40" onerror="this.remove()"></span><span style="flex:1">EME***</span><b>32 invited</b></div>
-<div class="row"><span class="rank">7</span><span class="lb-av"><i>K</i><img src="https://randomuser.me/api/portraits/men/22.jpg" alt="" loading="lazy" width="40" height="40" onerror="this.remove()"></span><span style="flex:1">KWA***</span><b>27 invited</b></div>
-<div class="row"><span class="rank">8</span><span class="lb-av"><i>N</i><img src="https://randomuser.me/api/portraits/women/33.jpg" alt="" loading="lazy" width="40" height="40" onerror="this.remove()"></span><span style="flex:1">NAD***</span><b>19 invited</b></div>
-<div class="row"><span class="rank">9</span><span class="lb-av"><i>O</i><img src="https://randomuser.me/api/portraits/men/45.jpg" alt="" loading="lazy" width="40" height="40" onerror="this.remove()"></span><span style="flex:1">OSE***</span><b>14 invited</b></div>
-<div class="row"><span class="rank">10</span><span class="lb-av"><i>T</i><img src="https://randomuser.me/api/portraits/women/56.jpg" alt="" loading="lazy" width="40" height="40" onerror="this.remove()"></span><span style="flex:1">TUN***</span><b>9 invited</b></div>
+<div class="aff-leader" id="top-board">
+<div class="row"><span class="rank">–</span><span class="lb-av">?</span><span style="flex:1">Loading board…</span><b></b></div>
 </div>
 
 <h2 style="font-size:20px;margin:30px 0 0">My referrals</h2>
@@ -169,7 +164,8 @@
 <nav class="mobilenav" aria-label="Mobile"><a href="earn.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Earn</a><a href="grow.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Grow</a><a href="invite.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M18 8v6M15 11h6"/></svg>Invite</a><a href="rewards.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="12" rx="1.5"/><path d="M4 13h16M12 9v12M12 9S7.5 9 6 7.5 5.5 4.8 7 4.5 12 9 12 9Zm0 0s4.5 0 6-1.5S18.5 4.8 17 4.5 12 9 12 9Z"/></svg>Rewards<span class="navdot" id="navdot-rewards" style="display:none"></span></a><a href="withdraw.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Cashout</a></nav>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet, getUserDoc, getOrCreateMyCode, claimReferrals, claimCommissions, fetchReferrals, fetchUserDocs, track, getUnclaimedRewards, logShare, SHARE_NAMES } from './js/firebase.js';
+import { auth, onAuthStateChanged, getWallet, getUserDoc, getOrCreateMyCode, claimReferrals, claimCommissions, fetchReferrals, fetchUserDocs, track, getUnclaimedRewards, getTopInviters, logShare, SHARE_NAMES } from './js/firebase.js';
+import { avatarSVG, maskHandle } from './js/avatars.js';
 import { mountHeader } from './js/header.js';
 import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 import { requireAuth } from './js/guard.js';
@@ -217,6 +213,44 @@ import { requireAuth } from './js/guard.js';
     document.getElementById('sh-fb').href='https://www.facebook.com/sharer/sharer.php?u='+encLink;
     document.getElementById('sh-em').href='mailto:?subject='+encodeURIComponent('Get '+formatUSD(1)+' on Favmoney')+'&body='+enc;
   }
+  function crownSVG(i){
+    if(i>2)return '';
+    var fill=i===0?'#FFC93C':(i===1?'#C9D2E0':'#9BE9FF');
+    return '<svg class="crown" viewBox="0 0 24 24" fill="'+fill+'" aria-hidden="true"><path d="M3 8.5 7 11l5-6.5L17 11l4-2.5L19.5 18h-15L3 8.5z"/></svg>';
+  }
+  // Real-only Top inviters: hourly Worker board, cartoon avatar per uid,
+  // masked handle per row. Empty slots invite the viewer to fill them.
+  // Never throws — worst case the board keeps its loading row.
+  async function paintBoard(meUid, myInvited){
+    var box=document.getElementById('top-board');
+    if(!box)return;
+    var top=null;
+    try{top=await getTopInviters();}catch(_){top=null;}
+    var entries=(top&&top.entries)||[];
+    var html='', used=0, meShown=false;
+    for(var i=0;i<entries.length&&used<10;i++){
+      var e=entries[i], n=Math.max(0,Math.floor(Number(e.invited)||0));
+      if(!(n>0))continue;
+      var mine=meUid&&e.uid===meUid;
+      if(mine)meShown=true;
+      html+='<div class="row'+(mine?' lb-you':'')+'"><span class="rank">'+(used+1)+'</span>'
+        +'<span class="lb-av"><span class="lb-face">'+avatarSVG(e.uid,40)+'</span>'+crownSVG(used)+'</span>'
+        +'<span style="flex:1">'+(mine?'YOU':maskHandle(e.handle))+'</span><b>'+n+' invited</b></div>';
+      used++;
+    }
+    if(!meShown&&meUid){
+      html+='<div class="row lb-you"><span class="rank">–</span>'
+        +'<span class="lb-av"><span class="lb-face">'+avatarSVG(meUid,40)+'</span></span>'
+        +'<span style="flex:1">YOU</span><b>'+Math.max(0,Math.floor(Number(myInvited)||0))+' invited</b></div>';
+      used++;
+    }
+    for(var k=used;k<10;k++){
+      html+='<div class="row lb-open"><span class="rank">'+(k+1)+'</span>'
+        +'<span class="lb-av">?</span>'
+        +'<span style="flex:1">Your name here</span><b>invite friends</b></div>';
+    }
+    box.innerHTML=html;
+  }
   async function refreshStats(){
     if(!uid)return;
     var refs=[], proofs=[];
@@ -227,17 +261,18 @@ import { requireAuth } from './js/guard.js';
     var bonus=proofs.filter(function(p){return p.label==='referral-inviter';}).reduce(function(s,p){return s+Number(p.amount||0);},0);
     var comm=proofs.filter(function(p){return (p.label||'').indexOf('referral-commission')===0;}).reduce(function(s,p){return s+Number(p.amount||0);},0);
     document.getElementById('st-invited').textContent=invited;
+    paintBoard(uid, invited);
     document.getElementById('st-active').textContent=paid;
     document.getElementById('st-bonus').textContent=money(bonus);
     document.getElementById('st-comm').textContent=money(comm);
-    document.getElementById('lb-you').textContent=invited+' invited';
     var rows=document.getElementById('ref-rows');
     if(!refs.length){
       rows.innerHTML='<tr><td colspan="4" style="color:var(--muted)">No referrals yet. Share your link to earn '+formatUSD(0.5)+' per friend.</td></tr>';
     }else{
       rows.innerHTML=refs.map(function(r){
         var pill=r.claimed?'<span class="pill paid">Paid</span>':'<span class="pill pending">Pending</span>';
-        return '<tr><td data-label="Friend">'+mask(r.newUid||r.id)+'</td><td data-label="Reward">'+formatUSD(0.5)+'</td><td data-label="Status">'+pill+'</td><td data-label="Date">'+relDate(r.createdAt)+'</td></tr>';
+        var who=r.handle?maskHandle(r.handle):mask(r.newUid||r.id);
+        return '<tr><td data-label="Friend">'+who+'</td><td data-label="Reward">'+formatUSD(0.5)+'</td><td data-label="Status">'+pill+'</td><td data-label="Date">'+relDate(r.createdAt)+'</td></tr>';
       }).join('');
     }
     try{

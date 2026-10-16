@@ -6,6 +6,29 @@
 // so pages can reuse it instead of calling getWallet() twice.
 import { getWallet } from './firebase.js';
 import { formatUSD } from './currency.js';
+import { avatarSVG } from './avatars.js';
+
+function paintAvatar(uid) {
+  try {
+    const chip = document.getElementById('user-chip');
+    if (!chip) return;
+    let av = document.getElementById('chip-av');
+    if (!av) {
+      av = document.createElement('span');
+      av.className = 'fav-av';
+      av.id = 'chip-av';
+      chip.insertBefore(av, chip.firstChild);
+    }
+    av.innerHTML = avatarSVG(uid, 22);
+  } catch (_) { /* noop */ }
+}
+
+function clearAvatar() {
+  try {
+    const av = document.getElementById('chip-av');
+    if (av) av.remove();
+  } catch (_) { /* noop */ }
+}
 
 export function paintGuestHeader() {
   try {
@@ -16,6 +39,7 @@ export function paintGuestHeader() {
     if (name) name.textContent = 'Sign in';
     if (bal) bal.textContent = '—';
   } catch (_) { /* noop */ }
+  clearAvatar();
 }
 
 export async function paintMemberHeader(user) {
@@ -25,6 +49,7 @@ export async function paintMemberHeader(user) {
     const name = document.getElementById('chip-name');
     if (chip) chip.setAttribute('href', 'profile.html');
     if (name) name.textContent = email.split('@')[0];
+    paintAvatar(user.uid);
   } catch (_) { /* noop */ }
   try {
     const w = await getWallet(user.uid);

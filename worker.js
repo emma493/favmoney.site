@@ -162,6 +162,87 @@ const S = (v) => ({ stringValue: String(v == null ? '' : v) });
 const N = (v) => ({ doubleValue: Number(v || 0) });
 const T = () => ({ timestampValue: new Date().toISOString() });
 
+// List every document in a collection (paginated). Returns raw REST docs.
+async function fsListAll(projectId, token, collection, pageSize) {
+  const out = [];
+  let pageToken = '';
+  for (let p = 0; p < 50; p++) {
+    let url = fsBase(projectId) + '/' + collection + '?pageSize=' + (pageSize || 300);
+    if (pageToken) url += '&pageToken=' + encodeURIComponent(pageToken);
+    const res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+    if (!res.ok) throw new Error('fsList ' + res.status);
+    const data = await resJson(res, 'fsList');
+    if (Array.isArray(data.documents)) out.push(...data.documents);
+    pageToken = data.nextPageToken || '';
+    if (!pageToken) break;
+  }
+  return out;
+}
+
+function restStr(doc, field) {
+  try {
+    const f = doc && doc.fields && doc.fields[field];
+    return String((f && (f.stringValue || f.integerValue)) || '');
+  } catch (_) { return ''; }
+}
+
+// ---------- Top-inviters board (hourly cron -> leaderboard/top_inviters) ----------
+// Counts referrals per ownerUid, resolves each owner's handle from their user
+// doc (email prefix), writes the top 10 to one public doc. Pure + testable
+// fold over REST-shaped docs lives in topInvitersFromDocs().
+export function topInvitersFromDocs(refDocs, userByUid, topN) {
+  const counts = {};
+  for (const d of (Array.isArray(refDocs) ? refDocs : [])) {
+    const owner = restStr(d, 'ownerUid');
+    if (!owner) continue;
+    counts[owner] = (counts[owner] || 0) + 1;
+  }
+  return Object.keys(counts)
+    .map((uid) => {
+      const u = (userByUid && userByUid[uid]) || {};
+      const email = String(u.email || '');
+      const handle = (email.split('@')[0] || 'friend').slice(0, 24);
+      return { uid, handle, invited: counts[uid] };
+    })
+    .sort((a, b) => b.invited - a.invited)
+    .slice(0, Math.max(1, Math.min(10, Number(topN) || 10)));
+}
+
+async function rebuildTopInviters(env) {
+  const projectId = (env && env.FIREBASE_PROJECT_ID) || 'favmoney';
+  const saJson = (env && env.FIREBASE_SERVICE_ACCOUNT) || '';
+  if (!saJson) { console.log('top-inviters: FIREBASE_SERVICE_ACCOUNT not configured'); return; }
+  const token = await googleAccessToken(saJson);
+  const refs = await fsListAll(projectId, token, 'referrals', 500);
+  const counts = {};
+  for (const d of refs) {
+    const owner = restStr(d, 'ownerUid');
+    if (owner) counts[owner] = (counts[owner] || 0) + 1;
+  }
+  const top = Object.keys(counts).sort((a, b) => counts[b] - counts[a]).slice(0, 10);
+  const entries = [];
+  for (const uid of top) {
+    let handle = 'friend';
+    try {
+      const u = await fsGet(projectId, token, 'users/' + encodeURIComponent(uid));
+      const email = String((u && u.fields && u.fields.email && u.fields.email.stringValue) || '');
+      if (email.split('@')[0]) handle = email.split('@')[0].slice(0, 24);
+    } catch (_) {}
+    entries.push({ uid, handle, invited: counts[uid] });
+  }
+  await fsPatch(projectId, token, 'leaderboard/top_inviters', {
+    entries: {
+      arrayValue: {
+        values: entries.map((e) => ({
+          mapValue: { fields: { uid: S(e.uid), handle: S(e.handle), invited: N(e.invited) } }
+        }))
+      }
+    },
+    updatedAt: N(Date.now())
+  }, ['entries', 'updatedAt']);
+  console.log('top-inviters: wrote ' + entries.length + ' entries');
+}
+
 // ---------- OGAds offer feed (API v2, key in OGADS_API_KEY secret) ----------
 async function handleOgadsOffers(request, env) {
   const key = (env && env.OGADS_API_KEY) || '';
@@ -546,6 +627,12 @@ export default {
       console.log('gg-postback error: ' + (e && e.message ? e.message : e));
       return json({ ok: false, reason: 'write' }, 502);
     }
+  },
+  // Hourly cron (see wrangler.jsonc [triggers]): rebuild the public
+  // top-inviters board. Never throws out — a failed run retries next hour.
+  async scheduled(event, env, ctx) {
+    try { await rebuildTopInviters(env); }
+    catch (e) { console.log('top-inviters cron error: ' + (e && e.message ? e.message : e)); }
   }
 };
 

@@ -150,7 +150,7 @@ import { currentUserOnce } from './js/guard.js';
       var refMsg='';
       if(ref){
         try{
-          var res=await redeemReferral(cred.user.uid,ref);
+          var res=await redeemReferral(cred.user.uid,ref,e.split('@')[0]);
           if(res&&res.ok){refMsg=' $1.00 referral bonus added instantly.';}
           else if(res&&res.reason==='invalid'){show('Code not found — account created without the $1.00 bonus.');}
           else if(res&&res.reason==='self'){show('You cannot use your own code.');}

@@ -110,11 +110,12 @@ service cloud.firestore {
     match /referrals/{newUid} {
       allow create: if authed()
         && newUid == request.auth.uid
-        && request.resource.data.keys().hasOnly(['code', 'ownerUid', 'newUid', 'amount', 'inviteeAmount', 'claimed', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['code', 'ownerUid', 'newUid', 'handle', 'amount', 'inviteeAmount', 'claimed', 'createdAt'])
         && isCode(request.resource.data.code)
         && request.resource.data.ownerUid is string
         && request.resource.data.newUid == request.auth.uid
         && request.resource.data.ownerUid != request.auth.uid
+        && (!('handle' in request.resource.data) || (request.resource.data.handle is string && request.resource.data.handle.size() <= 24))
         && request.resource.data.amount == 0.5
         && request.resource.data.inviteeAmount == 1
         && request.resource.data.claimed == false;
@@ -128,6 +129,14 @@ service cloud.firestore {
         && request.resource.data.claimed == true
         && resource.data.claimed == false;
       allow delete: if false;
+    }
+
+    // Hourly top-inviters board: written server-side by the Worker cron
+    // (Admin SDK bypasses rules). Members read the single doc; no client
+    // writes, no lists.
+    match /leaderboard/{docId} {
+      allow get: if authed();
+      allow list, create, update, delete: if false;
     }
 
     // Lifetime commission debts: filed by the earner, claimed by the owner.

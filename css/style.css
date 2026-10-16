@@ -444,6 +444,8 @@ body{padding-bottom:0}
 /* ---------- Freecash dashboard (earn, offers, profile, bonuses, affiliates, withdrawals) ---------- */
 .user-chip{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);border:1px solid var(--line-soft);border-radius:999px;padding:6px 14px 6px 6px;font-size:13px;font-weight:700;color:#fff;text-decoration:none}
 .user-chip img{width:28px;height:28px;border-radius:50%;object-fit:cover;background:#2a2d52}
+.user-chip .fav-av{display:inline-flex;line-height:0;border-radius:50%;overflow:hidden}
+.user-chip .fav-av svg{display:block}
 .user-chip .bal{color:var(--green)}
 .icon-btn{position:relative;width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid var(--line-soft);color:#c9cce4;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .icon-btn:hover{color:#fff;border-color:rgba(1,214,118,.5)}

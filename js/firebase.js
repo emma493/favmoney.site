@@ -247,14 +247,17 @@ export async function getOrCreateMyCode(uid) {
 
 // Called once right after signup. Credits the invitee $1 instantly,
 // files the $0.50 claim for the owner to pick up (owner wallet is self-only).
-// Never throws — signup must succeed even if referral writes fail.
-export async function redeemReferral(newUid, rawCode) {
+// handle is the invitee's public display handle (email prefix); shown masked
+// on the inviter's referrals list. Never throws — signup must succeed even
+// if referral writes fail.
+export async function redeemReferral(newUid, rawCode, handle) {
   const code = cleanCode(rawCode);
   if (code.length !== 6) return { ok: false, reason: 'empty' };
   let ownerUid = null;
   try { ownerUid = await resolveCodeOwner(code); } catch (_) { ownerUid = null; }
   if (!ownerUid) return { ok: false, reason: 'invalid' };
   if (ownerUid === newUid) return { ok: false, reason: 'self' };
+  const h = String(handle || '').replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 24);
   try {
     await setDoc(doc(db, 'users', newUid), { refcode: code, referredBy: ownerUid, updatedAt: serverTimestamp() }, { merge: true });
   } catch (_) {}
@@ -263,7 +266,7 @@ export async function redeemReferral(newUid, rawCode) {
   } catch (_) {}
   try {
     await setDoc(doc(db, 'referrals', newUid), {
-      code, ownerUid, newUid,
+      code, ownerUid, newUid, handle: h,
       amount: REF_INVITER_AMOUNT, inviteeAmount: REF_INVITEE_AMOUNT,
       claimed: false, createdAt: serverTimestamp()
     });
@@ -352,6 +355,21 @@ export async function fetchReferrals(ownerUid, n) {
     });
     return rows;
   } catch (e) { return []; }
+}
+
+// Hourly top-inviters board, written by the Worker cron to
+// leaderboard/top_inviters ({ entries: [{uid, handle, invited}], updatedAt }).
+// Returns null when the cron has not run yet — callers show the empty state.
+export async function getTopInviters() {
+  try {
+    const snap = await getDoc(doc(db, 'leaderboard', 'top_inviters'));
+    if (!snap.exists()) return null;
+    const d = snap.data() || {};
+    const entries = Array.isArray(d.entries) ? d.entries.filter(function (e) {
+      return e && typeof e.uid === 'string' && Number(e.invited) > 0;
+    }).slice(0, 10) : [];
+    return { entries, updatedAtMs: Number(d.updatedAt) || 0 };
+  } catch (_) { return null; }
 }
 
 // ---- Ad-gated extra plays: 1 free/day + 10 ad plays/day per game ----

@@ -7,5 +7,5 @@
 /images/*
   Cache-Control: public, max-age=86400
 /*
-  Link: <https://fonts.googleapis.com>; rel=preconnect, <https://fonts.gstatic.com>; rel=preconnect; crossorigin, <https://randomuser.me>; rel=preconnect
+  Link: <https://fonts.googleapis.com>; rel=preconnect, <https://fonts.gstatic.com>; rel=preconnect; crossorigin
   Speculation-Rules: "/speculation.json"

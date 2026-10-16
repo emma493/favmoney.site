@@ -106,8 +106,7 @@ if (window.FavLoader) FavLoader.hold();
   }
   function ggProvider(){ return providerById('gg'); }
   // Provider card HTML (own link, tag and 70% pill per provider).
-  // Rendered standalone in #provider-list, or spliced into the offers
-  // stream — same markup, same link, both places never at once.
+  // Single home: the standalone #provider-list above.
   function providerCardHTML(p){
     if(!p) return '';
     var ready = !!p.base && !!uid;
@@ -125,13 +124,12 @@ if (window.FavLoader) FavLoader.hold();
       + '<div class="oc-base"><div class="oc-time"><small>Provider</small><b>' + esc(p.tag || '') + '</b></div>' + btn + '</div></div></div>';
   }
   function ggCardHTML(){ return providerCardHTML(ggProvider()); }
-  // The standalone container only shows when GG is NOT merged into the
-  // offers stream (guests, empty offers, link not configured).
+  // The standalone provider list above is always visible, so this only
+  // hides it when there is genuinely nothing to show (no providers).
   function syncProviderContainer(){
     var list = document.getElementById('provider-list');
     if(!list) return;
-    var merged = !!uid && !!ogadsCache && ogadsCache.length > 0;
-    list.style.display = merged ? 'none' : '';
+    list.style.display = list.innerHTML.trim() ? '' : 'none';
   }
   function paintProviders(){
     var list = document.getElementById('provider-list');
@@ -139,12 +137,9 @@ if (window.FavLoader) FavLoader.hold();
     var gg = ggProvider();
     var setup = document.getElementById('gg-setup');
     if(setup) setup.style.display = (gg && !gg.base) ? '' : 'none';
-    // MyLead renders here ONLY when not merged into the offers stream
-    // (same merged test as syncProviderContainer) — the stream splice is
-    // its single home once offers load, so it can never show twice.
-    var merged = !!uid && !!ogadsCache && ogadsCache.length > 0;
+    // The provider list above is the single home for provider cards;
+    // the offers stream below stays pure OGAds and is never touched here.
     list.innerHTML = OFFER_PROVIDERS.map(function(p){
-      if(p && p.id === 'mylead' && merged) return '';
       if(p && (p.id === 'gg' || p.id === 'mylead')) return providerCardHTML(p);
       var ready = !!p.base && !!uid;
       var img = p.img ? '<div class="oc-asset"><img src="' + esc(p.img) + '" alt="" loading="lazy" decoding="async"></div>' : '';
@@ -189,17 +184,8 @@ if (window.FavLoader) FavLoader.hold();
         + '<p class="oc-desc">' + esc(o.adcopy || '') + '</p>'
         + '<div class="oc-base og-base"><button class="btn btn-green" data-ogads="' + esc(o.link) + '" data-offer="' + o.offerid + '" style="min-height:48px">Start</button></div></div></div>';
     });
-    // Provider cards ride fixed slots in the offers stream: Golden Goose
-    // (gg.agency) third, MyLead (mylead.global) fourth — same cards, same
-    // links, never duplicated with the standalone container.
-    var slots = [];
-    if(uid){
-      var gg = ggCardHTML();
-      if(gg) slots.push({at:2, html:gg});
-      var ml = providerCardHTML(providerById('mylead'));
-      if(ml) slots.push({at:3, html:ml});
-    }
-    slots.forEach(function(s){ cards.splice(Math.min(s.at, cards.length), 0, s.html); });
+    // Provider cards live only in the standalone list above — the stream
+    // below stays pure OGAds offers, no spliced provider slots.
     list.innerHTML = cards.join('');
     try{paintProviders();}catch(_){syncProviderContainer();}
   }

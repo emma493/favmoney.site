@@ -98,7 +98,7 @@
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
 <div class="back-row"><a class="back-btn" href="earn.html" aria-label="Back to Earn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg><span>Earn</span></a></div>
 <h1 class="dash-title">Quiz & Earn</h1>
-<p>One <b>free session every day</b>, plus up to <b>10 bonus sessions</b> via short ads. Pick an operator, solve <b>30 math sprints</b> against a 10-second timer — <b data-usd="0.10">$0.10</b> per correct answer. One rescue life per session.</p>
+<p>One <b>free session every day</b>, plus up to <b>10 bonus sessions</b> via short ads. Pick an operator, solve <b>30 math sprints</b> against a 10-second timer — <b data-usd="0.10">$0.10</b> per correct answer. Wrong twice and the session ends — no second chances.</p>
 
 <div id="member-zone" style="display:none">
 <div class="bonus-card" id="quiz-entry" style="display:none">
@@ -131,7 +131,6 @@
 <span class="quiz-count" id="quiz-count">10.0s</span>
 </div>
 <div class="quiz-grid" id="quiz-grid"></div>
-<div><span class="quiz-life" id="quiz-life">1 rescue life left</span></div>
 </div>
 
 <div class="bonus-card" id="quiz-over" style="display:none;text-align:center">
@@ -140,8 +139,7 @@
 <p style="color:var(--muted);font-size:14px;margin:8px 0 16px" id="over-sub">0 correct out of 0.</p>
 <p id="over-status" style="font-size:13px;font-weight:700;color:var(--muted);margin:0 0 12px"></p>
 <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
-<button class="btn btn-green" id="free-again-btn" style="min-height:48px;min-width:220px;display:none">Play free session</button>
-<button class="btn btn-ghost" id="again-btn" style="min-height:48px;min-width:220px">Watch ad · Play again</button>
+<button class="btn btn-green" id="again-btn" style="min-height:48px;min-width:220px">Watch ad · Play again</button>
 </div>
 </div>
 </div>
@@ -149,7 +147,7 @@
 <h2 style="font-size:20px;margin:26px 0 0">How it works</h2>
 <div class="quest-row"><div class="qico">1</div><div class="qmid"><b>Take your free session</b><div style="font-size:13px;color:var(--muted)">One free 30-question session per UTC day. The entry card counts down to midnight when used.</div></div></div>
 <div class="quest-row"><div class="qico">2</div><div class="qmid"><b>Want more? Watch an ad</b><div style="font-size:13px;color:var(--muted)">Up to 10 bonus sessions a day — one short ad per session. Free and bonus sessions pay the same <span data-usd="0.10">$0.10</span> per correct answer.</div></div></div>
-<div class="quest-row"><div class="qico">3</div><div class="qmid"><b>Answers credit instantly</b><div style="font-size:13px;color:var(--muted)">Cash lands in available. Wrong twice and the session ends — one rescue life per session via a 20-second view.</div></div></div>
+<div class="quest-row"><div class="qico">3</div><div class="qmid"><b>Answers credit instantly</b><div style="font-size:13px;color:var(--muted)">Cash lands in available. Wrong twice and the session ends immediately — watch an ad to start a new session.</div></div></div>
 
 <h2 style="font-size:20px;margin:30px 0 0">Good to know</h2>
 <div class="faq" style="margin-top:14px">
@@ -164,18 +162,7 @@
 </main>
 <footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="earn.html">Earn</a></span></div></div></footer>
 
-<div class="quiz-veil" id="quiz-life-veil" role="dialog" aria-label="Rescue life">
-<div class="quiz-box">
-<h3 id="life-title">Wrong answer</h3>
-<p>You have <b>1 rescue life</b>. Watch a 20-second view to keep this session alive — a second wrong ends it.</p>
-<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:18px">
-<button class="btn btn-green" id="life-ad-btn" style="min-height:48px">Watch & continue</button>
-<button class="btn btn-ghost" id="life-end-btn" style="min-height:48px">End session</button>
-</div>
-</div>
-</div>
-
-<div class="quiz-ad-veil" id="quiz-ad-modal" role="dialog" aria-label="Sponsored view for a rescue life">
+<div class="quiz-ad-veil" id="quiz-ad-modal" role="dialog" aria-label="Sponsored view">
 <div class="quiz-box" style="text-align:left">
 <div style="text-align:center"><h3 id="quiz-ad-title">Quiz break</h3><p id="quiz-ad-text"></p></div>
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--muted);margin:14px 0 8px"><span id="quiz-ad-msg">Keep this view visible…</span><b id="quiz-ad-count" style="color:#7dd3fc">20s</b></div>
@@ -188,7 +175,7 @@
 
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet, getUserDoc, fetchUserDocs, quizSession, genQuizQuestion, quizOptions, startQuizSession, getQuizState, answerQuiz, useQuizLife, getUnclaimedRewards, track, QUIZ_AD_DAILY_CAP, QUIZ_SESSION_SIZE, QUIZ_PAY, QUIZ_TIME_MS } from './js/firebase.js';
+import { auth, onAuthStateChanged, getWallet, getUserDoc, fetchUserDocs, quizSession, genQuizQuestion, quizOptions, startQuizSession, getQuizState, answerQuiz, endQuizSession, getUnclaimedRewards, track, QUIZ_AD_DAILY_CAP, QUIZ_SESSION_SIZE, QUIZ_PAY, QUIZ_TIME_MS } from './js/firebase.js';
 import { SPONSOR_URL } from './js/ptc-catalog.js';
 import { coinPour, softThud, isMuted, toggleMute } from './js/sfx.js';
 import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
@@ -339,7 +326,7 @@ if (window.FavLoader) FavLoader.hold();
   // (the question + options were generated on this device), so feedback paints
   // with zero network wait. Server re-verification (anti-tamper) runs behind
   // the feedback; a quiet refresh reconciles balance/history afterwards.
-  var snap={answered:0,correct:0,earned:0,lifeUsed:false}, delta={a:0,c:0,e:0,miss:0};
+  var snap={answered:0,correct:0,earned:0}, delta={a:0,c:0,e:0,miss:0}, curMiss=0;
   var saving=0, refreshing=false, refreshQueued=false, over=false;
   function waitForSaves(){
     return new Promise(function(res){
@@ -362,16 +349,12 @@ if (window.FavLoader) FavLoader.hold();
     var a=snap.answered+delta.a;
     return {answered:a,correct:snap.correct+delta.c,
       earned:Math.round((snap.earned+delta.e)*100)/100,
-      lifeUsed:snap.lifeUsed,remaining:Math.max(0,QUIZ_SESSION_SIZE-a)};
-  }
+      remaining:Math.max(0,QUIZ_SESSION_SIZE-a)};}
   function pad2q(n){n=Math.max(0,Math.floor(Number(n||0)));return (n<10?'0':'')+n;}
   function paintScore(){
     var e=effSt();
     document.getElementById('quiz-progress').textContent='QUESTION '+pad2q(Math.min(QUIZ_SESSION_SIZE,e.answered+1))+' / '+QUIZ_SESSION_SIZE;
     document.getElementById('quiz-score').textContent='+'+money(e.earned);
-    var life=document.getElementById('quiz-life');
-    if(e.lifeUsed){life.textContent='Rescue life used';life.classList.add('used');}
-    else{life.textContent='1 rescue life left';life.classList.remove('used');}
   }
   function silentRefresh(){
     if(refreshing){refreshQueued=true;return;}
@@ -387,7 +370,8 @@ if (window.FavLoader) FavLoader.hold();
 
   function ask(st){
     over=false;
-    snap={answered:st?st.answered:0,correct:st?st.correct:0,earned:st?st.earned:0,lifeUsed:!!(st&&st.lifeUsed)};
+    snap={answered:st?st.answered:0,correct:st?st.correct:0,earned:st?st.earned:0};
+    if(st&&st.misses!=null)curMiss=st.misses;
     delta={a:0,c:0,e:0,miss:0};
     cur=genQuizQuestion(curOp,snap.answered);
     cur.options=quizOptions(cur.answer);
@@ -423,7 +407,7 @@ if (window.FavLoader) FavLoader.hold();
     }
     delta.a++;
     if(correct){delta.c++;delta.e=Math.round((delta.e+QUIZ_PAY)*100)/100;}
-    else{delta.miss++;}
+    else{delta.miss++;curMiss++;}
     paintScore();
     if(correct){
       coinPour();
@@ -449,8 +433,20 @@ if (window.FavLoader) FavLoader.hold();
     setTimeout(function(){
       busy=false;
       var e=effSt();
-      if(e.remaining<=0||(!correct&&e.lifeUsed)){endSession(e);return;}
-      if(!correct){showLife();return;}
+      if(e.remaining<=0){endSession(e);return;}
+      if(!correct&&curMiss>=2){
+        // Fail is final: no rescue, no replay. Kill the session server-side
+        // so it can never resume, show what was kept, send them to ads.
+        cur=null;
+        show('Session failed — watch an ad to start a new one.');
+        (async function(){
+          try{await waitForSaves();}catch(_){}
+          try{await endQuizSession(uid);}catch(_){}
+          try{await refresh(false);}catch(_){}
+          gameOver(e);
+        })();
+        return;
+      }
       ask(e);
     },correct?450:700);
   }
@@ -461,46 +457,30 @@ if (window.FavLoader) FavLoader.hold();
     var c=st?st.correct:0, a=st?st.answered:0;
     document.getElementById('over-title').textContent=done?'Session complete':'Game over';
     document.getElementById('over-earned').textContent='+'+money(st?st.earned:0);
-    document.getElementById('over-sub').textContent='You answered '+c+' of '+a+' correctly.'+(done?'':' Timed-out questions score zero — play again below.');
-    var fab=document.getElementById('free-again-btn'), ab=document.getElementById('again-btn'), os=document.getElementById('over-status');
-    var hasFree=!!(quizState&&quizState.freeLeft>0);
+    document.getElementById('over-sub').textContent='You answered '+c+' of '+a+' correctly.'+(done?'':' Watch an ad below to start a new session.');
+    var ab=document.getElementById('again-btn'), os=document.getElementById('over-status');
     var aleft=(quizState&&quizState.adLeft!=null)?quizState.adLeft:QUIZ_AD_DAILY_CAP;
-    if(fab)fab.style.display=hasFree?'':'none';
     if(ab){
       if(aleft>0){
         ab.style.display='';
         ab.textContent='Watch ad · Play again ('+aleft+' left)';
         ab.disabled=false;
-        if(hasFree){ab.classList.remove('btn-green');ab.classList.add('btn-ghost');}
-        else{ab.classList.remove('btn-ghost');ab.classList.add('btn-green');}
+        ab.classList.remove('btn-ghost');ab.classList.add('btn-green');
       }else{
         ab.style.display='none';
       }
     }
     if(os){
-      if(hasFree)os.textContent='Your free session is still available.';
-      else if(quizState)os.textContent='Next free in '+msToClock(quizState.resetMs)+(aleft>0?' · bonus sessions via ads.':' · back at midnight UTC.');
-      else os.textContent='';
+      os.textContent=aleft>0?'Watch an ad below to start a new session.':'Back at midnight UTC.';
     }
     clearOp();
     showZone('quiz-over');
   }
 
-  function showLife(){
-    document.getElementById('quiz-life-veil').classList.add('open');
-  }
-  function hideLife(){document.getElementById('quiz-life-veil').classList.remove('open');}
-  document.getElementById('life-end-btn').addEventListener('click',async function(){
-    hideLife();
-    var st=await refresh(false);
-    gameOver(st||quizSession(proofs,Date.now()));
-  });
-
-  // Rewarded views (shared controller): bonus entries + rescue lives open
-  // the sponsor in a NEW TAB (never iframed) with a background timer.
-  // Time met auto-grants the entry/life; early return shows paused + Resume.
-  // Open-credit flow: entry/life buttons show instructions + a real
-  // tap-to-open link. Tapping it opens the ad AND grants instantly.
+  // Rewarded views (shared controller): bonus entries open the sponsor
+  // in a NEW TAB (never iframed). Open-credit flow: the entry button shows
+  // instructions + a real tap-to-open link. Tapping it opens the ad AND
+  // grants instantly.
   var pendingQuiz=null, quizCrediting=false, quizPopup=null;
   function quizModalOpen(on){ try{document.getElementById('quiz-ad-modal').classList.toggle('open',!!on);}catch(_){} }
   function setQuizModal(title,text){
@@ -510,10 +490,9 @@ if (window.FavLoader) FavLoader.hold();
     try{document.getElementById('quiz-ad-count').textContent='';}catch(_){}
     try{document.getElementById('quiz-ad-bar').style.width='0%';}catch(_){}
   }
-  function showQuizIntro(mode){
-    pendingQuiz={mode:mode};
-    var isEntry=mode==='entry';
-    setQuizModal(isEntry?'Bonus session break':'Quiz break','Tap the button below to open the ad in a new tab. Your '+(isEntry?'bonus session':'rescue life')+' unlocks the moment it opens.');
+  function showQuizIntro(){
+    pendingQuiz={mode:'entry'};
+    setQuizModal('Bonus session break','Tap the button below to open the ad in a new tab. Your bonus session unlocks the moment it opens.');
     try{var ol=document.getElementById('quiz-ad-openlink');ol.href=SPONSOR_URL;ol.style.display='';ol.style.pointerEvents='';ol.style.opacity='';}catch(_){}
     quizModalOpen(true);
   }
@@ -524,13 +503,10 @@ if (window.FavLoader) FavLoader.hold();
   }
   function doQuizCredit(){
     if(!pendingQuiz||quizCrediting||!uid)return;
-    var mode=pendingQuiz.mode;
     quizCrediting=true;
     try{var ol0=document.getElementById('quiz-ad-openlink');ol0.style.pointerEvents='none';ol0.style.opacity='.6';}catch(_){}
-    try{track('quiz_ad_open',{mode:mode});}catch(_){}
-    var p;
-    if(mode==='entry'){
-      p=startQuizSession(uid,'ad').then(function(r2){
+    try{track('quiz_ad_open',{mode:'entry'});}catch(_){}
+    var p=startQuizSession(uid,'ad').then(function(r2){
         if(!r2.ok){
           if(r2.reason==='capped'){ quizPopup={title:'Bonus session break',text:'Bonus sessions done for today - back at midnight UTC.'}; return refresh(false); }
           quizPopup=null; show('Could not start - check connection and try again.'); return null;
@@ -538,15 +514,6 @@ if (window.FavLoader) FavLoader.hold();
         try{track('quiz_start_mode',{mode:'ad'});}catch(_){}
         return refresh(false).then(function(st2){ route(st2); quizPopup={title:'Session unlocked!',text:'Your bonus session is ready.'}; });
       });
-    }else{
-      p=useQuizLife(uid).then(function(r){
-        if(!r.ok){
-          return refresh(false).then(function(st0){ st0=st0||quizSession(proofs,Date.now()); gameOver(st0); quizPopup={title:'Quiz break',text:'Life failed - session ended.'}; });
-        }
-        show('Rescued - keep going.');
-        return refresh(false).then(function(st){ st=st||quizSession(proofs,Date.now()); if(!st.active){gameOver(st);} else{ask(st);} quizPopup={title:'Rescued!',text:'Keep going - good luck.'}; });
-      });
-    }
     p.catch(function(){ quizPopup=null; show('Could not save - check connection and try again.'); })
      .then(function(){
        quizCrediting=false; pendingQuiz=null;
@@ -554,65 +521,6 @@ if (window.FavLoader) FavLoader.hold();
        if(quizPopup){ showQuizGranted(quizPopup.title,quizPopup.text); }
      });
   }
-  function paintQuizModalGONE(s){
-    var veil=document.getElementById('quiz-ad-modal');
-    if(!veil)return;
-    function set(id,txt){try{document.getElementById(id).textContent=txt;}catch(_){}}
-    function showEl(id,on){try{document.getElementById(id).style.display=on?'':'none';}catch(_){}}
-    if(!s||s.status==='idle'||(s.status==='viewing'&&!s.soft)){veil.classList.remove('open');return;}
-    var isEntry=s.id==='quiz-entry';
-    var req=s.secs||20;
-    var done=Math.min(Number(s.accumMs||0),Number(s.requiredMs||req*1000));
-    var pct=req>0?Math.min(100,done/(req*1000)*100):0;
-    var left=Math.max(0,Math.ceil(((Number(s.requiredMs||req*1000))-done)/1000));
-    try{document.getElementById('quiz-ad-bar').style.width=pct+'%';}catch(_){}
-    veil.classList.add('open');
-    try{
-      var ol=document.getElementById('quiz-ad-openlink');
-      if(ol){ ol.href=SPONSOR_URL; ol.style.display='none'; }
-    }catch(_){}
-    showEl('quiz-ad-go',false);
-    showEl('quiz-ad-back',false);
-    if(s.status==='viewing'){
-      // Soft progress: the timer keeps running behind this modal.
-      set('quiz-ad-title',isEntry?'Bonus session break':'Quiz break');
-      set('quiz-ad-text','Watching... '+Math.floor(done/1000)+'s of '+req+'s - return to the ad tab.');
-      set('quiz-ad-msg','Watching...');set('quiz-ad-count',left+'s left');
-      showEl('quiz-ad-resume',false);
-      try{var ol0=document.getElementById('quiz-ad-openlink');if(ol0)ol0.style.display='none';}catch(_){}
-      showEl('quiz-ad-back',true);
-      return;
-    }
-    if(s.status==='paused'){
-      set('quiz-ad-title',isEntry?'Bonus session break':'Quiz break');
-      if(s.error)set('quiz-ad-text',s.error);
-      else if(s.tabClosed)set('quiz-ad-text','The ad tab was closed - that time does not count. Tap Resume to keep earning.');
-      else set('quiz-ad-text','Paused at '+Math.floor(done/1000)+'s of '+req+'s. Tap Resume to continue.');
-      set('quiz-ad-msg','Paused');set('quiz-ad-count',left+'s left');
-      showEl('quiz-ad-resume',true);
-      try{
-        var ol2=document.getElementById('quiz-ad-openlink');
-        var live=false;
-        try{ live=!!(qrv&&qrv.hasHandle&&qrv.hasHandle()); }catch(_){}
-        if(ol2) ol2.style.display=(s.tabClosed||s.error||!live)?'':'none';
-      }catch(_){}
-    }else if(s.status==='crediting'){
-      set('quiz-ad-title',isEntry?'Bonus session break':'Quiz break');
-      set('quiz-ad-text','Verifying your view.');
-      set('quiz-ad-msg','Verifying...');set('quiz-ad-count','');
-      showEl('quiz-ad-resume',false);
-    }else if(s.status==='credited'){
-      set('quiz-ad-title',isEntry?'Session unlocked!':'Rescued!');
-      set('quiz-ad-text',isEntry?'Your bonus session is ready.':'Keep going - good luck.');
-      set('quiz-ad-msg','Done');set('quiz-ad-count','');
-      showEl('quiz-ad-resume',false);
-    }
-  }
-  document.getElementById('life-ad-btn').addEventListener('click',function(){
-    hideLife();
-    if(quizCrediting){show('Unlocking your view...');return;}
-    showQuizIntro('life');
-  });
   document.getElementById('quiz-ad-close').addEventListener('click',function(){
     quizModalOpen(false);
     quizPopup=null;pendingQuiz=null;
@@ -651,13 +559,10 @@ if (window.FavLoader) FavLoader.hold();
   document.getElementById('deposit-btn').addEventListener('click',function(){
     if(!quizState||(quizState.adLeft||0)<=0){show('Bonus sessions done for today - back at midnight UTC.');return;}
     if(quizCrediting){show('Unlocking your view...');return;}
-    showQuizIntro('entry');
+    showQuizIntro();
   });
   document.getElementById('again-btn').addEventListener('click',function(){
     document.getElementById('deposit-btn').click();
-  });
-  document.getElementById('free-again-btn').addEventListener('click',function(){
-    document.getElementById('free-btn').click();
   });
   var opBtns=document.querySelectorAll('.quiz-op');
   for(var k=0;k<opBtns.length;k++){
@@ -692,6 +597,12 @@ if (window.FavLoader) FavLoader.hold();
       }catch(e){}
       var st=null;
       try{ st=await refresh(false); }catch(_){ st=null; }
+      // Quit, failed or abandoned sessions never resume: kill anything
+      // unfinished so the user always starts fresh at 0/30.
+      if(st&&st.hasSession&&st.active){
+        try{ await endQuizSession(uid); }catch(_){}
+        try{ st=await refresh(false); }catch(_){ st=null; }
+      }
       // Even if the read failed, show the entry card instead of a blank page.
       route(st||{hasSession:false,active:false});
       ready();

@@ -640,34 +640,55 @@ export function quizOptions(answer, rand) {
 // for the daily free session); answers at the same-or-later timestamp belong
 // to it (server stamps have 1s resolution, so >= keeps a same-second first
 // answer inside the session — the safe direction).
-// Returns { entries, lastEntryMs, hasSession, active, answered, correct, lifeUsed, earned, remaining, freeEntry }.
+// Kill markers: any 'quiz-abandon' row voids everything at-or-before it, so
+// failed, quit or stale sessions can never resume — the next start is 0/30.
+// Returns { entries, lastEntryMs, hasSession, active, answered, correct,
+// misses, lifeUsed, earned, remaining, freeEntry }.
 export function quizSession(proofs, nowMs) {
   const now = Number(nowMs || Date.now());
   const rows = Array.isArray(proofs) ? proofs : [];
-  let lastEntryMs = 0, entries = 0, freeEntry = false;
+  let lastEntryMs = 0, entries = 0, freeEntry = false, killMs = 0;
+  for (const p of rows) {
+    if (String((p && p.label) || '') !== 'quiz-abandon') continue;
+    const ms = proofMs(p, now);
+    if (ms > killMs) killMs = ms;
+  }
   for (const p of rows) {
     const lb = String((p && p.label) || '');
     if (lb !== 'quiz-ad' && lb !== 'quiz-free') continue;
-    entries++;
     const ms = proofMs(p, now);
+    if (ms < killMs) continue;
+    entries++;
     if (ms >= lastEntryMs) { lastEntryMs = ms; freeEntry = lb === 'quiz-free'; }
   }
-  let answered = 0, correct = 0, lifeUsed = false, earned = 0;
+  let answered = 0, correct = 0, misses = 0, lifeUsed = false, earned = 0;
   if (entries > 0) {
     for (const p of rows) {
       const lb = String((p && p.label) || '');
       if (lb !== 'play:quiz' && lb !== 'quiz-miss' && lb !== 'quiz-life') continue;
-      if (proofMs(p, now) < lastEntryMs) continue;
+      const ms = proofMs(p, now);
+      if (ms < lastEntryMs || ms <= killMs) continue;
       if (lb === 'play:quiz') { answered++; correct++; earned = Math.round((earned + Number(p.amount || 0)) * 100) / 100; }
-      else if (lb === 'quiz-miss') answered++;
+      else if (lb === 'quiz-miss') { answered++; misses++; }
       else lifeUsed = true;
     }
   }
   const remaining = Math.max(0, QUIZ_SESSION_SIZE - answered);
   return {
     entries, lastEntryMs, hasSession: entries > 0, active: entries > 0 && remaining > 0,
-    answered, correct, lifeUsed, earned, remaining, freeEntry
+    answered, correct, misses, lifeUsed, earned, remaining, freeEntry
   };
+}
+
+// Hard-kill the current session (fail, quit, stale return): everything
+// before this marker stops counting, so the next start is fresh at 0/30.
+// status 'pending' passes Firestore rules with any label. Earnings already
+// credited stay credited — only the session dies.
+export async function endQuizSession(uid) {
+  try {
+    await addDoc(collection(db, 'proofs'), { uid, amount: 0, label: 'quiz-abandon', status: 'pending', at: serverTimestamp() });
+  } catch (_) { return { ok: false, reason: 'write' }; }
+  return { ok: true };
 }
 
 // Pure free-day state — no Firestore beyond the user doc row.

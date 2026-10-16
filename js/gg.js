@@ -17,36 +17,6 @@ export const OFFER_PROVIDERS = [
     cta: 'Open offers',
     img: 'images/offers-and-apps.png',
     base: GG_PROMO_BASE
-  },
-  {
-    id: 'provider-2',
-    name: 'Golden Goose',
-    tag: 'gg.agency · Mobile offers',
-    desc: 'Complete mobile offers from gg.agency. You keep 70% of each approved payout.',
-    cta: 'Open offers',
-    img: 'images/offers-and-apps.png',
-    base: '',
-    page: 'provider-2.html'
-  },
-  {
-    id: 'provider-3',
-    name: 'Golden Goose',
-    tag: 'gg.agency · Mobile offers',
-    desc: 'Complete mobile offers from gg.agency. You keep 70% of each approved payout.',
-    cta: 'Open offers',
-    img: 'images/offers-and-apps.png',
-    base: '',
-    page: 'provider-3.html'
-  },
-  {
-    id: 'provider-4',
-    name: 'Golden Goose',
-    tag: 'gg.agency · Mobile offers',
-    desc: 'Complete mobile offers from gg.agency. You keep 70% of each approved payout.',
-    cta: 'Open offers',
-    img: 'images/offers-and-apps.png',
-    base: '',
-    page: 'provider-4.html'
   }
 ];
 

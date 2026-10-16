@@ -101,13 +101,13 @@ import { requireAuth } from './js/guard.js';
     badge.classList.remove('ready','wait','done');
     if(s.capped){
       badge.textContent='DONE';badge.classList.add('done');
-      st.textContent=s.claimedToday+' of '+FAUCET_DAILY_CAP+' claimed · fresh batch in '+msToClock(s.resetMs);
+      st.textContent='Daily limit reached · back in '+msToClock(s.resetMs);
     }else if(s.ready){
       badge.textContent='READY';badge.classList.add('ready');
-      st.textContent='Batch '+s.batch+' of '+s.batchesPerDay+' · '+s.inBatch+' of '+s.batchSize+' claimed — claim now';
+      st.textContent='Drip ready — claim now';
     }else{
       badge.textContent=msToClock(s.waitMs);badge.classList.add('wait');
-      st.textContent='Batch '+s.batch+' of '+s.batchesPerDay+' · next drip in '+msToClock(s.waitMs);
+      st.textContent='Next drip in '+msToClock(s.waitMs);
     }
   }
   function paintBadges(n){

@@ -20,6 +20,21 @@
   var MIN_BATCH_GAP_MS = 30000;
   var TICK_MS = 5000;
 
+  // 22 approved Adsterra smartlink codes (21 from Pub_Codes + existing live code).
+  // One code is picked at random per page load so a user never sees the same
+  // smartlink repeatedly at one spot.
+  var ADSTERRA_CODES = [
+    'q4bdfbc52q','af6yhfd87','a6d5k65huy','ujwu4f3t','cj4btgr12',
+    'yawhz3ds','xpuq7kbt','eeddrxp2','qn6spr0f','k8ask9rs37',
+    'gfjgd87wg','fkdsm75b0e','jbpt6whs','td3mae49','qz73kn0a',
+    'fssesnqi','c1sdbzrzc','haxxm114ry','z6cn2pvm3g','dvk1f5zj',
+    'gbdikgtp','ef5de62cb9e4be913aaff26c6d87ba05'
+  ];
+
+  function randomAdsterraCode() {
+    return ADSTERRA_CODES[Math.floor(Math.random() * ADSTERRA_CODES.length)];
+  }
+
   var slots = [];
   var queue = Promise.resolve();
   var watchAccum = 0;
@@ -34,10 +49,14 @@
         (function (el) {
           var type = el.getAttribute('data-ad-type') || 'atoptions';
           if (type === 'container') {
-            var src = el.getAttribute('data-ad-src') || '';
-            var container = el.getAttribute('data-ad-container') || '';
-            if (!src || !container) return;
-            found.push({ el: el, type: type, src: src, container: container, async: el.getAttribute('data-ad-async') === '1' });
+            // Randomize to one of the 22 approved Adsterra codes per page load.
+            var code = randomAdsterraCode();
+            var src = 'https://pl31763938.profitableratecpmnetwork.com/' + code + '/invoke.js';
+            var container = 'container-' + code;
+            el.setAttribute('data-ad-src', src);
+            el.setAttribute('data-ad-container', container);
+            el.setAttribute('data-ad-async', '1');
+            found.push({ el: el, type: type, src: src, container: container, async: true });
           } else {
             var key = el.getAttribute('data-ad-key') || '';
             var host = el.getAttribute('data-ad-host') || 'https://www.highrevenueformat.com';

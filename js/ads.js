@@ -21,8 +21,6 @@
   var TICK_MS = 5000;
 
   // 22 approved Adsterra smartlink codes (21 from Pub_Codes + existing live code).
-  // One code is picked at random per page load so a user never sees the same
-  // smartlink repeatedly at one spot.
   var ADSTERRA_CODES = [
     'q4bdfbc52q','af6yhfd87','a6d5k65huy','ujwu4f3t','cj4btgr12',
     'yawhz3ds','xpuq7kbt','eeddrxp2','qn6spr0f','k8ask9rs37',
@@ -31,8 +29,25 @@
     'gbdikgtp','ef5de62cb9e4be913aaff26c6d87ba05'
   ];
 
-  function randomAdsterraCode() {
-    return ADSTERRA_CODES[Math.floor(Math.random() * ADSTERRA_CODES.length)];
+  // Direct (non-Adsterra) links rotated 1:1 with the Adsterra pool.
+  var DIRECT_LINKS = [
+    'https://uplcm.com/4/12053586'
+  ];
+
+  // 50/50 group pick: Adsterra vs direct link. Within Adsterra wins, one of
+  // the 22 codes is chosen at random so a user never sees the same code
+  // repeatedly at one spot.
+  function pickAdSource() {
+    if (Math.random() < 0.5) {
+      return {
+        type: 'adsterra',
+        code: ADSTERRA_CODES[Math.floor(Math.random() * ADSTERRA_CODES.length)]
+      };
+    }
+    return {
+      type: 'direct',
+      url: DIRECT_LINKS[Math.floor(Math.random() * DIRECT_LINKS.length)]
+    };
   }
 
   var slots = [];
@@ -49,10 +64,16 @@
         (function (el) {
           var type = el.getAttribute('data-ad-type') || 'atoptions';
           if (type === 'container') {
-            // Randomize to one of the 22 approved Adsterra codes per page load.
-            var code = randomAdsterraCode();
-            var src = 'https://pl31763938.profitableratecpmnetwork.com/' + code + '/invoke.js';
-            var container = 'container-' + code;
+            // 50/50: Adsterra code (random from 22) vs direct uplcm link.
+            var source = pickAdSource();
+            var src, container;
+            if (source.type === 'adsterra') {
+              src = 'https://pl31763938.profitableratecpmnetwork.com/' + source.code + '/invoke.js';
+              container = 'container-' + source.code;
+            } else {
+              src = source.url;
+              container = 'container-direct';
+            }
             el.setAttribute('data-ad-src', src);
             el.setAttribute('data-ad-container', container);
             el.setAttribute('data-ad-async', '1');

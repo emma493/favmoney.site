@@ -315,7 +315,7 @@ footer{border-top:1px solid var(--line-soft);background:#F8FAFC;padding:48px 0 2
 .cash{background:#fff;color:#111;border:2px solid var(--line);border-radius:14px;padding:16px;text-align:center;font-weight:800;cursor:pointer}
 .cash small{display:block;font-weight:600;color:#555;font-size:12px}
 .cash.sel{border-color:var(--green);box-shadow:0 0 0 3px rgba(16,185,129,.3)}
-.cash.dark{background:#141523;color:#fff;border-color:var(--line)}
+.cash.dark{background:#F1F5F9;color:#0F172A;border-color:var(--line)}
 .cash.dark small{color:#bbb}
 .cash.blue{background:#003087;color:#fff}
 .cash.blue small{color:#cfe0ff}

@@ -208,7 +208,7 @@ import { requireAuth } from './js/guard.js';
       setStoredCountry(code);
       applyCountry(code);
       msg.textContent='Saved — balances now show in '+COUNTRY_MAP[code].currency+'.';
-      msg.style.color='#8ff0bd';
+      msg.style.color='#047857';
     }catch(e){msg.textContent='Save failed — check connection and try again.';msg.style.color='#ff9aa2';}
   });
   document.addEventListener('fav-rates',function(){paintStats();render();});

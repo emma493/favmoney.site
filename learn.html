@@ -435,11 +435,11 @@ if (window.FavLoader) FavLoader.hold();
     (function(q,qi){
       answerQuiz(uid,q,qi).then(function(r){
         saving--;
-        if(!r||!r.ok)show('Could not save that answer — reconnecting…');
+        if(!r||!r.ok)console.log('[favmoney] Could not save that answer — reconnecting…');
         silentRefresh();
       }).catch(function(){
         saving--;
-        show('Could not save that answer — reconnecting…');
+        console.log('[favmoney] Could not save that answer — reconnecting…');
         silentRefresh();
       });
     })(cur,idx);
@@ -529,12 +529,12 @@ if (window.FavLoader) FavLoader.hold();
     var p=startQuizSession(uid,'ad').then(function(r2){
         if(!r2.ok){
           if(r2.reason==='capped'){ quizPopup={title:'Bonus session break',text:'Bonus sessions done for today - back at midnight UTC.'}; return refresh(false); }
-          quizPopup=null; show('Could not start - check connection and try again.'); return null;
+          quizPopup=null; console.log('[favmoney] Could not start - check connection and try again.'); return null;
         }
         try{track('quiz_start_mode',{mode:'ad'});}catch(_){}
         return refresh(false).then(function(st2){ route(st2); quizPopup={title:'Session unlocked!',text:'Your bonus session is ready.'}; });
       });
-    p.catch(function(){ quizPopup=null; show('Could not save - check connection and try again.'); })
+    p.catch(function(){ quizPopup=null; console.log('[favmoney] Could not save - check connection and try again.'); })
      .then(function(){
        quizCrediting=false; pendingQuiz=null;
        try{var ol2=document.getElementById('quiz-ad-openlink');ol2.style.pointerEvents='';ol2.style.opacity='';}catch(_){}

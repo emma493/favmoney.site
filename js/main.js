@@ -50,14 +50,14 @@
   }
   var signin = document.querySelector('[data-signin]');
   if (signin) signin.addEventListener('click', function () {
-    setTimeout(function () { showToast('Sign-in is coming soon — enter your email above to create a free account.'); }, 350);
+    setTimeout(function () { console.log('[favmoney] Sign-in is coming soon — enter your email above to create a free account.'); }, 350);
   });
 
   // 3b. Footer stubs: cookie settings, language, social placeholders
   document.querySelectorAll('[data-cookie]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       try { localStorage.setItem('favmoney_cookies', JSON.stringify({ choice: 'essential', at: new Date().toISOString() })); } catch (e) {}
-      showToast('Cookie preferences saved for this browser.');
+      console.log('[favmoney] Cookie preferences saved for this browser.');
     });
   });
   document.querySelectorAll('[data-lang]').forEach(function (btn) {
@@ -69,7 +69,7 @@
           return;
         }
       } catch (e) {}
-      showToast('English is the current language. More languages coming soon.');
+      console.log('[favmoney] English is the current language. More languages coming soon.');
     });
   });
   document.querySelectorAll('[data-soon]').forEach(function (a) {

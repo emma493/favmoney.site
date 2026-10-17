@@ -150,11 +150,11 @@ if (window.FavLoader) FavLoader.hold();
   async function doClaim(){
     var r;
     try{r=await claimFaucet(uid);}
-    catch(e){show('Claim failed — check connection and try again.');return;}
+    catch(e){console.log('[favmoney] Claim failed — check connection and try again.');return;}
     if(!r.ok){
       if(r.reason==='capped')show('Daily max reached — back at UTC midnight.');
       else if(r.reason==='cooldown')show('Too soon — next drip in '+msToClock(r.waitMs)+'.');
-      else show('Claim failed — check connection and try again.');
+      else console.log('[favmoney] Claim failed — check connection and try again.');
       await refresh(false);
       return;
     }

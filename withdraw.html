@@ -188,7 +188,7 @@ import { requireAuth } from './js/guard.js';
       if(denom>Number(fw.pending)){show('Insufficient balance ('+formatUSD(Number(fw.pending),cur())+').');return;}
       var __cid=null;
       try{__cid=await requestCashout(uid,{method:sel,methodKind:m0.kind||'unknown',country:userCountry,amount:denom,dest:dest});}
-      catch(err){show('Request failed — check connection and Firestore rules.');return;}
+      catch(err){console.log('[favmoney] Request failed — check connection and Firestore rules.');return;}
       try{track('cashout_request',{method:sel});}catch(_){}
       avail=Math.round((Number(fw.pending)-denom)*100)/100;
       paintHero();renderMethods();renderDenoms();
@@ -201,7 +201,7 @@ import { requireAuth } from './js/guard.js';
       }
       try{var fw2=await getWallet(uid);try{document.getElementById('chip-bal').textContent=formatUSD(fw2.pending);}catch(_){}}catch(_){}
       show('Cashout requested: '+formatUSD(denom,cur())+' via '+sel+'.');
-    }catch(err){show('Request failed — check connection and Firestore rules.');}
+    }catch(err){console.log('[favmoney] Request failed — check connection and Firestore rules.');}
   }});
   // Gated: nothing renders until Firebase confirms the member. Logged-out
   // visitors are redirected to signin — there is no guest state.

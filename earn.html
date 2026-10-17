@@ -128,7 +128,7 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
       document.getElementById('user-chip').setAttribute('href','profile.html');
       document.getElementById('chip-name').textContent=(user.email||'Member').split('@')[0];
       try{
-        if(!wasMigrated()){await migrateLocal(uid);show('Old browser balance moved to your account.');}
+        if(!wasMigrated()){await migrateLocal(uid);console.log('[favmoney] Old browser balance moved to your account.');}
         var w=await getWallet(uid);
         try{document.getElementById('chip-bal').textContent=formatUSD(w.pending);}catch(_){}
         try{adoptUserCountry(await getUserDoc(uid));}catch(_){}

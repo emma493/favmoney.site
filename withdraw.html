@@ -17,9 +17,9 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
-  <style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(20,21,35,.35);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#01D676;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#01D676;border:0;cursor:pointer;align-items:center;justify-content:center;color:#0d1a13;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
+  <style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid #E2E8F0;border-top-color:#10B981;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#10B981;border:0;cursor:pointer;align-items:center;justify-content:center;color:#fff;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
   <script src="js/loader.js"></script>
 </head>
 <body>
@@ -55,7 +55,7 @@
 <div class="cashout-hero">
 <p class="avail">Available to withdraw</p>
 <div class="bigamt" id="avail" data-usd="0">$0.00</div>
-<p style="color:var(--muted);font-size:13px;margin:8px 0 0" id="pay-to">Paying to United States · balances in USD · <a href="profile.html" style="color:#9be9c4">Change country</a></p>
+<p style="color:var(--muted);font-size:13px;margin:8px 0 0" id="pay-to">Paying to United States · balances in USD · <a href="profile.html" style="color:var(--green-ink)">Change country</a></p>
 </div>
 <h2 style="font-size:20px;margin:30px 0 0">Most Popular</h2>
 <div class="method-grid" id="grid-pop"></div>
@@ -70,7 +70,7 @@
 <div class="auth-card" style="max-width:none">
 <div id="dest-fields"></div>
 <button class="btn btn-green btn-block" id="req" style="margin-top:14px">Request cashout</button>
-<p class="tiny">Reviewed promptly. Track status in <a href="withdrawals.html" style="color:#9be9c4">My Withdrawals</a>. Need more balance? <a href="earn.html" style="color:#9be9c4">Earn more</a>.</p>
+<p class="tiny">Reviewed promptly. Track status in <a href="withdrawals.html" style="color:var(--green-ink)">My Withdrawals</a>. Need more balance? <a href="earn.html" style="color:var(--green-ink)">Earn more</a>.</p>
 </div>
 </div>
 </div></section>
@@ -105,7 +105,7 @@ import { requireAuth } from './js/guard.js';
     var pct=Math.min(100,Math.round(avail/m.min*100));
     var art=m.img
       ? '<div class="mart"><img src="'+m.img+'" alt="'+m.id+'" loading="lazy" /></div>'
-      : '<div class="mart"><span style="display:flex;align-items:center;justify-content:center;width:48px;height:48px;margin:0 auto;border-radius:12px;background:linear-gradient(135deg,#01D676,#0a5c3f);font-weight:800;font-size:19px;color:#06240f">'+m.id.charAt(0)+'</span></div>';
+      : '<div class="mart"><span style="display:flex;align-items:center;justify-content:center;width:48px;height:48px;margin:0 auto;border-radius:12px;background:linear-gradient(135deg,#10B981,#047857);font-weight:800;font-size:19px;color:#06240f">'+m.id.charAt(0)+'</span></div>';
     return '<button class="method-card'+(sel===m.id?' sel':'')+'" data-m="'+m.id+'"><h3>'+m.id+'</h3>'+art+'<div class="minline"><small>Minimum '+formatUSD(m.min,cur())+'</small><div class="prog" style="margin:0"><i style="width:'+pct+'%"></i></div><small>'+formatUSD(avail,cur())+' / '+formatUSD(m.min,cur())+'</small></div></button>';
   }
   function setMethodsFor(cc){
@@ -114,7 +114,7 @@ import { requireAuth } from './js/guard.js';
     if(!methodById(sel))sel='PayPal';
     denom=0;
     var c=COUNTRY_MAP[userCountry]||COUNTRY_MAP.US;
-    document.getElementById('pay-to').innerHTML='Paying to '+c.name+' · balances in '+c.currency+' · <a href="profile.html" style="color:#9be9c4">Change country</a>';
+    document.getElementById('pay-to').innerHTML='Paying to '+c.name+' · balances in '+c.currency+' · <a href="profile.html" style="color:var(--green-ink)">Change country</a>';
     paintHero();renderMethods();renderDenoms();
   }
   function renderMethods(){

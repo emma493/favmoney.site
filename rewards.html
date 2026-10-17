@@ -25,13 +25,14 @@
   <meta name="twitter:description" content="Claim task-completion milestones on Favmoney: ads, quests, invites, streaks and Grow actions pay $0.10 to $2.00 each." />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
-  <style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(20,21,35,.35);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#01D676;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#01D676;border:0;cursor:pointer;align-items:center;justify-content:center;color:#0d1a13;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
+  <style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid #E2E8F0;border-top-color:#10B981;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#10B981;border:0;cursor:pointer;align-items:center;justify-content:center;color:#fff;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
   <script src="js/loader.js"></script>
   <style>
-    .ready-banner{display:flex;gap:14px;align-items:center;background:radial-gradient(400px 160px at 50% 0%,rgba(255,215,94,.14),transparent 70%),linear-gradient(180deg,#232544,#181a30);border:1px solid rgba(255,215,94,.4);border-radius:16px;padding:18px;margin-top:16px}
-    .ready-banner .big{font-size:28px;font-weight:800;color:#ffd75e;font-variant-numeric:tabular-nums}
+    .ready-banner{display:flex;gap:14px;align-items:center;background:radial-gradient(400px 160px at 50% 0%,rgba(16,185,129,.08),transparent 70%),#F8FAFC;border:1px solid rgba(245,158,11,.4);border-radius:16px;padding:18px;margin-top:16px;box-shadow:var(--shadow-lg)}
+    .ready-banner .big{font-size:28px;font-weight:800;color:#92400E;font-variant-numeric:tabular-nums}
+    .ready-banner .big{font-size:28px;font-weight:800;color:#92400E;font-variant-numeric:tabular-nums}
     .ready-banner p{margin:2px 0 0;font-size:13px;color:var(--muted)}
     .ready-banner .btn{margin-left:auto;flex:none}
     .ms-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
@@ -41,8 +42,8 @@
     .ms-head{display:flex;gap:12px;align-items:center}
     .ms-head b{font-size:15px;display:block}
     .ms-head span{font-size:12px;color:var(--muted)}
-    .ms-count{margin-left:auto;flex:none;font-size:12px;font-weight:800;color:#ffd75e;background:rgba(255,215,94,.1);border:1px solid rgba(255,215,94,.3);border-radius:999px;padding:3px 10px;white-space:nowrap}
-    .ms-count.done{color:#8ff0bd;background:rgba(1,214,118,.12);border-color:rgba(1,214,118,.35)}
+    .ms-count{margin-left:auto;flex:none;font-size:12px;font-weight:800;color:#92400E;background:rgba(255,215,94,.1);border:1px solid rgba(255,215,94,.3);border-radius:999px;padding:3px 10px;white-space:nowrap}
+    .ms-count.done{color:var(--green-ink);background:rgba(1,214,118,.12);border-color:rgba(1,214,118,.35)}
     .tier{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:13px}
     .tier .tinfo{flex:1;min-width:0}
     .tier .tinfo small{color:var(--faint)}
@@ -53,11 +54,11 @@
     .ms-badge{display:flex;gap:12px;align-items:center;min-width:0}
     .bd-medal{position:relative;flex:none;width:64px;height:64px}
     .bd-medal svg{width:64px;height:64px;display:block}
-    .bd-ring{fill:#141523;stroke:var(--bd,#8A8B91);stroke-width:4}
+    .bd-ring{fill:#FFFFFF;stroke:var(--bd,#8A8B91);stroke-width:4}
     .bd-face{fill:rgba(255,255,255,.03)}
     .bd-pip{fill:rgba(255,255,255,.14)}
     .bd-pip.lit{fill:var(--bd,#8A8B91)}
-    .rank-0{--bd:#8A8B91}.rank-1{--bd:#CD7F32}.rank-2{--bd:#C0C0C0}.rank-3{--bd:#FFD75E}.rank-4{--bd:#01D676}
+    .rank-0{--bd:#8A8B91}.rank-1{--bd:#CD7F32}.rank-2{--bd:#C0C0C0}.rank-3{--bd:#FFD75E}.rank-4{--bd:#10B981}
     .ms-head span.ms-rank{display:block;font-size:12px;font-weight:800;color:var(--bd)}
     @media(max-width:640px){.ready-banner{flex-wrap:wrap}.ready-banner .btn{flex:1 1 100%;min-height:48px}.tier .btn{min-height:44px}}
   </style>

@@ -18,7 +18,7 @@
       'how.title': "So what's the catch?<br />Here's the <span class=\"hl\">honest truth.</span>",
       'how.sub': 'No magic. Brands pay to reach real people — we pass most of it back to you.',
       'how.s1t': 'Brands are fighting for your attention',
-      'how.s1p': 'Game studios and apps spend billions on ads. Instead of paying ad networks, Favmoney partners pay <b style="color:#fff">you</b> directly to try their games and products for real.',
+      'how.s1p': 'Game studios and apps spend billions on ads. Instead of paying ad networks, Favmoney partners pay <b style="color:#0F172A">you</b> directly to try their games and products for real.',
       'how.feat': 'Featured quests', 'how.featp': 'Hand-picked games with milestone payouts, refreshed daily.', 'how.browse': 'Browse all quests ',
       'how.matched': 'Matched for you', 'how.matchedp': "Tell us what you like once — we surface games and quizzes you'll actually enjoy.",
       'how.s2t': "We match you with stuff you'll actually like",

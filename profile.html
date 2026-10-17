@@ -17,25 +17,25 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
   <style>
   .fav-country{position:relative}
-  .fav-country-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#0d0e1d;border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:12px;padding:12px 14px;font:inherit;cursor:pointer;min-height:48px}
+  .fav-country-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid #CBD5E1;color:#0F172A;border-radius:12px;padding:12px 14px;font:inherit;cursor:pointer;min-height:48px}
   .fav-country-btn img{width:22px;height:16px;object-fit:cover;border-radius:3px;vertical-align:-3px;margin-right:8px}
   .fav-country-ph{color:var(--faint,#8a8fa8)}
   .fav-country-chev{color:var(--faint,#8a8fa8)}
-  .fav-country-pop{position:absolute;z-index:50;top:calc(100% + 6px);left:0;right:0;background:#171830;border:1px solid rgba(255,255,255,.14);border-radius:12px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.5)}
-  .fav-country-search{width:100%;box-sizing:border-box;background:#0d0e1d;border:0;border-bottom:1px solid rgba(255,255,255,.1);color:#fff;padding:12px 14px;font:inherit;outline:none}
+  .fav-country-pop{position:absolute;z-index:50;top:calc(100% + 6px);left:0;right:0;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 4px 20px -2px rgba(0,0,0,.08)}
+  .fav-country-search{width:100%;box-sizing:border-box;background:#fff;border:0;border-bottom:1px solid var(--line);color:#0F172A;padding:12px 14px;font:inherit;outline:none}
   .fav-country-list{max-height:260px;overflow:auto;padding:6px}
-  .fav-country-row{width:100%;display:flex;align-items:center;gap:10px;background:transparent;border:0;color:#fff;padding:9px 10px;border-radius:9px;cursor:pointer;font:inherit;text-align:left}
-  .fav-country-row:hover,.fav-country-row.sel{background:rgba(1,214,118,.12)}
+  .fav-country-row{width:100%;display:flex;align-items:center;gap:10px;background:transparent;border:0;color:#0F172A;padding:9px 10px;border-radius:9px;cursor:pointer;font:inherit;text-align:left}
+  .fav-country-row:hover,.fav-country-row.sel{background:rgba(16,185,129,.1)}
   .fav-country-row img{width:24px;height:17px;object-fit:cover;border-radius:3px}
   .fav-country-name{flex:1}
   .fav-country-cur{color:var(--faint,#8a8fa8);font-size:12px}
   .fav-country-empty{padding:14px;color:var(--muted,#aab);font-size:13px}
   </style>
-  <style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(20,21,35,.35);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#01D676;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#01D676;border:0;cursor:pointer;align-items:center;justify-content:center;color:#0d1a13;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
+  <style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid #E2E8F0;border-top-color:#10B981;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#10B981;border:0;cursor:pointer;align-items:center;justify-content:center;color:#fff;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
   <script src="js/loader.js"></script>
 </head>
 <body>
@@ -68,7 +68,7 @@
 <a class="btn btn-ghost" href="settings.html" style="margin-left:auto;min-height:44px">Settings</a>
 </div>
 <div class="profile-head">
-<div class="who"><div id="avatar" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#01D676,#0a5c3f);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#06240f">?</div><div><b id="p-name">···</b><span id="p-joined">···</span></div></div>
+<div class="who"><div id="avatar" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#10B981,#047857);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#fff">?</div><div><b id="p-name">···</b><span id="p-joined">···</span></div></div>
 <div class="stat-strip" style="margin:18px 0 0">
 <div class="stat-cell"><b id="p-earn" data-usd="0">$0.00</b><span>Total earnings</span></div>
 <div class="stat-cell"><b id="p-done">0</b><span>Offers completed</span></div>
@@ -143,11 +143,11 @@ import { requireAuth } from './js/guard.js';
     var rows=proofs.filter(matchCat).filter(function(p){
       return !pendOnly||(p.status||'pending').toLowerCase()==='pending';
     });
-    if(cat==='referrals'){document.getElementById('rows').innerHTML='<tr><td colspan="5" style="color:var(--muted)">No referrals yet. <a href="invite.html" style="color:#8ff0bd">Invite friends</a>.</td></tr>';return;}
+    if(cat==='referrals'){document.getElementById('rows').innerHTML='<tr><td colspan="5" style="color:var(--muted)">No referrals yet. <a href="invite.html" style="color:var(--green-ink)">Invite friends</a>.</td></tr>';return;}
     document.getElementById('rows').innerHTML=rows.length?rows.map(function(p){
       var nm=(p.label||p.title||'Quest');
       return '<tr><td>'+nm+'</td><td>'+rowAmt(p)+'</td><td>'+pill(p.status)+'</td><td>'+(p.partner||'Favmoney')+'</td><td>'+relDate(p.at||p.createdAt)+'</td></tr>';
-    }).join(''):'<tr><td colspan="5" style="color:var(--muted)">No history yet. <a href="earn.html" style="color:#8ff0bd">Start your first offer</a>.</td></tr>';
+    }).join(''):'<tr><td colspan="5" style="color:var(--muted)">No history yet. <a href="earn.html" style="color:var(--green-ink)">Start your first offer</a>.</td></tr>';
   }
   function tsOf(p){
     if(!p||!p.at)return 0;

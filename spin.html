@@ -25,37 +25,37 @@
   <meta name="twitter:description" content="Spin the daily prize wheel: one free spin a day plus 10 bonus spins via short ads, cash prizes only." />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://firestore.googleapis.com" />
   <link rel="stylesheet" href="css/style.css" />
-  <style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(20,21,35,.35);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#01D676;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#01D676;border:0;cursor:pointer;align-items:center;justify-content:center;color:#0d1a13;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
+  <style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid #E2E8F0;border-top-color:#10B981;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#10B981;border:0;cursor:pointer;align-items:center;justify-content:center;color:#fff;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
   <script src="js/loader.js"></script>
   <style>
     .spin-stage{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0 4px}
-    .spin-wheel-wrap{position:relative;width:min(340px,86vw);aspect-ratio:1;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 42%,#2b2e52 0%,#1a1c33 62%,#141523 100%)}
-    #spin-canvas{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 18px 50px -12px rgba(0,0,0,.65),0 0 0 6px rgba(255,255,255,.04),0 0 44px rgba(1,214,118,.12)}
-    .spin-pointer{position:absolute;left:50%;top:-8px;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:24px solid #01D676;filter:drop-shadow(0 4px 8px rgba(0,0,0,.5));z-index:2}
-    .spin-status{font-size:14px;font-weight:700;color:#8ff0bd;min-height:22px;text-align:center;font-variant-numeric:tabular-nums}
-    .spin-status.cool{color:#ffd75e}
-    .spin-result{min-height:26px;font-size:16px;font-weight:800;text-align:center}
-    .spin-result.win{color:#8ff0bd}
+    .spin-wheel-wrap{position:relative;width:min(340px,86vw);aspect-ratio:1;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 42%,#FFFFFF 0%,#F1F5F9 62%,#E2E8F0 100%);border:1px solid var(--line)}
+    #spin-canvas{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 4px 20px -2px rgba(0,0,0,.08),0 0 0 6px #F1F5F9,0 0 44px rgba(16,185,129,.18)}
+    .spin-pointer{position:absolute;left:50%;top:-8px;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:24px solid #10B981;filter:drop-shadow(0 4px 8px rgba(0,0,0,.18));z-index:2}
+    .spin-status{font-size:14px;font-weight:700;color:var(--green-ink);min-height:22px;text-align:center;font-variant-numeric:tabular-nums}
+    .spin-status.cool{color:#92400E}
+    .spin-result{min-height:26px;font-size:16px;font-weight:800;text-align:center;color:#0F172A}
+    .spin-result.win{color:var(--green-ink)}
     .spin-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px;width:100%}
     .spin-btns .btn{min-height:48px;flex:1 1 auto;min-width:200px;max-width:320px}
     .spin-odds{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
-    .spin-odds td{padding:9px 12px;border-bottom:1px solid var(--line-soft);color:rgba(255,255,255,.85)}
+    .spin-odds td{padding:9px 12px;border-bottom:1px solid var(--line-soft);color:#334155}
     .spin-odds tr:last-child td{border-bottom:0}
-    .spin-odds .pr{font-weight:800;color:#fff;white-space:nowrap}
+    .spin-odds .pr{font-weight:800;color:#0F172A;white-space:nowrap}
     .spin-odds .wt{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
-    .spin-odds tr.jack td{background:rgba(255,215,94,.06)}
-    .spin-odds tr.jack .pr{color:#ffd75e}
-    .spin-veil{position:fixed;inset:0;z-index:90;background:rgba(10,11,22,.9);display:none;align-items:center;justify-content:center;padding:20px}
+    .spin-odds tr.jack td{background:rgba(245,158,11,.08)}
+    .spin-odds tr.jack .pr{color:#92400E}
+    .spin-veil{position:fixed;inset:0;z-index:90;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;padding:20px}
     .spin-veil.open{display:flex}
-    .spin-box{width:min(420px,100%);background:linear-gradient(180deg,#232544,#181a30);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:var(--shadow-xl);text-align:center;padding:32px 24px 24px}
+    .spin-box{width:min(420px,100%);background:#FFFFFF;border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:var(--shadow-xl);text-align:center;padding:32px 24px 24px;color:#0F172A}
     .spin-box .big{font-size:clamp(40px,9vw,56px);font-weight:800;line-height:1;margin:6px 0}
     .spin-box .big.cash{color:var(--green)}
     .spin-box .big.dia{color:#7dd3fc}
-    .spin-box .big.ticket{color:#ffd75e}
+    .spin-box .big.ticket{color:#92400E}
     .spin-box h3{margin:0;font-size:20px}
     .spin-box p{color:var(--muted);font-size:14px;margin:8px 0 0}
     @media(max-width:640px){.spin-btns .btn{flex:1 1 100%;max-width:none}}
@@ -162,7 +162,7 @@
 <div class="spin-veil" id="spin-ad-modal" role="dialog" aria-label="Sponsored view for a bonus spin">
 <div class="spin-box" style="text-align:left">
 <div style="text-align:center"><h3 id="spin-ad-title">Bonus spin break</h3><p id="spin-ad-text" style="color:var(--muted);font-size:14px;margin:8px 0 0">Sponsored views open in a new tab - your spin grants automatically.</p></div>
-<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--muted);margin:14px 0 8px"><span id="spin-ad-msg">Keep this view visible…</span><b id="spin-ad-count" style="color:#8ff0bd">20s</b></div>
+<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--muted);margin:14px 0 8px"><span id="spin-ad-msg">Keep this view visible…</span><b id="spin-ad-count" style="color:var(--green-ink)">20s</b></div>
 <div class="prog" style="margin:0 0 8px"><i id="spin-ad-bar" style="width:0%"></i></div>
 <a class="btn btn-green btn-block" id="spin-ad-openlink" href="#" target="_blank" rel="noopener sponsored nofollow" style="display:none">Open ad in new tab</a>
 <button class="btn btn-green btn-block" id="spin-ad-go" style="display:none">Continue</button>
@@ -200,20 +200,20 @@
       var a0=(i/n)*Math.PI*2, a1=((i+1)/n)*Math.PI*2;
       ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,R,a0,a1);ctx.closePath();
       ctx.fillStyle=SEGS[i].color;ctx.fill();
-      ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=3;ctx.stroke();
+      ctx.strokeStyle='#ffffff';ctx.lineWidth=3;ctx.stroke();
       ctx.save();ctx.rotate((a0+a1)/2);ctx.textAlign='right';ctx.fillStyle='#fff';
-      ctx.font='800 44px Poppins, sans-serif';ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=8;
+      ctx.font='800 44px Inter, sans-serif';ctx.shadowColor='rgba(0,0,0,.35)';ctx.shadowBlur=8;
       ctx.fillText(SEGS[i].short, R-26, 15);ctx.restore();
     }
     var g=ctx.createRadialGradient(0,0,10,0,0,120);
-    g.addColorStop(0,'#232544');g.addColorStop(1,'#101223');
+    g.addColorStop(0,'#FFFFFF');g.addColorStop(1,'#F1F5F9');
     ctx.beginPath();ctx.arc(0,0,104,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
-    ctx.lineWidth=6;ctx.strokeStyle='rgba(1,214,118,.6)';ctx.stroke();
-    ctx.fillStyle='#01D676';ctx.font='800 64px Poppins, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.lineWidth=6;ctx.strokeStyle='rgba(16,185,129,.55)';ctx.stroke();
+    ctx.fillStyle='#10B981';ctx.font='800 64px Inter, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText((window.__favSpinSym||'$'),0,4);
     ctx.restore();
     ctx.beginPath();ctx.arc(cx,cy,R+8,0,Math.PI*2);
-    ctx.lineWidth=12;ctx.strokeStyle='#8b8fa8';ctx.stroke();
+    ctx.lineWidth=12;ctx.strokeStyle='#CBD5E1';ctx.stroke();
   }
   function segIndexFor(id){for(var i=0;i<SEGS.length;i++)if(SEGS[i].id===id)return i;return 0;}
   function animateTo(prizeId, reduced, done){

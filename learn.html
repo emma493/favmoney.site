@@ -24,48 +24,48 @@
 <meta name="twitter:title" content="Quiz & Earn Cash — Trivia That Pays · Favmoney" />
 <meta name="twitter:description" content="Play Quiz & Earn on Favmoney: solve 30 math sprints a day and earn $0.10 per correct answer. One free session daily." />
 <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="css/style.css" />
-<style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(20,21,35,.35);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid rgba(255,255,255,.18);border-top-color:#01D676;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#01D676;border:0;cursor:pointer;align-items:center;justify-content:center;color:#0d1a13;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
+<style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid #E2E8F0;border-top-color:#10B981;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#10B981;border:0;cursor:pointer;align-items:center;justify-content:center;color:#fff;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
 <script src="js/loader.js"></script>
 <style>
 .quiz-ops{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
-#quiz-ops{position:relative;overflow:hidden;background:radial-gradient(500px 240px at 50% 0%,rgba(1,214,118,.2),transparent 70%),linear-gradient(180deg,#20223d,#141523)}
-.quiz-op{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:88px;border-radius:14px;background:linear-gradient(135deg,#31356e,#1c1e3a);border:1px solid var(--line);color:#fff;font-family:var(--font);cursor:pointer;box-shadow:var(--shadow-tile);transition:transform .12s ease,border-color .12s ease,box-shadow .12s ease}
-.quiz-op .op-sym{font-size:30px;font-weight:800;line-height:1.1}
-.quiz-op .op-name{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--grey-300)}
-.quiz-op:hover{border-color:var(--green);transform:translateY(-2px);box-shadow:0 0 0 3px rgba(1,214,118,.25),var(--shadow-tile)}
+#quiz-ops{position:relative;overflow:hidden;background:radial-gradient(500px 240px at 50% 0%,rgba(16,185,129,.08),transparent 70%),#F8FAFC}
+.quiz-op{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:88px;border-radius:14px;background:#FFFFFF;border:1px solid var(--line);color:#0F172A;font-family:var(--font);cursor:pointer;box-shadow:var(--shadow-tile);transition:transform .12s ease,border-color .12s ease,box-shadow .12s ease}
+.quiz-op .op-sym{font-size:30px;font-weight:800;line-height:1.1;color:var(--green-ink)}
+.quiz-op .op-name{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.quiz-op:hover{border-color:var(--green);transform:translateY(-2px);box-shadow:0 0 0 3px rgba(16,185,129,.2),var(--shadow-tile)}
 .quiz-op:active{transform:translateY(0) scale(.98)}
-.quiz-arena{text-align:center;position:relative;overflow:hidden;background:radial-gradient(500px 240px at 50% 0%,rgba(1,214,118,.2),transparent 70%),linear-gradient(180deg,#20223d,#141523)}
+.quiz-arena{text-align:center;position:relative;overflow:hidden;background:radial-gradient(500px 240px at 50% 0%,rgba(16,185,129,.08),transparent 70%),#F8FAFC}
 .quiz-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);font-weight:700;margin-bottom:6px}
 #quiz-progress{letter-spacing:.08em;font-variant-numeric:tabular-nums}
 .quiz-score-tick{color:#2a1a00;background:linear-gradient(135deg,#f6c453,#e08900);border-radius:999px;padding:4px 12px;font-variant-numeric:tabular-nums;white-space:nowrap}
-.quiz-q{font-size:clamp(44px,10vw,64px);font-weight:800;color:#fff;margin:10px 0 2px;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.quiz-q{font-size:clamp(44px,10vw,64px);font-weight:800;color:#0F172A;margin:10px 0 2px;font-variant-numeric:tabular-nums;letter-spacing:.01em}
 .quiz-timer{display:flex;align-items:center;justify-content:center;gap:10px;margin:4px 0 12px}
 .quiz-ring{transform:rotate(-90deg)}
-.quiz-ring .bg{stroke:rgba(255,255,255,.12)}
-.quiz-ring .fg{stroke:#01D676;stroke-linecap:round;transition:stroke .2s}
+.quiz-ring .bg{stroke:#E2E8F0}
+.quiz-ring .fg{stroke:#10B981;stroke-linecap:round;transition:stroke .2s}
 .quiz-ring.low .fg{stroke:#f43f5e}
-.quiz-count{font-size:15px;font-weight:800;color:#fff;min-width:44px;text-align:left;font-variant-numeric:tabular-nums}
+.quiz-count{font-size:15px;font-weight:800;color:#0F172A;min-width:44px;text-align:left;font-variant-numeric:tabular-nums}
 .quiz-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
-.quiz-opt{display:flex;align-items:center;gap:12px;min-height:64px;border-radius:14px;border:1px solid var(--line);background:linear-gradient(135deg,#31356e,#1c1e3a);color:#fff;font-family:var(--font);font-size:22px;font-weight:800;cursor:pointer;padding:10px 14px;font-variant-numeric:tabular-nums;box-shadow:var(--shadow-tile)}
+.quiz-opt{display:flex;align-items:center;gap:12px;min-height:64px;border-radius:14px;border:1px solid var(--line);background:#FFFFFF;color:#0F172A;font-family:var(--font);font-size:22px;font-weight:800;cursor:pointer;padding:10px 14px;font-variant-numeric:tabular-nums;box-shadow:var(--shadow-tile)}
 .quiz-opt:not(:disabled):hover{border-color:var(--green)}
-.quiz-badge{flex:none;width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.08);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--grey-300)}
+.quiz-badge{flex:none;width:30px;height:30px;border-radius:9px;background:#F1F5F9;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#475569}
 .quiz-opt .opt-val{flex:1;text-align:center}
-.quiz-opt.right{border-color:#01D676;background:rgba(1,214,118,.14);color:#8ff0bd}
-.quiz-opt.right .quiz-badge{background:var(--green);border-color:var(--green);color:#06240f}
-.quiz-opt.wrong{border-color:#f43f5e;background:rgba(244,63,94,.12);color:#fda4af}
+.quiz-opt.right{border-color:#10B981;background:rgba(16,185,129,.1);color:#047857}
+.quiz-opt.right .quiz-badge{background:var(--green);border-color:var(--green);color:#fff}
+.quiz-opt.wrong{border-color:#f43f5e;background:rgba(244,63,94,.08);color:#DC2626}
 .quiz-opt.wrong .quiz-badge{background:#f43f5e;border-color:#f43f5e;color:#fff}
 .quiz-opt:disabled{cursor:default;opacity:.85}
-.quiz-life{display:inline-block;margin-top:10px;font-size:13px;font-weight:700;color:#7dd3fc}
+.quiz-life{display:inline-block;margin-top:10px;font-size:13px;font-weight:700;color:var(--green-ink)}
 .quiz-life.used{color:var(--faint)}
-.quiz-veil{position:fixed;inset:0;z-index:90;background:rgba(10,11,22,.9);display:none;align-items:center;justify-content:center;padding:20px}
+.quiz-veil{position:fixed;inset:0;z-index:90;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;padding:20px}
 .quiz-veil.open{display:flex}
-.quiz-box{width:min(420px,100%);background:linear-gradient(180deg,#232544,#181a30);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:var(--shadow-xl);text-align:center;padding:32px 24px 24px}
-.quiz-box h3{margin:0;font-size:20px;color:#fff}
+.quiz-box{width:min(420px,100%);background:#FFFFFF;border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:var(--shadow-xl);text-align:center;padding:32px 24px 24px}
+.quiz-box h3{margin:0;font-size:20px;color:#0F172A}
 .quiz-box p{color:var(--muted);font-size:14px;margin:8px 0 0}
-.quiz-box .big{font-size:clamp(40px,9vw,56px);font-weight:800;line-height:1;margin:6px 0;color:var(--green)}
-.quiz-ad-veil{position:fixed;inset:0;z-index:95;background:rgba(10,11,22,.9);display:none;align-items:center;justify-content:center;padding:20px}
+.quiz-box .big{font-size:clamp(40px,9vw,56px);font-weight:800;line-height:1;margin:6px 0;color:var(--green-ink)}
+.quiz-ad-veil{position:fixed;inset:0;z-index:95;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;padding:20px}
 .quiz-ad-veil.open{display:flex}
 @media(max-width:640px){.quiz-ops{grid-template-columns:repeat(2,1fr)}}
 @media(prefers-reduced-motion:reduce){.quiz-op:hover{transform:none}}
@@ -104,7 +104,7 @@
 <div class="bonus-card" id="quiz-entry" style="display:none">
 <h2 style="margin:0 0 6px;font-size:20px">Start a session</h2>
 <p style="color:var(--muted);font-size:14px;margin:0 0 16px">One free 30-question session per day. Correct answers pay <span data-usd="0.10">$0.10</span> each to your main balance — up to <span data-usd="3">$3.00</span> a session. Wrong twice and the session ends.</p>
-<p id="quiz-status" aria-live="polite" style="font-size:14px;font-weight:700;color:#8ff0bd;margin:0 0 12px">Loading your sessions…</p>
+<p id="quiz-status" aria-live="polite" style="font-size:14px;font-weight:700;color:var(--green-ink);margin:0 0 12px">Loading your sessions…</p>
 <div style="display:flex;gap:8px;flex-wrap:wrap">
 <button class="btn btn-green" id="free-btn" style="min-height:48px;min-width:220px;flex:1" disabled>Start free quiz</button>
 <button class="btn btn-ghost" id="deposit-btn" style="min-height:48px;min-width:220px;flex:1" disabled>Watch ad · Play</button>

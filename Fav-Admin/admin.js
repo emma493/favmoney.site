@@ -266,6 +266,8 @@ if (window.FavLoader) FavLoader.hold();
       document.getElementById('ov-methods').innerHTML = html;
       var nb = document.getElementById('nav-n');
       if (nb) { if (q.length) { nb.textContent = q.length > 9 ? '9+' : q.length; nb.style.display = ''; } else nb.style.display = 'none'; }
+      loadOverviewHealth();
+      loadOverviewTrend();
     } catch (_) {
       document.getElementById('ov-stats').innerHTML = '<div class="ad-panel"><p class="psub">Load failed — paste the repo firestore.rules, then reload.</p></div>';
     }
@@ -287,6 +289,7 @@ if (window.FavLoader) FavLoader.hold();
       downloadCSV('favmoney-users.csv', ['uid', 'email', 'disabled', 'taskEarned'],
         browse.rows.map(function (u) { return [u.id, u.email || '', u.disabled === true ? 'yes' : 'no', u.taskEarned || 0]; }));
     });
+    initBulkAdjust();
   }
   async function loadBrowse() {
     var listEl = document.getElementById('u-list');
@@ -480,6 +483,8 @@ if (window.FavLoader) FavLoader.hold();
         }).join('') + '</tbody></table>'
       : '<p class="psub">No decided cashouts yet.</p>';
   }
+  initBulkPayout();
+  loadPayoutDuplicates();
   document.addEventListener('click', async function (e) {
     var b = e.target.closest('[data-decide]');
     if (!b) {
@@ -708,7 +713,7 @@ if (window.FavLoader) FavLoader.hold();
     downloadCSV('favmoney-payouts.csv', ['id', 'uid', 'method', 'dest', 'amount', 'status', 'when'],
       rows.map(function (c) { return [c.id, c.uid || '', c.method || '', c.dest || '', c.amount || 0, c.status || '', fullTs(tsMs(c.at))]; }));
   });
-  document.getElementById('l-go').addEventListener('click', function () { ledgerLimit = 200; loadLedger(); });
+  document.getElementById('l-go').addEventListener('click', function () { ledgerLimit = 200; loadLedger(); loadLedgerLabels(); loadLedgerOutliers(); });
   document.getElementById('l-more').addEventListener('click', function () {
     ledgerLimit = Math.min(1000, ledgerLimit + 300);
     loadLedger();
@@ -738,4 +743,298 @@ if (window.FavLoader) FavLoader.hold();
   });
 
   setTimeout(ready, 6000);
+
+  /* ========================================================================
+     OVERVIEW — platform health + 7-day trend
+     ======================================================================== */
+  async function loadOverviewHealth() {
+    var out = document.getElementById('ov-health');
+    try {
+      // DAU: distinct UIDs from proofs with 'at' today
+      var today = dayStr(Date.now());
+      var proofs = await colAll('proofs', 500);
+      var dau = new Set();
+      var pendingSum = 0;
+      proofs.forEach(function (p) {
+        if (dayStr(tsMs(p.at)) === today) { if (p.uid) dau.add(p.uid); }
+      });
+      // Pending liability: sum wallets.pending (cap 500 reads)
+      var wallets = await colAll('wallets', 500);
+      wallets.forEach(function (w) { pendingSum += Number(w.pending || 0); });
+      // Referral health
+      var refs = await colAll('referrals', 300);
+      var claimed = 0;
+      refs.forEach(function (r) { if (r.claimed === true) claimed++; });
+      var refRate = refs.length ? Math.round(claimed / refs.length * 100) : 0;
+      var health = [
+        ['DAU (proofs today)', String(dau.size), ''],
+        ['Pending liability', money(pendingSum), pendingSum > 500 ? 'warn' : ''],
+        ['Referrals claimed', refRate + '%', ''],
+        ['Wallets sampled', String(wallets.length), ''],
+      ];
+      out.innerHTML = health.map(function (s) {
+        return '<div class="ad-stat"><b class="' + s[2] + '">' + esc(s[1]) + '</b><span>' + esc(s[0]) + '</span></div>';
+      }).join('');
+    } catch (_) { out.innerHTML = '<p class="psub">Health load failed — check rules.</p>'; }
+  }
+
+  async function loadOverviewTrend() {
+    var out = document.getElementById('ov-trend');
+    try {
+      var cash = await colAll('cashouts', 300);
+      var today = Date.now();
+      var buckets = {};
+      for (var i = 6; i >= 0; i--) {
+        var d = new Date(today - i * 86400000);
+        buckets[dayStr(d.getTime())] = { n: 0, usd: 0 };
+      }
+      cash.forEach(function (c) {
+        if (c.status !== 'paid') return;
+        var ds = dayStr(tsMs(c.at));
+        if (buckets[ds]) { buckets[ds].n++; buckets[ds].usd += Number(c.amount || 0); }
+      });
+      var rows = Object.keys(buckets).map(function (k) { return buckets[k]; });
+      var totalN = rows.reduce(function (s, b) { return s + b.n; }, 0);
+      var totalUsd = rows.reduce(function (s, b) { return s + b.usd; }, 0);
+      out.innerHTML = '<table class="ad-tbl"><thead><tr><th>Day</th><th>Paid count</th><th>Paid total</th></tr></thead><tbody>' +
+        Object.keys(buckets).reverse().map(function (k) {
+          var b = buckets[k];
+          return '<tr><td>' + esc(k) + '</td><td>' + b.n + '</td><td>' + money(b.usd) + '</td></tr>';
+        }).join('') +
+        '</tbody></table><p class="psub">7-day total: ' + totalN + ' paid · ' + money(totalUsd) + '</p>';
+    } catch (_) { out.innerHTML = '<p class="psub">Trend load failed — check rules.</p>'; }
+  }
+
+  /* ========================================================================
+     USERS — bulk wallet adjust
+     ======================================================================== */
+  function initBulkAdjust() {
+    document.getElementById('bulk-go').addEventListener('click', doBulkAdjust);
+  }
+  async function doBulkAdjust() {
+    var ta = document.getElementById('bulk-uids');
+    var noteEl = document.getElementById('bulk-note');
+    var res = document.getElementById('bulk-result');
+    var text = ta.value.trim();
+    if (!text) { res.textContent = 'Paste UIDs first.'; return; }
+    var note = noteEl.value.trim();
+    if (!note) { res.textContent = 'Add a reason.'; return; }
+    var lines = text.split(/\n/).map(function (l) { return l.trim(); }).filter(function (l) { return l.length > 0; });
+    var ok = 0, fail = 0, totalAmt = 0;
+    res.textContent = 'Processing ' + lines.length + ' lines…';
+    for (var i = 0; i < lines.length; i++) {
+      var parts = lines[i].split(/\t/);
+      var uid = parts[0].trim();
+      var amt = parts[1] ? Math.round(Number(parts[1]) * 100) / 100 : 1;
+      if (!(amt >= -100 && amt <= 100) || amt === 0) { fail++; continue; }
+      if (!uid) { fail++; continue; }
+      try {
+        var patch = amt > 0
+          ? { pending: increment(amt), lifetime: increment(amt), updatedAt: serverTimestamp(), lastLabel: 'admin-bulk-credit' }
+          : { pending: increment(amt), updatedAt: serverTimestamp(), lastLabel: 'admin-bulk-debit' };
+        await updateDoc(doc(db, 'wallets', uid), patch);
+        await addDoc(collection(db, 'proofs'), {
+          uid: uid, amount: amt, label: amt > 0 ? 'admin-bulk-credit' : 'admin-bulk-debit',
+          status: 'done', note: note, by: me ? me.email : 'admin', at: serverTimestamp()
+        });
+        await audit(amt > 0 ? 'credit' : 'debit', uid, amt, note);
+        totalAmt += amt; ok++;
+      } catch (_) { fail++; }
+    }
+    res.textContent = 'Done: ' + ok + ' ok, ' + fail + ' failed, net ' + money(totalAmt) + '.';
+    setTimeout(function () { res.textContent = ''; }, 5000);
+  }
+
+  /* ========================================================================
+     PAYOUTS — duplicates + bulk decide
+     ======================================================================== */
+  async function loadPayoutDuplicates() {
+    var out = document.getElementById('p-dupes');
+    try {
+      var cash = await colAll('cashouts', 300);
+      var byDest = {};
+      cash.forEach(function (c) {
+        var d = String(c.dest || '');
+        if (!d) return;
+        if (!byDest[d]) byDest[d] = [];
+        byDest[d].push(c);
+      });
+      var dupes = Object.keys(byDest).filter(function (d) { return byDest[d].length > 1; });
+      if (!dupes.length) { out.innerHTML = '<p class="psub">No duplicate destinations.</p>'; return; }
+      out.innerHTML = '<table class="ad-tbl"><thead><tr><th>Destination</th><th>Users</th><th>UIDs</th><th></th></tr></thead><tbody>' +
+        dupes.map(function (d) {
+          var rows = byDest[d];
+          var uids = rows.map(function (r) { return String(r.uid || '').slice(0, 8); }).join(', ');
+          return '<tr><td class="mono">' + esc(d) + '</td><td>' + rows.length + '</td><td class="mono">' + esc(uids) + '</td>' +
+            '<td><button class="ad-btn ghost" data-inspect-dupe="' + esc(d) + '">Inspect</button></td></tr>';
+        }).join('') + '</tbody></table>';
+    } catch (_) { out.innerHTML = '<p class="psub">Duplicate scan failed — check rules.</p>'; }
+  }
+  function initBulkPayout() {
+    document.getElementById('bulk-pay').addEventListener('click', function () { doBulkPayoutDecide('paid'); });
+    document.getElementById('bulk-reject').addEventListener('click', function () { doBulkPayoutDecide('rejected'); });
+  }
+  async function doBulkPayoutDecide(to) {
+    var ta = document.getElementById('bulk-pay-ids');
+    var res = document.getElementById('bulk-pay-result');
+    var text = ta.value.trim();
+    if (!text) { res.textContent = 'Paste cashout IDs first.'; return; }
+    var ids = text.split(/\n/).map(function (l) { return l.trim(); }).filter(function (l) { return l.length > 0; });
+    var ok = 0, fail = 0;
+    res.textContent = 'Processing ' + ids.length + ' IDs…';
+    for (var i = 0; i < ids.length; i++) {
+      var id = ids[i];
+      if (!window.confirm((to === 'paid' ? 'Mark PAID ' : 'REJECT ') + id + '?')) continue;
+      try {
+        await updateDoc(doc(db, 'cashouts', id), { status: to });
+        await audit(to === 'paid' ? 'payout-paid' : 'payout-rejected', id, 0, 'bulk ' + to);
+        ok++;
+      } catch (_) { fail++; }
+    }
+    res.textContent = 'Done: ' + ok + ' ok, ' + fail + ' failed.';
+    await loadPayouts();
+    setTimeout(function () { res.textContent = ''; }, 5000);
+  }
+
+  /* ========================================================================
+     LEDGER — label frequency + outliers
+     ======================================================================== */
+  async function loadLedgerLabels() {
+    var out = document.getElementById('l-labels');
+    try {
+      var rows = await colAll('proofs', 200);
+      var freq = {};
+      rows.forEach(function (p) { var k = String(p.label || '?'); freq[k] = (freq[k] || 0) + 1; });
+      var keys = Object.keys(freq).sort(function (a, b) { return freq[b] - freq[a]; });
+      out.innerHTML = '<table class="ad-tbl"><thead><tr><th>Label</th><th>Count</th></tr></thead><tbody>' +
+        keys.map(function (k) { return '<tr><td>' + esc(k) + '</td><td>' + freq[k] + '</td></tr>'; }).join('') +
+        '</tbody></table>';
+    } catch (_) { out.innerHTML = '<p class="psub">Label scan failed — check rules.</p>'; }
+  }
+  async function loadLedgerOutliers() {
+    var out = document.getElementById('l-outliers');
+    try {
+      var rows = await colAll('proofs', 200);
+      var byLabel = {};
+      rows.forEach(function (p) {
+        var k = String(p.label || '?');
+        if (!byLabel[k]) byLabel[k] = [];
+        byLabel[k].push(Number(p.amount || 0));
+      });
+      var outliers = [];
+      Object.keys(byLabel).forEach(function (k) {
+        var amts = byLabel[k].filter(function (a) { return a > 0; }).sort(function (a, b) { return a - b; });
+        if (amts.length < 3) return;
+        var median = amts[Math.floor(amts.length / 2)];
+        var threshold = median * 5;
+        amts.forEach(function (a) {
+          if (a > threshold && a > 1) outliers.push({ label: k, amount: a, median: median });
+        });
+      });
+      outliers.sort(function (a, b) { return b.amount - a.amount; });
+      if (!outliers.length) { out.innerHTML = '<p class="psub">No outliers found.</p>'; return; }
+      out.innerHTML = '<table class="ad-tbl"><thead><tr><th>Label</th><th>Amount</th><th>Label median</th><th>Ratio</th></tr></thead><tbody>' +
+        outliers.slice(0, 20).map(function (o) {
+          return '<tr><td>' + esc(o.label) + '</td><td>' + money(o.amount) + '</td><td>' + money(o.median) + '</td><td>' + (o.amount / o.median).toFixed(1) + 'x</td></tr>';
+        }).join('') + '</tbody></table>';
+    } catch (_) { out.innerHTML = '<p class="psub">Outlier scan failed — check rules.</p>'; }
+  }
+
+  /* ========================================================================
+     REWARDS — unclaimed liability + track completion
+     ======================================================================== */
+  async function loadRewards() {
+    var out = document.getElementById('r-out');
+    var comp = document.getElementById('r-completion');
+    try {
+      out.innerHTML =
+        '<p class="psub">Reward liability calc requires per-user proof reads (billed reads are capped per view). Showing track structure below — compute full liability offline from exported user data.</p>' +
+        '<table class="ad-tbl"><thead><tr><th>Track</th><th>Tiers</th><th>Payouts</th></tr></thead><tbody>' +
+        REWARD_TRACKS.map(function (t) {
+          return '<tr><td>' + esc(t.name) + '</td><td>' + t.targets.length + '</td><td>' + REWARD_TIERS.map(function (x) { return money(x); }).join(' / ') + '</td></tr>';
+        }).join('') + '</tbody></table>';
+    } catch (_) { out.innerHTML = '<p class="psub">Rewards load failed — check rules.</p>'; }
+    comp.innerHTML = '<p class="psub">Track completion requires per-user proof reads — export user CSVs and compute offline for now.</p>';
+  }
+
+  /* ========================================================================
+     REFERRALS — health, commission debt, recent invitations
+     ======================================================================== */
+  async function loadReferrals() {
+    var out = document.getElementById('rf-out');
+    var comm = document.getElementById('rf-commissions');
+    var recent = document.getElementById('rf-recent');
+    try {
+      var refs = await colAll('referrals', 300);
+      var commissions = await colAll('commissions', 300);
+      var claimed = refs.filter(function (r) { return r.claimed === true; }).length;
+      var unclaimedCommission = commissions.filter(function (c) { return c.claimed === false; })
+        .reduce(function (s, c) { return s + Number(c.commission || 0); }, 0);
+      var refTotal = refs.reduce(function (s, r) { return s + Number(r.amount || 0); }, 0);
+      out.innerHTML =
+        '<table class="ad-tbl"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody>' +
+        '<tr><td>Total referrals</td><td>' + refs.length + '</td></tr>' +
+        '<tr><td>Claimed invitations</td><td>' + claimed + '</td></tr>' +
+        '<tr><td>Claim rate</td><td>' + (refs.length ? Math.round(claimed / refs.length * 100) : 0) + '%</td></tr>' +
+        '<tr><td>Referrer payouts (lifetime)</td><td>' + money(refTotal) + '</td></tr>' +
+        '<tr><td>Unclaimed commission debt</td><td>' + money(unclaimedCommission) + '</td></tr>' +
+        '</tbody></table>';
+      var unclaimed = commissions.filter(function (c) { return c.claimed === false; }).sort(function (a, b) { return tsMs(b.at) - tsMs(a.at); }).slice(0, 20);
+      comm.innerHTML = '<table class="ad-tbl"><thead><tr><th>Owner UID</th><th>From UID</th><th>Amount</th><th>Kind</th><th>When</th></tr></thead><tbody>' +
+        unclaimed.map(function (c) {
+          return '<tr><td class="mono">' + esc(String(c.ownerUid || '').slice(0, 8)) + '…</td>' +
+            '<td class="mono">' + esc(String(c.fromUid || '').slice(0, 8)) + '…</td>' +
+            '<td>' + money(c.commission) + '</td><td>' + esc(c.kind || '?') + '</td><td>' + rel(tsMs(c.at)) + '</td></tr>';
+        }).join('') || '<tr><td colspan="5">No unclaimed commissions.</td></tr>' + '</tbody></table>';
+      var rec = refs.sort(function (a, b) { return tsMs(b.at) - tsMs(a.at); }).slice(0, 20);
+      recent.innerHTML = '<table class="ad-tbl"><thead><tr><th>Owner UID</th><th>Invitee UID</th><th>Code</th><th>Amount</th><th>Claimed</th><th>When</th></tr></thead><tbody>' +
+        rec.map(function (r) {
+          return '<tr><td class="mono">' + esc(String(r.ownerUid || '').slice(0, 8)) + '…</td>' +
+            '<td class="mono">' + esc(String(r.newUid || '').slice(0, 8)) + '…</td>' +
+            '<td>' + esc(r.code || '?') + '</td><td>' + money(r.amount) + '</td>' +
+            '<td><span class="pill ' + (r.claimed ? 'paid' : 'pending') + '">' + (r.claimed ? 'yes' : 'no') + '</span></td>' +
+            '<td>' + rel(tsMs(r.at)) + '</td></tr>';
+        }).join('') || '<tr><td colspan="6">No referrals.</td></tr>' + '</tbody></table>';
+    } catch (_) {
+      out.innerHTML = '<p class="psub">Referral load failed — check rules.</p>';
+      comm.innerHTML = '';
+      recent.innerHTML = '';
+    }
+  }
+
+  /* ========================================================================
+     EMERGENCY — maintenance mode kill switch
+     ======================================================================== */
+  async function loadEmergency() {
+    var status = document.getElementById('kill-status');
+    try {
+      var snap = await getDoc(doc(db, 'system', 'maintenance'));
+      var enabled = snap.exists() && snap.data().enabled === true;
+      status.textContent = enabled ? 'MAINTENANCE MODE IS ON' : 'Maintenance mode is off';
+      status.style.color = enabled ? '#ff9a9a' : '#8ff0bd';
+    } catch (_) { status.textContent = 'Unable to read maintenance flag.'; }
+    document.getElementById('kill-on').addEventListener('click', function () { setMaintenance(true); });
+    document.getElementById('kill-off').addEventListener('click', function () { setMaintenance(false); });
+  }
+  async function setMaintenance(enabled) {
+    try {
+      await setDoc(doc(db, 'system', 'maintenance'), {
+        enabled: enabled, updatedAt: serverTimestamp(), by: me ? me.email : 'admin'
+      });
+      await audit(enabled ? 'maintenance-on' : 'maintenance-off', 'system', 0, enabled ? 'Emergency maintenance enabled' : 'Maintenance disabled');
+      show(enabled ? 'Maintenance mode enabled.' : 'Maintenance mode disabled.');
+      loadEmergency();
+    } catch (_) { show('Maintenance toggle failed — check rules.'); }
+  }
+
+  /* ========================================================================
+     Router updates + view wiring
+     ======================================================================== */
+  VIEW_LOADERS.rewards = loadRewards;
+  VIEW_LOADERS.referrals = loadReferrals;
+  VIEW_LOADERS.emergency = loadEmergency;
+
+  // Wire new buttons
+  document.getElementById('r-reload') && document.getElementById('r-reload').addEventListener('click', loadRewards);
+  document.getElementById('rf-reload') && document.getElementById('rf-reload').addEventListener('click', loadReferrals);
 })();

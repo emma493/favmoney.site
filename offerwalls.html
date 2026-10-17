@@ -140,7 +140,9 @@ if (window.FavLoader) FavLoader.hold();
     // The provider list above is the single home for provider cards;
     // the offers stream below stays pure OGAds and is never touched here.
     list.innerHTML = OFFER_PROVIDERS.map(function(p){
-      if(p && (p.id === 'gg' || p.id === 'mylead')) return providerCardHTML(p);
+      // GG and MyLead now live only on earn.html cards (#3, #4 → provider-3/4);
+      // keep this page pure OGAds so there is no duplicate provider card.
+      if(p && (p.id === 'gg' || p.id === 'mylead')) return '';
       var ready = !!p.base && !!uid;
       var img = p.img ? '<div class="oc-asset"><img src="' + esc(p.img) + '" alt="" loading="lazy" decoding="async"></div>' : '';
       var btn;

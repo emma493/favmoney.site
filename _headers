@@ -1,11 +1,11 @@
 /css/*
   Cache-Control: public, max-age=3600
 /js/*
-  Cache-Control: public, max-age=300
+  Cache-Control: public, max-age=86400
 /assets/*
   Cache-Control: public, max-age=86400
 /images/*
   Cache-Control: public, max-age=86400
 /*
-  Link: <https://fonts.googleapis.com>; rel=preconnect, <https://fonts.gstatic.com>; rel=preconnect; crossorigin
+  Link: <https://fonts.googleapis.com>; rel=preconnect, <https://fonts.gstatic.com>; rel=preconnect; crossorigin, <https://flagcdn.com>; rel=preconnect, <https://api.frankfurter.app>; rel=preconnect
   Speculation-Rules: "/speculation.json"

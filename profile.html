@@ -18,7 +18,7 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
   <link rel="stylesheet" href="css/style.css" />
   <style>
   .fav-country{position:relative}
@@ -104,7 +104,7 @@
 </div>
 <div class="auth-card" style="max-width:none;margin-top:14px" id="country-card">
 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-<img id="p-flag" src="https://flagcdn.com/w40/us.png" alt="" width="26" height="19" style="border-radius:4px;object-fit:cover" />
+<img id="p-flag" src="https://flagcdn.com/w40/us.png" alt="" width="26" height="19" loading="lazy" decoding="async" style="border-radius:4px;object-fit:cover" />
 <div style="flex:1;min-width:140px"><b id="p-country">United States</b><div style="font-size:12px;color:var(--faint)" id="p-currency">Balances in USD</div></div>
 </div>
 <div style="margin-top:12px"><label for="country-picker" style="font-size:13px">Change country</label><div id="country-picker"></div></div>
@@ -256,24 +256,29 @@ import { requireAuth } from './js/guard.js';
         joinedLabel=ago(Date.now()-meta);
       }catch(e){joinedLabel='Member';}
       try{
-        var udoc=null;
-        try{udoc=await getUserDoc(user.uid);}catch(_){udoc=null;}
+        // Parallelize the two independent reads so first paint isn't gated
+        // on a serial Firestore waterfall.
+        var udoc=null, w=null;
+        var _r = await Promise.all([
+          getUserDoc(user.uid).then(function(d){udoc=d;}).catch(function(){udoc=null;}),
+          getWallet(user.uid).then(function(d){w=d;}).catch(function(){w=null;})
+        ]);
         var cc=(udoc&&udoc.country&&COUNTRY_MAP[udoc.country])?udoc.country:(currentCountry().country||'US');
         pickedCountry=cc;
         applyCountry(cc);
-        var w=await getWallet(user.uid);
         try{window.__favLastWallet=w;}catch(_){}
-        try{document.getElementById('chip-bal').textContent=formatUSD(w.pending);}catch(_){}
-        earn=Number(w.lifetime);
+        try{document.getElementById('chip-bal').textContent=formatUSD(w&&w.pending);}catch(_){}
+        earn=Number(w&&w.lifetime||0);
         proofs=await fetchUserDocs(user.uid,'proofs',50);
+        if(window.FavLoader)FavLoader.pageReady();
+        paintStats();render();
+        // Deferred: unclaimed-rewards badge does not block first paint.
         try{
           var __n=await getUnclaimedRewards(user.uid);
           var __nd=document.getElementById('navdot-rewards');
           if(__nd){if(__n>0){__nd.textContent=__n>9?'9+':__n;__nd.style.display='flex';}else{__nd.style.display='none';}}
         }catch(_){}
-      }catch(e){earn=0;proofs=[];}
-      if(window.FavLoader)FavLoader.pageReady();
-      paintStats();render();
+      }catch(e){earn=0;proofs=[]; if(window.FavLoader)FavLoader.pageReady(); paintStats();render();}
   });
   var root=document.documentElement;function onS(){if(scrollY>0)root.setAttribute('data-top-nav-scrolled','true');else root.removeAttribute('data-top-nav-scrolled');}addEventListener('scroll',onS,{passive:true});onS();
 })();

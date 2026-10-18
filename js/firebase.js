@@ -10,7 +10,8 @@ import {
 } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
 import {
   getFirestore, doc, getDoc, setDoc, addDoc, collection,
-  serverTimestamp, updateDoc, increment, query, where, getDocs, limit, arrayUnion
+  serverTimestamp, updateDoc, increment, query, where, getDocs, limit, arrayUnion,
+  runTransaction
 } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
 
 export const firebaseConfig = {
@@ -115,15 +116,28 @@ export async function submitProof(uid, data) {
 }
 
 export async function requestCashout(uid, data) {
-  const ref = await addDoc(collection(db, 'cashouts'), {
-    uid, ...data, status: 'review', at: serverTimestamp()
-  });
+  const amount = Number(data.amount || 0);
   const wref = doc(db, 'wallets', uid);
-  await updateDoc(wref, {
-    pending: increment(-Number(data.amount || 0)),
-    updatedAt: serverTimestamp()
-  });
-  try { return ref.id; } catch (_) { return null; }
+  try {
+    const ref = await runTransaction(db, async (transaction) => {
+      const walletSnap = await transaction.get(wref);
+      const currentPending = walletSnap.exists() ? Number(walletSnap.data().pending || 0) : 0;
+      if (currentPending < amount) throw new Error('insufficient balance');
+      const cashoutRef = doc(collection(db, 'cashouts'));
+      transaction.set(cashoutRef, {
+        uid, ...data, status: 'review', at: serverTimestamp()
+      });
+      transaction.update(wref, {
+        pending: currentPending - amount,
+        updatedAt: serverTimestamp()
+      });
+      return cashoutRef;
+    });
+    return ref.id;
+  } catch (e) {
+    console.log('[favmoney] requestCashout failed:', e && e.message ? e.message : e);
+    return null;
+  }
 }
 
 // ---- Favmoney profile fields (replaces localStorage: streak, started, claimed) ----
@@ -1258,18 +1272,18 @@ export async function stakeInvest(uid, rawAmount) {
   return { ok: true };
 }
 
-// Return the user's own principal to available. The $1 seed never moves.
+// Return everything above the locked $1 seed to available.
 export async function unstakeAll(uid) {
   await settleInvest(uid);
   const s = await readInvestState(uid);
-  const movable = Math.floor(Math.min(s.investedUser, s.invested - INVEST_SEED) * 100) / 100;
+  const movable = Math.floor(Math.max(0, s.invested - INVEST_SEED) * 100) / 100;
   if (!(movable > 0)) return { ok: false, reason: 'seed-only' };
   try {
     await updateDoc(doc(db, 'wallets', uid), {
-      pending: increment(movable), invested: increment(-movable),
+      pending: increment(movable), invested: INVEST_SEED,
       investedAt: Date.now(), updatedAt: serverTimestamp(), lastLabel: 'invest-unstake'
     });
-    await setDoc(doc(db, 'users', uid), { investedUser: Math.max(0, Math.round((s.investedUser - movable) * 100) / 100) }, { merge: true });
+    await setDoc(doc(db, 'users', uid), { investedUser: 0 }, { merge: true });
     await addDoc(collection(db, 'proofs'), { uid, amount: movable, label: 'invest-unstake', status: 'done', at: serverTimestamp() });
   } catch (_) { return { ok: false, reason: 'write' }; }
   return { ok: true, amount: movable };

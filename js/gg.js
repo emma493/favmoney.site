@@ -17,7 +17,7 @@ export const OFFER_PROVIDERS = [
     id: 'gg',
     name: 'Golden Goose',
     tag: 'gg.agency · Mobile offers',
-    desc: 'Complete mobile offers from gg.agency. You keep 70% of each approved payout.',
+    desc: 'Complete mobile offers from gg.agency to earn rewards.',
     cta: 'Open offers',
     img: 'images/goldengoose.png',
     base: GG_PROMO_BASE
@@ -26,7 +26,7 @@ export const OFFER_PROVIDERS = [
     id: 'mylead',
     name: 'MyLead',
     tag: 'mylead.global · Offerwall',
-    desc: 'Complete offerwall deals from mylead.global. You keep 70% of each approved payout.',
+    desc: 'Complete offerwall deals from mylead.global to earn rewards.',
     cta: 'Open wall',
     img: 'images/mylead.png',
     base: MYLEAD_WALL_URL,

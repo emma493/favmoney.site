@@ -38,6 +38,8 @@
     .share-row a{min-height:44px;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;color:#0F172A;border-radius:999px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);text-decoration:none;box-shadow:var(--shadow-lg)}
     .share-row a:hover{border-color:rgba(16,185,129,.5)}
     .share-row svg{width:16px;height:16px}
+    .copy-code-btn{background:transparent;border:1px solid var(--line);border-radius:8px;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;vertical-align:middle;margin-left:8px;font-size:12px}
+    .copy-code-btn:hover{background:#F8FAFC;border-color:var(--green)}
     .faq-item .a div p{margin:0 0 8px}
     .reward-ledger{background:var(--card-2);border:1px solid var(--line-soft);border-radius:16px;margin-top:16px;overflow:hidden}
     .rl-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line-soft);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#64748B}
@@ -106,6 +108,9 @@
 <span data-ad-slot data-ad-type="atoptions" data-ad-key="1acb941701ae67be8dbcfb20b016861c" data-ad-w="160" data-ad-h="600" data-ad-host="https://www.highrevenueformat.com"><script>atOptions={'key':'1acb941701ae67be8dbcfb20b016861c','format':'iframe','height':600,'width':160,'params':{}};</script><script async src="https://www.highrevenueformat.com/1acb941701ae67be8dbcfb20b016861c/invoke.js"></script></span>
 <span data-ad-slot data-ad-type="atoptions" data-ad-key="1cd9594d3cc8a9ce1ce3c58210f9d6df" data-ad-w="320" data-ad-h="50" data-ad-host="https://www.highrevenueformat.com"><script>atOptions={'key':'1cd9594d3cc8a9ce1ce3c58210f9d6df','format':'iframe','height':50,'width':320,'params':{}};</script><script async src="https://www.highrevenueformat.com/1cd9594d3cc8a9ce1ce3c58210f9d6df/invoke.js"></script></span>
 <span data-ad-slot data-ad-type="atoptions" data-ad-key="e7f2971f3e98ae987349d7316bc32c62" data-ad-w="728" data-ad-h="90" data-ad-host="https://www.highrevenueformat.com"><script>atOptions={'key':'e7f2971f3e98ae987349d7316bc32c62','format':'iframe','height':90,'width':728,'params':{}};</script><script async src="https://www.highrevenueformat.com/e7f2971f3e98ae987349d7316bc32c62/invoke.js"></script></span>
+<span data-ad-slot data-ad-type="script" data-ad-src="https://offerwall.me/api/public/banner-code.js" data-placement="3NGWuhIgpEW2e3Y7rHtZ1ikVHAMnGA" data-size="728x90" data-frame-origin="https://offerwall.me"></span>
+<span data-ad-slot data-ad-type="script" data-ad-src="https://offerwall.me/api/public/banner-code.js" data-placement="3NGWuhIgpEW2e3Y7rHtZ1ikVHAMnGA" data-size="468x60" data-frame-origin="https://offerwall.me"></span>
+<span data-ad-slot data-ad-type="script" data-ad-src="https://offerwall.me/api/public/banner-code.js" data-placement="3NGWuhIgpEW2e3Y7rHtZ1ikVHAMnGA" data-size="300x250" data-frame-origin="https://offerwall.me"></span>
 </div>
 <script defer src="js/ads.js"></script>
 <div id="page-loader" role="status" aria-label="Loading Favmoney"><div class="spinner" id="loader-spin" aria-hidden="true"></div><button id="loader-retry" type="button" aria-label="Retry loading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button></div><script>window.__favLoaderT0=window.__favLoaderT0||Date.now();(function(){setTimeout(function(){var o=document.getElementById("page-loader");if(o)o.classList.add("slow");},8000);var r=document.getElementById("loader-retry");if(r)r.addEventListener("click",function(){location.reload();});})();</script>
@@ -136,7 +141,7 @@
 <button class="btn btn-ghost" id="share-btn" style="min-height:48px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>Share</button>
 </div>
 <p style="font-size:12px;color:var(--faint);margin:10px 0 0">Your code</p>
-<p class="inv-code" id="my-code">——————</p>
+<p class="inv-code" id="my-code">——————</p><button id="copy-code-btn" class="copy-code-btn" title="Copy invite code" aria-label="Copy invite code"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
 <div class="share-row" id="share-row">
 <a id="sh-wa" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="#25D366" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>WhatsApp</a>
 <a id="sh-tg" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="#229ED9" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>Telegram</a>
@@ -331,6 +336,17 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
       catch(_){show('Copy this link: '+link);}
     }
     try{track('invite_copy');}catch(_){}
+  });
+  document.getElementById('copy-code-btn').addEventListener('click',async function(){
+    var code=document.getElementById('my-code').textContent;
+    if(!code||code==='——————')return;
+    try{await navigator.clipboard.writeText(code);show('Code copied.');}
+    catch(e){
+      var ta=document.createElement('textarea');ta.value=code;document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');show('Code copied.');}catch(_){show('Copy this code: '+code);}
+      document.body.removeChild(ta);
+    }
+    try{track('invite_code_copy');}catch(_){}
   });
   document.getElementById('share-btn').addEventListener('click',async function(){
     var link=document.getElementById('inv-link').value;

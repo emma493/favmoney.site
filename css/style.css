@@ -603,10 +603,10 @@ select.sel{height:44px;border-radius:10px;border:1px solid #CBD5E1;background:#f
 .task-grid.oc-list,.task-grid:has(.oc-card){grid-template-columns:1fr;gap:14px;max-width:720px}
 @media(max-width:1000px){.task-grid.oc-list,.task-grid:has(.oc-card){grid-template-columns:1fr}}
 @media(max-width:640px){.task-grid.oc-list,.task-grid:has(.oc-card){grid-template-columns:1fr}}
-.oc-card{position:relative;display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:0;width:100%;max-width:900px;height:176px;padding:8px 20px;border-radius:16px;border:1px solid var(--line);background:#F8FAFC;box-shadow:0 4px 20px -2px rgba(0,0,0,.05);overflow:hidden;text-decoration:none;color:#0F172A;transition:border-color .15s ease-out}
+.oc-card{position:relative;display:flex;flex-direction:row;align-items:flex-start;justify-content:flex-start;gap:1rem;width:100%;max-width:900px;min-height:fit-content;height:auto;padding:1.5rem 1.5rem 1.5rem 0;border-radius:16px;border:1px solid var(--line);background:#F8FAFC;box-shadow:0 4px 20px -2px rgba(0,0,0,.05);overflow:visible;text-decoration:none;color:#0F172A;transition:border-color .15s ease-out}
 .oc-card:hover{border-color:#CBD5E1}
-.oc-asset{position:relative;width:160px;height:160px;margin-right:16px;flex-shrink:0;border:0;border-radius:12px;background:transparent;overflow:hidden;display:flex;align-items:center;justify-content:center}
-.oc-asset img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;transform:scale(1.0);filter:drop-shadow(0 6px 12px rgba(0,0,0,.12))}
+.oc-asset{position:relative;width:160px;height:160px;margin-right:1rem;flex-shrink:0;border:0;border-radius:12px;background:transparent;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.oc-asset img{width:100%;height:100%;object-fit:contain;object-position:center;display:block;transform:none;filter:none}
 .oc-card--wide .oc-asset{width:160px}
 .oc-card--wide .oc-asset img{transform:scale(1.0)}
 .oc-body{display:flex;flex-direction:column;flex:1;min-width:0;margin-top:0;text-align:left}
@@ -625,8 +625,8 @@ select.sel{height:44px;border-radius:10px;border:1px solid #CBD5E1;background:#f
 .oc-cta{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:var(--green);text-decoration:none;transition:opacity .15s ease-out;user-select:none}
 .oc-cta:hover{opacity:.8}
 .oc-cta svg{width:14px;height:14px}
-@media(min-width:640px){.oc-card{gap:0;padding:8px 20px;border-radius:16px}.oc-asset{width:160px;height:160px;margin-right:16px;border-radius:12px}.oc-card--wide .oc-asset{width:160px}.oc-body{text-align:left}.oc-head{gap:8px;margin-bottom:8px}.oc-title{gap:8px}.oc-title h2{font-size:15px;white-space:normal}.oc-pay{font-size:8px;margin-bottom:12px}.oc-pay b{font-size:10px}.oc-desc{font-size:11px;line-height:1.3}.oc-base{margin-top:12px}.oc-time small{font-size:9px}.oc-time b{font-size:12px}}
-@media(max-width:639px){.oc-card{padding:6px 16px;height:136px}.oc-asset{width:120px;height:120px;margin-right:12px;border-radius:12px}.oc-asset img{object-fit:cover;object-position:center}.oc-title h2{font-size:13px}.oc-pay{font-size:8px}.oc-pay b{font-size:9px}.oc-desc{font-size:10px;line-height:1.3}}}
+@media(min-width:640px){.oc-card{gap:1rem;padding:1.5rem 1.5rem 1.5rem 0;border-radius:16px}.oc-asset{width:160px;height:160px;margin-right:1rem;border-radius:12px}.oc-card--wide .oc-asset{width:200px;height:160px;margin-left:1px}.oc-body{text-align:left}.oc-head{gap:8px;margin-bottom:8px}.oc-title{gap:8px}.oc-title h2{font-size:15px;white-space:normal}.oc-pay{font-size:8px;margin-bottom:12px}.oc-pay b{font-size:10px}.oc-desc{font-size:11px;line-height:1.3}.oc-base{margin-top:12px}.oc-time small{font-size:9px}.oc-time b{font-size:12px}}
+@media(max-width:639px){.oc-card{padding:1.25rem 1.25rem 1.25rem 0;height:auto;min-height:fit-content}.oc-asset{width:120px;height:120px;margin-right:12px;border-radius:12px}.oc-card--wide .oc-asset{width:160px;height:132px;margin-left:1px}.oc-asset img{object-fit:contain;object-position:center}.oc-title h2{font-size:13px}.oc-pay{font-size:8px}.oc-pay b{font-size:9px}.oc-desc{font-size:10px;line-height:1.3}}}
 
 /* ===== Rewards milestone badges: header bell count + mobile nav dot ===== */
 .icon-btn{position:relative}

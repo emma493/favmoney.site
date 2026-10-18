@@ -1037,4 +1037,28 @@ if (window.FavLoader) FavLoader.hold();
   // Wire new buttons
   document.getElementById('r-reload') && document.getElementById('r-reload').addEventListener('click', loadRewards);
   document.getElementById('rf-reload') && document.getElementById('rf-reload').addEventListener('click', loadReferrals);
+
+  // Auto-refresh: pending payouts queue + overview stats every 30s when signed in.
+  setInterval(async function () {
+    if (!me) return;
+    try {
+      var curView = document.querySelector('#ad-nav button.on, #ad-tabs button.on');
+      var view = curView ? curView.getAttribute('data-view') : 'overview';
+      if (view === 'payouts' || view === 'overview') {
+        await loadPayouts();
+      }
+      if (view === 'overview') {
+        loaded.overview = false;
+        loadOverview();
+      }
+      var nb = document.getElementById('nav-n');
+      try {
+        var qs = await getDocs(query(collection(db, 'cashouts'), where('status', '==', 'review'), limit(100)));
+        if (nb) {
+          if (qs.size) { nb.textContent = qs.size > 9 ? '9+' : qs.size; nb.style.display = ''; }
+          else nb.style.display = 'none';
+        }
+      } catch (_) {}
+    } catch (_) {}
+  }, 30000);
 })();

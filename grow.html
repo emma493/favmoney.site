@@ -606,6 +606,11 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
       if(raf)cancelAnimationFrame(raf);
       lastPaint=0;startFastLoop();
   });
+  // Periodic state refresh every 30s (balance, yield, miner state).
+  setInterval(async function(){
+    if(!uid)return;
+    try{await refresh();}catch(_){}
+  },30000);
   document.addEventListener('visibilitychange',function(){
     try{
       if(document.hidden){startSlowLoop();}else{startFastLoop();}

@@ -395,6 +395,14 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
       if(window.FavLoader)FavLoader.pageReady();
       if(poll)clearInterval(poll);
       poll=setInterval(function(){claimAll(true);},20000);
+      // Re-fetch invite code every 30s in case it changes server-side.
+      setInterval(async function(){
+        if(!uid)return;
+        try{
+          var nc=await getOrCreateMyCode(uid);
+          if(nc&&nc!==myCode){myCode=nc;paintShare();}
+        }catch(_){}
+      },30000);
   });
   var root=document.documentElement;function onS(){if(scrollY>0)root.setAttribute('data-top-nav-scrolled','true');else root.removeAttribute('data-top-nav-scrolled');}addEventListener('scroll',onS,{passive:true});onS();
   try{refreshRates().then(function(){paintMoney();if(uid){paintShare();refreshStats();}});}catch(_){}

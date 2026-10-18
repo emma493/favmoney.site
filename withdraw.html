@@ -255,6 +255,16 @@ import { requireAuth } from './js/guard.js';
       paintHero();renderMethods();
       if(window.FavLoader)FavLoader.pageReady();
   });
+  // Live available balance: re-read wallet every 10s.
+  setInterval(async function(){
+    if(!uid)return;
+    try{
+      var w=await getWallet(uid);
+      avail=Number(w.pending);
+      paintHero();renderMethods();renderDenoms();
+      try{document.getElementById('chip-bal').textContent=formatUSD(w.pending);}catch(_){}
+    }catch(_){}
+  },10000);
   setMethodsFor(currentCountry().country||'US');
   try{refreshRates().then(function(){paintHero();renderMethods();renderDenoms();});}catch(_){}
   document.addEventListener('fav-rates',function(){paintHero();renderMethods();});

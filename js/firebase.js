@@ -11,8 +11,10 @@ import {
 import {
   getFirestore, doc, getDoc, setDoc, addDoc, collection,
   serverTimestamp, updateDoc, increment, query, where, getDocs, limit, arrayUnion,
-  runTransaction
+  runTransaction, onSnapshot
 } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
+
+import { coinPour } from './js/sfx.js';
 
 export const firebaseConfig = {
   // Public web key (ships in client JS by design; GitHub secret-scan alert
@@ -92,6 +94,26 @@ export async function getWallet(uid) {
     invested: Number(d.invested || 0), investedAt: Number(d.investedAt || 0), boostUntil: Number(d.boostUntil || 0),
     mineUntil: Number(d.mineUntil || 0)
   };
+}
+
+/** Live wallet subscription. Calls onChange({pending, lifetime, ...}) on every Firestore change.
+ *  Returns an unsubscribe function. Caller should unsubscribe on page unload/component cleanup. */
+export function subscribeWallet(uid, onChange) {
+  const wref = doc(db, 'wallets', uid);
+  return onSnapshot(wref, (snap) => {
+    if (!snap.exists()) {
+      try { onChange({ pending: 0, lifetime: 0, invested: 0, investedAt: 0, boostUntil: 0, mineUntil: 0 }); } catch (_) {}
+      return;
+    }
+    const d = snap.data();
+    try { onChange({
+      pending: Number(d.pending || 0), lifetime: Number(d.lifetime || 0),
+      invested: Number(d.invested || 0), investedAt: Number(d.investedAt || 0), boostUntil: Number(d.boostUntil || 0),
+      mineUntil: Number(d.mineUntil || 0)
+    }); } catch (_) {}
+  }, (err) => {
+    // Fail silently — live balance is a nicety, not critical path.
+  });
 }
 
 export async function creditWallet(uid, amount, label) {
@@ -1332,6 +1354,8 @@ export async function creditReward(uid, amount, label, extra) {
     status: 'pending', at: serverTimestamp(), ...(extra || {})
   });
   try { recordCommission(uid, amount, label); } catch (_) {}
+  // Sound on every credit (muted-safe: coinPour() is a no-op when muted).
+  try { if (Number(amount) > 0) coinPour(); } catch (_) {}
   // Grow bookkeeping: task earnings raise the stakeable ceiling and mark
   // today active (stats only — mining never stops). Referral/invest labels are excluded.
   try {

@@ -220,7 +220,9 @@
   function animateTo(prizeId, reduced, done){
     var n=SEGS.length, idx=segIndexFor(prizeId);
     var segArc=Math.PI*2/n;
-    var jitter=(0.15+Math.random()*0.7)*segArc;
+    // Keep jitter under half a segment so the pointer can never overshoot the
+    // won slice into a neighbour (the wheel must stop on the prize it awards).
+    var jitter=(Math.random()*0.4)*segArc;
     var segCenter=idx*segArc+segArc/2;
     var targetAngle=(-Math.PI/2)-segCenter+jitter;
     var cur=((rot%(Math.PI*2))+Math.PI*2)%(Math.PI*2);

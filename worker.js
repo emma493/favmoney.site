@@ -83,6 +83,118 @@ function timingSafeEqual(a, b) {
   return d === 0;
 }
 
+// ---------- MD5 (pure JS; crypto.subtle has no MD5) ----------
+function md5(str) {
+  const s = String(str || '');
+  let a = 1732584193, b = -271733879, c = -1732584194, d = 271733878;
+  const x = [];
+  for (let i = 0; i < s.length; i++) x[i >> 2] |= s.charCodeAt(i) << ((i % 4) * 8);
+  x[s.length >> 2] |= 0x80 << ((s.length % 4) * 8);
+  x[(((s.length + 8) >>> 6) << 4) + 14] = s.length * 8;
+  const rot = (n, c) => (n << c) | (n >>> (32 - c));
+  const fn = (k) => {
+    let xx = x[k];
+    return xx < 0 ? xx + 4294967296 : xx;
+  };
+  for (let i = 0; i < x.length; i += 16) {
+    const olda = a, oldb = b, oldc = c, oldd = d;
+    const ff = (q, r, s, t, m, n, k) => {
+      const f = (r & s) | (~r & t);
+      const g = fn(m) + q + f + k;
+      return rot(g, n) + r;
+    };
+    const gg = (q, r, s, t, m, n, k) => {
+      const f = (r & t) | (s & ~t);
+      const g = fn(m) + q + f + k;
+      return rot(g, n) + r;
+    };
+    const hh = (q, r, s, t, m, n, k) => {
+      const f = r ^ s ^ t;
+      const g = fn(m) + q + f + k;
+      return rot(g, n) + r;
+    };
+    const ii = (q, r, s, t, m, n, k) => {
+      const f = s ^ (r | ~t);
+      const g = fn(m) + q + f + k;
+      return rot(g, n) + r;
+    };
+    a = ff(a, b, c, d, i + 0, 7, -680876936);
+    d = ff(d, a, b, c, i + 1, 12, -389564586);
+    c = ff(c, d, a, b, i + 2, 17, 606105819);
+    b = ff(b, c, d, a, i + 3, 22, -1044525330);
+    a = ff(a, b, c, d, i + 4, 7, -176418897);
+    d = ff(d, a, b, c, i + 5, 12, 1200080426);
+    c = ff(c, d, a, b, i + 6, 17, -1473231341);
+    b = ff(b, c, d, a, i + 7, 22, -45705983);
+    a = ff(a, b, c, d, i + 8, 7, 1770035416);
+    d = ff(d, a, b, c, i + 9, 12, -1958414417);
+    c = ff(c, d, a, b, i + 10, 17, -42063);
+    b = ff(b, c, d, a, i + 11, 22, -1990404162);
+    a = ff(a, b, c, d, i + 12, 7, 1804603682);
+    d = ff(d, a, b, c, i + 13, 12, -40341101);
+    c = ff(c, d, a, b, i + 14, 17, -1502002290);
+    b = ff(b, c, d, a, i + 15, 22, 1236535329);
+    a = gg(a, b, c, d, i + 1, 5, -165796510);
+    d = gg(d, a, b, c, i + 6, 9, -1069501632);
+    c = gg(c, d, a, b, i + 11, 14, 643717713);
+    b = gg(b, c, d, a, i + 0, 20, -373897302);
+    a = gg(a, b, c, d, i + 5, 5, -701558691);
+    d = gg(d, a, b, c, i + 10, 9, 38016083);
+    c = gg(c, d, a, b, i + 15, 14, -660478335);
+    b = gg(b, c, d, a, i + 4, 20, -405537848);
+    a = gg(a, b, c, d, i + 9, 5, 568446438);
+    d = gg(d, a, b, c, i + 14, 9, -1019803690);
+    c = gg(c, d, a, b, i + 3, 14, -187363961);
+    b = gg(b, c, d, a, i + 8, 20, 116353150);
+    a = gg(a, b, c, d, i + 13, 5, -1444681467);
+    d = gg(d, a, b, c, i + 2, 9, -51403784);
+    c = gg(c, d, a, b, i + 7, 14, 1735328473);
+    b = gg(b, c, d, a, i + 12, 20, -1926607734);
+    a = hh(a, b, c, d, i + 5, 4, -378558);
+    d = hh(d, a, b, c, i + 8, 11, -2022574463);
+    c = hh(c, d, a, b, i + 11, 16, 1839030562);
+    b = hh(b, c, d, a, i + 14, 23, -35309556);
+    a = hh(a, b, c, d, i + 1, 4, -1530992060);
+    d = hh(d, a, b, c, i + 4, 11, 1272893353);
+    c = hh(c, d, a, b, i + 7, 16, -155497632);
+    b = hh(b, c, d, a, i + 10, 23, -1094730640);
+    a = hh(a, b, c, d, i + 13, 4, 681279174);
+    d = hh(d, a, b, c, i + 0, 11, -358537222);
+    c = hh(c, d, a, b, i + 3, 16, -722521979);
+    b = hh(b, c, d, a, i + 6, 23, 76029189);
+    a = hh(a, b, c, d, i + 9, 4, -640364487);
+    d = hh(d, a, b, c, i + 12, 11, -421815835);
+    c = hh(c, d, a, b, i + 15, 16, 530742520);
+    b = hh(b, c, d, a, i + 2, 23, -995338651);
+    a = ii(a, b, c, d, i + 0, 6, -198630844);
+    d = ii(d, a, b, c, i + 7, 10, 1126891415);
+    c = ii(c, d, a, b, i + 14, 15, -1416354905);
+    b = ii(b, c, d, a, i + 5, 21, -57434055);
+    a = ii(a, b, c, d, i + 12, 6, 1700485571);
+    d = ii(d, a, b, c, i + 3, 10, -1894986606);
+    c = ii(c, d, a, b, i + 10, 15, -1051523);
+    b = ii(b, c, d, a, i + 1, 21, -2054922799);
+    a = ii(a, b, c, d, i + 8, 6, 1873313359);
+    d = ii(d, a, b, c, i + 15, 10, -30611744);
+    c = ii(c, d, a, b, i + 6, 15, -1560198380);
+    b = ii(b, c, d, a, i + 13, 21, 1309151649);
+    a = ii(a, b, c, d, i + 4, 6, -145523070);
+    d = ii(d, a, b, c, i + 11, 10, -1120210379);
+    c = ii(c, d, a, b, i + 2, 15, 718787259);
+    b = ii(b, c, d, a, i + 9, 21, -343485551);
+    a = (a + olda) | 0;
+    b = (b + oldb) | 0;
+    c = (c + oldc) | 0;
+    d = (d + oldd) | 0;
+  }
+  const hex = (n) => {
+    let h = '';
+    for (let i = 0; i < 4; i++) h += '0123456789abcdef'.charAt((n >> (i * 8 + 4)) & 0xF) + '0123456789abcdef'.charAt((n >> (i * 8)) & 0xF);
+    return h;
+  };
+  return hex(a) + hex(b) + hex(c) + hex(d);
+}
+
 // ---------- Firebase Admin via REST (service account JWT -> OAuth) ----------
 let tokenCache = { token: '', exp: 0 };
 
@@ -684,6 +796,170 @@ async function handleMyleadPostback(request, env) {
   }
 }
 
+// ---------- Offerwall.me postback (signed user IDs + MD5 signature) ----------
+// POST /api/offerwall-postback
+// Body params (form or JSON): subId, transId, offer_name, offer_type, reward,
+// status ("1" credit | "2" reversal), signature, userIp, country, payout.
+// Verification: md5(subId + transId + reward + OFFERWALL_SECRET_KEY) === signature.
+// Idempotency key: transId. Wallet is created if the uid has none.
+// Dedupe collection: offerwall_events/{transId}. Wallet: wallets/{subId}.
+async function owPostbackBody(request) {
+  const ct = String(request.headers.get('Content-Type') || '').toLowerCase();
+  if (ct.indexOf('application/json') >= 0) return await request.json();
+  if (ct.indexOf('form') >= 0) {
+    const out = {};
+    const fd = await request.formData();
+    for (const [k, v] of fd.entries()) out[k] = v;
+    return out;
+  }
+  const txt = await request.text();
+  if (!txt) return {};
+  try { return JSON.parse(txt); } catch (_) {}
+  const out = {};
+  for (const [k, v] of new URLSearchParams(txt).entries()) out[k] = v;
+  return out;
+}
+
+async function handleOfferwallPostback(request, env) {
+  if (request.method !== 'POST') return json({ ok: false, reason: 'method' }, 405);
+  const secret = (env && env.OFFERWALL_SECRET_KEY) || '';
+  if (!secret) {
+    console.log('offerwall-postback: OFFERWALL_SECRET_KEY not configured');
+    return json({ ok: false, reason: 'setup' }, 500);
+  }
+  let b;
+  try { b = await owPostbackBody(request); } catch (_) { return json({ ok: false, reason: 'body' }, 400); }
+  const str = (v) => String(v == null ? '' : v);
+  const subId = str(b.subId || b.userId || b.uid).slice(0, 128);
+  const transId = str(b.transId || b.transactionId).slice(0, 128);
+  const reward = str(b.reward || b.amount || '0');
+  const status = str(b.status || b.action || '');
+  const signature = str(b.signature).toLowerCase();
+  const offerName = str(b.offer_name || b.offerName || '').slice(0, 128);
+  const offerType = str(b.offer_type || b.type || '').slice(0, 32);
+  const userIp = str(b.userIp || b.ip || '0.0.0.0').slice(0, 64);
+  const country = str(b.country || '').slice(0, 8).toUpperCase();
+  const payout = str(b.payout || '0');
+
+  if (md5(subId + transId + reward + secret).toLowerCase() !== signature) {
+    console.log('offerwall-postback: signature mismatch; subId=' + subId + ' transId=' + transId);
+    return json({ ok: false, reason: 'auth' }, 401);
+  }
+  if (!subId || !transId || !reward) return json({ ok: false, reason: 'params' }, 400);
+  const amt = Math.round(Number(reward || 0) * 100) / 100;
+  if (!(amt >= 0)) return json({ ok: false, reason: 'reward' }, 400);
+
+  const projectId = (env && env.FIREBASE_PROJECT_ID) || 'favmoney';
+  const saJson = (env && (env.FIREBASE_SERVICE_ACCOUNT || env.FIREBASE_SERVICE_ACCOUNT_JSON)) || '';
+  if (!saJson) {
+    console.log('offerwall-postback: FIREBASE_SERVICE_ACCOUNT not configured');
+    return json({ ok: false, reason: 'setup' }, 500);
+  }
+  const eventId = 'ow-' + transId;
+  try {
+    const token = await googleAccessToken(saJson);
+    // Idempotency: transId claimed once.
+    const seen = await fsGet(projectId, token, 'offerwall_events/' + encodeURIComponent(eventId));
+    if (seen) return text('ok');
+    const baseFields = {
+      uid: S(subId), provider: S('offerwall.me'), eventId: S(eventId),
+      transId: S(transId), offerName: S(offerName), offerType: S(offerType),
+      reward: N(amt), status: S(status), userIp: S(userIp), country: S(country),
+      payout: N(payout), at: T()
+    };
+    await fsCreate(projectId, token, 'offerwall_events', eventId, { ...baseFields, status: S('processing') });
+
+    const credit = status === '1';
+    const reversal = status === '2';
+    if (!credit && !reversal) {
+      await fsPatch(projectId, token, 'offerwall_events/' + encodeURIComponent(eventId), { status: S('ignored') }, ['status']);
+      return text('ok');
+    }
+
+    const wallet = await fsGet(projectId, token, 'wallets/' + encodeURIComponent(subId));
+    const wf = (wallet && wallet.fields) || {};
+    const pending = Number((wf.pending && (wf.pending.doubleValue || wf.pending.integerValue)) || 0);
+    const lifetime = Number((wf.lifetime && (wf.lifetime.doubleValue || wf.lifetime.integerValue)) || 0);
+    const invested = wf.invested || { doubleValue: 1 };
+    const delta = credit ? amt : -amt;
+    const walletFields = {
+      pending: N(Math.round((pending + delta) * 100) / 100),
+      lifetime: N(Math.round((lifetime + delta) * 100) / 100),
+      invested,
+      lastLabel: S('play:offers'),
+      updatedAt: T()
+    };
+    if (wallet) {
+      await fsPatch(projectId, token, 'wallets/' + encodeURIComponent(subId), walletFields, ['pending', 'lifetime', 'invested', 'lastLabel', 'updatedAt']);
+    } else {
+      await fsCreate(projectId, token, 'wallets', subId, {
+        ...walletFields, investedAt: N(Date.now()), boostUntil: N(0)
+      });
+    }
+    await fsCreate(projectId, token, 'proofs', '', {
+      uid: S(subId), amount: N(Math.abs(delta)), label: S('play:offers'), status: S(credit ? 'done' : 'pending'), at: T(),
+      provider: S('offerwall.me'), eventId: S(eventId), offerName: S(offerName), profit: N(amt)
+    });
+    try {
+      await fsCreate(projectId, token, 'notifications', 'notif-' + eventId, {
+        uid: S(subId), kind: S('offer-credit'),
+        title: S(credit ? 'Offer approved' : 'Offer reversed'),
+        body: S((credit ? '+' : '-') + amt.toFixed(2) + ' from Offerwall.me'), link: S('profile.html'),
+        read: B(false), at: T()
+      });
+    } catch (_) {}
+    await fsPatch(projectId, token, 'offerwall_events/' + encodeURIComponent(eventId), { status: S(credit ? 'credited' : 'reversed'), amount: N(amt) }, ['status', 'amount']);
+    try {
+      const uref = 'users/' + encodeURIComponent(subId);
+      const u = await fsGet(projectId, token, uref);
+      const uf = (u && u.fields) || {};
+      const earned = Number((uf.taskEarned && (uf.taskEarned.doubleValue || uf.taskEarned.integerValue)) || 0);
+      if (credit) {
+        await fsPatch(projectId, token, uref, {
+          taskEarned: N(Math.round((earned + amt) * 100) / 100),
+          updatedAt: T()
+        }, ['taskEarned', 'updatedAt']);
+      }
+    } catch (_) {}
+    return text('ok');
+  } catch (e) {
+    console.log('offerwall-postback error: ' + (e && e.message ? e.message : e));
+    return json({ ok: false, reason: 'write' }, 502);
+  }
+}
+
+// ---------- Offerwall.me signed URL (identity signing) ----------
+// GET /api/offerwall-url?uid=USER_ID&idToken=FIREBASE_ID_TOKEN
+// Verifies the Firebase ID token, then returns a signed offerwall URL:
+// https://offerwall.me/offerwall/{PUBLIC_API_KEY}/{uid}?identityExpires=...&identitySignature=...
+async function handleOfferwallUrl(request, env) {
+  if (request.method !== 'GET') return json({ ok: false, reason: 'method' }, 405);
+  const publicKey = (env && env.OFFERWALL_PUBLIC_API_KEY) || '';
+  const privateSecret = (env && env.OFFERWALL_SECRET_KEY) || '';
+  if (!publicKey || !privateSecret) {
+    console.log('offerwall-url: OFFERWALL_PUBLIC_API_KEY / OFFERWALL_SECRET_KEY not configured');
+    return json({ ok: false, reason: 'setup' }, 500);
+  }
+  const url = new URL(request.url);
+  const uid = (url.searchParams.get('uid') || '').slice(0, 128);
+  const idToken = url.searchParams.get('idToken') || '';
+  if (!uid) return json({ ok: false, reason: 'uid' }, 400);
+  // Verify ownership via Firebase ID token.
+  const me = await verifyIdToken(idToken, env);
+  if (!me || me.uid !== uid) return json({ ok: false, reason: 'auth' }, 401);
+  const expires = (String(Math.floor(Date.now() / 1000) + 3600));
+  const message = 'offerwall-user-v1\n' + publicKey + '\n' + uid + '\n' + expires;
+  const key = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(privateSecret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message));
+  const signature = [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  const signedUrl = 'https://offerwall.me/offerwall/' + encodeURIComponent(publicKey)
+    + '/' + encodeURIComponent(uid)
+    + '?' + new URLSearchParams({ identityExpires: expires, identitySignature: signature }).toString();
+  return json({ ok: true, url: signedUrl, expires: expires });
+}
+
 // ---------- cashout mail (Resend) ----------
 // POST /api/notify-cashout { idToken, cashoutId, type: received|paid, displayAmount? }
 // Verifies the Firebase ID token via identitytoolkit (web key is public by
@@ -956,6 +1232,20 @@ export default {
       try { return await handleMyleadPostback(request, env); }
       catch (e) {
         console.log('mylead-postback error: ' + (e && e.message ? e.message : e));
+        return json({ ok: false, reason: 'write' }, 502);
+      }
+    }
+    if (url.pathname === '/api/offerwall-postback' || url.pathname === '/api/offerwall-postback/') {
+      try { return await handleOfferwallPostback(request, env); }
+      catch (e) {
+        console.log('offerwall-postback error: ' + (e && e.message ? e.message : e));
+        return json({ ok: false, reason: 'write' }, 502);
+      }
+    }
+    if (url.pathname === '/api/offerwall-url' || url.pathname === '/api/offerwall-url/') {
+      try { return await handleOfferwallUrl(request, env); }
+      catch (e) {
+        console.log('offerwall-url error: ' + (e && e.message ? e.message : e));
         return json({ ok: false, reason: 'write' }, 502);
       }
     }

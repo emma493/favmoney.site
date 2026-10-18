@@ -83,7 +83,8 @@ function timingSafeEqual(a, b) {
   return d === 0;
 }
 
-// ---------- MD5 (pure JS; crypto.subtle has no MD5) ----------
+/* ---------- OFFERWALL.ME INTEGRATION - COMMENTED OUT ----------
+   MD5 (pure JS; crypto.subtle has no MD5)
 function md5(str) {
   const s = String(str || '');
   let a = 1732584193, b = -271733879, c = -1732584194, d = 271733878;
@@ -194,6 +195,7 @@ function md5(str) {
   };
   return hex(a) + hex(b) + hex(c) + hex(d);
 }
+END OFFERWALL.ME INTEGRATION - COMMENTED OUT ---------- */
 
 // ---------- Firebase Admin via REST (service account JWT -> OAuth) ----------
 let tokenCache = { token: '', exp: 0 };
@@ -796,6 +798,7 @@ async function handleMyleadPostback(request, env) {
   }
 }
 
+/* ---------- OFFERWALL.ME POSTBACK - COMMENTED OUT ----------
 // ---------- Offerwall.me postback (signed user IDs + MD5 signature) ----------
 // POST /api/offerwall-postback
 // Body params (form or JSON): subId, transId, offer_name, offer_type, reward,
@@ -841,9 +844,10 @@ async function handleOfferwallPostback(request, env) {
   const country = str(b.country || '').slice(0, 8).toUpperCase();
   const payout = str(b.payout || '0');
 
-  if (md5(subId + transId + reward + secret).toLowerCase() !== signature) {
-    console.log('offerwall-postback: signature mismatch; subId=' + subId + ' transId=' + transId);
-    return json({ ok: false, reason: 'auth' }, 401);
+  const computed = md5(subId + transId + reward + secret).toLowerCase();
+  if (computed !== signature) {
+    console.log('offerwall-postback: signature mismatch; subId=' + subId + ' transId=' + transId + ' computed=' + computed + ' received=' + signature);
+    return json({ ok: false, reason: 'auth', debug: { subId: subId, transId: transId, reward: reward, payout: payout, reward_value: (b.reward_value || ''), computed: computed, received: signature, keys: Object.keys(b || {}) } }, 401);
   }
   if (!subId || !transId || !reward) return json({ ok: false, reason: 'params' }, 400);
   const amt = Math.round(Number(reward || 0) * 100) / 100;
@@ -927,7 +931,9 @@ async function handleOfferwallPostback(request, env) {
     return json({ ok: false, reason: 'write' }, 502);
   }
 }
+END OFFERWALL.ME POSTBACK - COMMENTED OUT ---------- */
 
+/* ---------- OFFERWALL.ME SIGNED URL - COMMENTED OUT ----------
 // ---------- Offerwall.me signed URL (identity signing) ----------
 // GET /api/offerwall-url?uid=USER_ID&idToken=FIREBASE_ID_TOKEN
 // Verifies the Firebase ID token, then returns a signed offerwall URL:
@@ -959,6 +965,7 @@ async function handleOfferwallUrl(request, env) {
     + '?' + new URLSearchParams({ identityExpires: expires, identitySignature: signature }).toString();
   return json({ ok: true, url: signedUrl, expires: expires });
 }
+END OFFERWALL.ME SIGNED URL - COMMENTED OUT ---------- */
 
 // ---------- cashout mail (Resend) ----------
 // POST /api/notify-cashout { idToken, cashoutId, type: received|paid, displayAmount? }
@@ -1235,6 +1242,7 @@ export default {
         return json({ ok: false, reason: 'write' }, 502);
       }
     }
+/* ---------- OFFERWALL.ME ROUTES - COMMENTED OUT ----------
     if (url.pathname === '/api/offerwall-postback' || url.pathname === '/api/offerwall-postback/') {
       try { return await handleOfferwallPostback(request, env); }
       catch (e) {
@@ -1249,6 +1257,7 @@ export default {
         return json({ ok: false, reason: 'write' }, 502);
       }
     }
+END OFFERWALL.ME ROUTES - COMMENTED OUT ---------- */
     if (url.pathname !== '/api/gg-postback' && url.pathname !== '/api/gg-postback/') {
       try {
         if (env && env.ASSETS) return await env.ASSETS.fetch(request);

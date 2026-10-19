@@ -27,7 +27,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=2" />
   <style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid #E2E8F0;border-top-color:#10B981;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#10B981;border:0;cursor:pointer;align-items:center;justify-content:center;color:#0F172A;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
   <script src="js/loader.js"></script>
   <style>
@@ -43,6 +43,11 @@
     .apr-badge{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:#0F172A;background:var(--green);border-radius:999px;padding:4px 14px}
     .apr-badge.boost{background:linear-gradient(135deg,#f6c453,#e08900);color:#2a1a00}
     .apr-badge svg{width:14px;height:14px}
+    .shift-ring-wrap{display:inline-flex;align-items:center;justify-content:center}
+    .shift-ring{overflow:visible;width:56px;height:56px}
+    .shift-ring-fill{transition:stroke-dashoffset .3s linear,stroke .3s ease}
+    .shift-ring-fill.low{stroke:#EF4444}
+    .shift-ring-time{font-variant-numeric:tabular-nums}
     .tick-sub{font-size:13px;color:var(--muted);margin:8px 0 0}
     .tick-sub b{color:var(--green-ink)}
     .boost-wrap{display:flex;justify-content:center;margin-top:16px}
@@ -134,12 +139,27 @@
 
 <div id="member-zone" style="display:none">
 <div class="bonus-card">
-<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between">
+<div style="display:flex;gap:10px;align-items:center">
 <span style="font-size:12px;font-weight:800;letter-spacing:.1em;color:var(--muted)">GROWING BALANCE</span>
 <span class="apr-badge" id="apr-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></svg><span id="apr-text">10,000% APR</span></span>
 </div>
+<div class="shift-ring-wrap">
+<svg class="shift-ring" viewBox="0 0 72 72">
+<circle class="shift-ring-track" cx="36" cy="36" r="30" fill="none" stroke="#E2E8F0" stroke-width="8"/>
+<circle class="shift-ring-fill" cx="36" cy="36" r="30" fill="none" stroke="#10B981" stroke-width="8" stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="0" transform="rotate(-90 36 36)"/>
+<text x="36" y="10" text-anchor="middle" font-size="10" fill="#64748B" font-weight="800">6h</text>
+<text x="56" y="42" font-size="10" fill="#64748B" font-weight="800">5h</text>
+<text x="64" y="58" font-size="10" fill="#64748B" font-weight="800">4h</text>
+<text x="50" y="70" font-size="10" fill="#64748B" font-weight="800">3h</text>
+<text x="22" y="70" font-size="10" fill="#64748B" font-weight="800">2h</text>
+<text x="8" y="58" font-size="10" fill="#64748B" font-weight="800">1h</text>
+<text x="36" y="36" text-anchor="middle" font-size="15" font-weight="800" fill="#0F172A" id="shift-ring-time">6:00</text>
+<text x="36" y="54" text-anchor="middle" font-size="9" fill="#64748B" id="shift-ring-label">shift remaining</text>
+</svg>
+</div>
+</div>
 <div class="tick" id="tick">0.0000000 <small>USD</small></div>
-<p class="tick-sub" id="tick-sub">Warming up…</p>
 <div class="boost-wrap">
 <button class="btn btn-green boost-pill" id="boost-btn" type="button"><span class="fill" id="boost-fill" aria-hidden="true"></span><span class="label"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5-11-6.5z"/></svg><span id="boost-text">Watch ad · boost 1 hour</span></span></button>
 </div>
@@ -150,7 +170,7 @@
 <h2 style="margin:0 0 4px;font-size:20px">Invest &amp; claim</h2>
 <p style="color:var(--muted);font-size:14px;margin:0">Available: <b id="av-now" data-usd="0" style="color:#0F172A">$0.00</b> · Staked by you: <b id="st-now" data-usd="0" style="color:#0F172A">$0.00</b> · Stakeable: <b id="cap-now" data-usd="0" style="color:var(--green-ink)">$0.00</b></p>
 <div class="amt-row">
-<input id="amt" type="number" min="0.1" step="0.1" placeholder="Amount in USD" aria-label="Amount to invest" />
+<input id="amt" type="number" min="0" step="0.01" placeholder="Amount in USD" aria-label="Amount to invest" />
 <button class="btn btn-ghost" id="max-btn" style="min-height:48px">Max</button>
 </div>
 <div class="btn-row">
@@ -306,10 +326,27 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
     try{document.getElementById('boost-btn').classList.toggle('attn',!mining);}catch(_){}
     var boosted=mining&&state.boostUntilMs>now;
     var perDay=dayYield(state.invested,boosted?INVEST_BOOST_APR:INVEST_BASE_APR);
-    var sub=mining
-      ?'Growing <b>'+moneyPrec(perDay,4)+'/day</b> · shift ends in <b>'+fmtClock(state.mineUntilMs-now)+'</b>'
-      :'Mining paused — watch an ad to start a 6h shift';
-    document.getElementById('tick-sub').innerHTML=sub;
+    var shiftLeft=mining?Math.max(0,state.mineUntilMs-now):0;
+    var shiftPct=mining?Math.max(0,Math.min(1,shiftLeft/21600000)):0;
+    var ring=document.getElementById('shift-ring-fill');
+    var timeText=document.getElementById('shift-ring-time');
+    var labelText=document.getElementById('shift-ring-label');
+    if(ring){
+      var offset=Math.round((1-shiftPct)*188*100)/100;
+      ring.style.strokeDashoffset=offset;
+      ring.classList.toggle('low', shiftLeft>0 && shiftLeft<3600000);
+      if(mining && shiftLeft>0){
+        var h=Math.floor(shiftLeft/3600000), m=Math.floor((shiftLeft%3600000)/60000);
+        timeText.textContent=(h>0?h+'h ':'')+m+'m';
+        labelText.textContent='shift remaining';
+      } else if(mining && shiftLeft<=0){
+        timeText.textContent='Shift ended';
+        labelText.textContent='watch ad to restart';
+      } else {
+        timeText.textContent='—';
+        labelText.textContent='no shift active';
+      }
+    }
     var badge=document.getElementById('apr-badge');
     document.getElementById('apr-text').textContent=(boosted?'15,000% BOOSTED':(mining?'10,000% APR':'PAUSED'));
     badge.classList.toggle('boost',boosted);
@@ -423,12 +460,11 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
   function flash(msg){var n=document.getElementById('grow-note');n.textContent=msg;n.style.display='';}
   document.getElementById('invest-btn').addEventListener('click',function(){var __b=this;if(window.FavLoader){return FavLoader.withButton(__b,function(){return __investWork();});}return __investWork();async function __investWork(){
     var v=parseFloat(document.getElementById('amt').value);
-    if(!(v>0)){show('Enter an amount (min '+formatUSD(0.10)+').');return;}
+    if(!(v>0)){show('Enter an amount greater than 0.');return;}
     var r=await stakeInvest(uid,v);
     if(!r.ok){
-      if(r.reason==='min')show('Minimum stake is '+formatUSD(0.10)+'.');
+      if(r.reason==='min')show('Enter an amount greater than 0.');
       else if(r.reason==='funds')show('Not enough available balance.');
-      else if(r.reason==='cap')show('Max '+formatUSD(100)+' staked per user.');
       else if(r.reason==='task-only')show('Only task earnings can be staked. Earn more first.');
       else show('Stake failed — check connection and rules.');
       return;
@@ -621,3 +657,4 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
 </script>
 </body>
 </html>
+

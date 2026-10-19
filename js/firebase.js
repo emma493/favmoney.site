@@ -1430,9 +1430,3 @@ export async function fetchUserDocs(uid, name, n) {
   });
   return rows;
 }
-
-export {
-  onAuthStateChanged, createUserWithEmailAndPassword,
-  signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup,
-  sendPasswordResetEmail
-};

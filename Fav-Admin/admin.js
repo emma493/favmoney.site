@@ -197,12 +197,39 @@ if (window.FavLoader) FavLoader.hold();
     });
     document.querySelectorAll('.ad-view').forEach(function (s) { s.classList.remove('on'); });
     document.getElementById('v-' + v).classList.add('on');
-    document.title = 'Fav-Admin · ' + v.charAt(0).toUpperCase() + v.slice(1);
+    var label = v.charAt(0).toUpperCase() + v.slice(1);
+    document.title = 'Fav-Admin · ' + label;
+    var bc = document.getElementById('ad-bc-current');
+    if (bc) bc.textContent = label;
+    var ht = document.getElementById('ad-header-title');
+    if (ht) ht.textContent = 'FAV-Admin · ' + label;
+    var hs = document.getElementById('ad-header-sub');
+    if (hs) hs.textContent = label.charAt(0).toUpperCase() + label.slice(1) + ' console';
+    // close mobile menu when navigating
+    document.body.classList.remove('menu-open');
     if (!loaded[v]) { loaded[v] = true; VIEW_LOADERS[v](); }
   }
   document.querySelectorAll('#ad-nav button[data-view], #ad-tabs button[data-view]').forEach(function (b) {
     b.addEventListener('click', function () { showView(b.getAttribute('data-view')); });
   });
+
+  /* ---------- shell: collapse + mobile menu ---------- */
+  var collapseBtn = document.getElementById('ad-collapse');
+  if (collapseBtn) {
+    collapseBtn.addEventListener('click', function () {
+      document.body.classList.toggle('side-collapsed');
+    });
+  }
+  var menuBtn = document.getElementById('ad-menu');
+  var overlay = document.getElementById('ad-overlay');
+  if (menuBtn && overlay) {
+    menuBtn.addEventListener('click', function () {
+      document.body.classList.toggle('menu-open');
+    });
+    overlay.addEventListener('click', function () {
+      document.body.classList.remove('menu-open');
+    });
+  }
 
   async function colAll(name, n) {
     var snap = await getDocs(query(collection(db, name), limit(n || 200)));

@@ -9,8 +9,9 @@
  * (shortxx also refreshes every 3rd video change — Favmoney has no swipe
  * feed, and every navigation loads fresh impressions anyway.)
  *
- * Serialized queue: all banner slots share the global `atOptions`, so slots
- * re-inject strictly one at a time — never overlapping, never mixed keys.
+ * Parallel reload: every slot re-injects simultaneously on each batch so all
+ * banners appear and refresh at the same time. atoptions slots are isolated
+ * per-slot in iframes so shared window.atOptions never races.
  * DOM injection only — never document.write (post-load write wipes the page).
  * Usage: <script defer src="js/ads.js"></script> (pool div must be in markup).
  */
@@ -51,7 +52,6 @@
   }
 
   var slots = [];
-  var queue = Promise.resolve();
   var watchAccum = 0;
   var lastBatchAt = 0;
   var batches = 0;
@@ -78,6 +78,17 @@
             el.setAttribute('data-ad-container', container);
             el.setAttribute('data-ad-async', '1');
             found.push({ el: el, type: type, src: src, container: container, async: true });
+          } else if (type === 'script') {
+            var src = el.getAttribute('data-ad-src') || '';
+            if (!src) return;
+            var data = {};
+            for (var a = 0; a < el.attributes.length; a++) {
+              var attr = el.attributes[a];
+              if (attr.name.indexOf('data-') === 0 && attr.name.indexOf('data-ad-') !== 0) {
+                data[attr.name] = attr.value;
+              }
+            }
+            found.push({ el: el, type: 'script', src: src, data: data, async: true });
           } else {
             var key = el.getAttribute('data-ad-key') || '';
             var host = el.getAttribute('data-ad-host') || 'https://www.highrevenueformat.com';
@@ -92,7 +103,7 @@
     return found;
   }
 
-  function injectScript(container, src, isAsync) {
+  function injectScript(container, src, isAsync, data) {
     return new Promise(function (resolve) {
       try {
         var s = document.createElement('script');
@@ -100,6 +111,13 @@
         if (isAsync) s.async = true;
         try { s.setAttribute('data-cfasync', 'false'); } catch (e) {}
         s.src = src;
+        if (data) {
+          for (var k in data) {
+            if (data.hasOwnProperty(k)) {
+              try { s.setAttribute(k, data[k]); } catch (e) {}
+            }
+          }
+        }
         var done = false;
         var finish = function () { if (!done) { done = true; resolve(); } };
         s.onload = function () { setTimeout(finish, 250); };
@@ -122,11 +140,27 @@
           box.id = s.container;
           s.el.appendChild(box);
           await injectScript(s.el, s.src, s.async);
+        } else if (s.type === 'script') {
+          await injectScript(s.el, s.src, s.async, s.data);
         } else {
+          // Isolate each atoptions slot in its own iframe so parallel reloads
+          // don't clobber each other's shared window.atOptions. Every banner
+          // gets its own window context, so all 16+ slots can refresh at once.
           try {
-            window.atOptions = { key: s.key, format: 'iframe', height: s.h, width: s.w, params: {} };
+            var box = document.createElement('iframe');
+            box.style.width = s.w + 'px';
+            box.style.height = s.h + 'px';
+            box.style.border = '0';
+            box.src = 'about:blank';
+            s.el.appendChild(box);
+            var idoc = box.contentDocument || box.contentWindow.document;
+            idoc.open();
+            idoc.write('<!DOCTYPE><html><head></head><body style="margin:0">' +
+              '<script>atOptions = ' + JSON.stringify({ key: s.key, format: 'iframe', height: s.h, width: s.w, params: {} }) + ';</script>' +
+              '<script src="' + s.host + '/' + s.key + '/invoke.js"></script>' +
+              '</body></html>');
+            idoc.close();
           } catch (e) {}
-          await injectScript(s.el, s.host + '/' + s.key + '/invoke.js', false);
         }
       } catch (e) {}
     })();
@@ -144,10 +178,11 @@
     lastBatchAt = Date.now();
     watchAccum = 0;
     batches++;
-    slots.forEach(function (s) {
-      queue = queue.then(function () { return refreshSlot(s); });
-    });
-    queue = queue.catch(function () {});
+    // Reload every slot simultaneously so all banners appear/refresh at the same time.
+    // Applies to all slot types (container, atoptions, script) and any new type
+    // added to collectSlots() in the future — no further changes needed when you
+    // add more banner codes.
+    Promise.all(slots.map(function (s) { return refreshSlot(s); })).catch(function () {});
   }
 
   function pageVisible() {

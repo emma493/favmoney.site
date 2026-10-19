@@ -4,8 +4,11 @@
 //   await mountHeader(user);   // user or null — paints chip + balance.
 // Returns the wallet object for signed-in users (null for guests / on error),
 // so pages can reuse it instead of calling getWallet() twice.
-import { getWallet } from './firebase.js';
+import { getWallet, subscribeWallet } from './firebase.js';
 import { formatUSD } from './currency.js';
+
+// Active live-wallet unsubscribe (one per mounted header). Cleared by stopHeader().
+let _walletUnsub = null;
 
 // No avatar in the nav bar by design: the member chip shows balance + name
 // only. (Member avatars still live on the profile page and leaderboards.)
@@ -26,6 +29,7 @@ export function paintGuestHeader() {
     if (bal) bal.textContent = '—';
   } catch (_) { /* noop */ }
   clearAvatar();
+  stopHeader();
 }
 
 export async function paintMemberHeader(user) {
@@ -37,17 +41,29 @@ export async function paintMemberHeader(user) {
     if (name) name.textContent = email.split('@')[0];
     clearAvatar();
   } catch (_) { /* noop */ }
+  // Initial read to paint immediately.
+  let initial = null;
   try {
-    const w = await getWallet(user.uid);
+    initial = await getWallet(user.uid);
     try {
       const bal = document.getElementById('chip-bal');
-      if (bal) bal.textContent = formatUSD(w.pending);
+      if (bal) bal.textContent = formatUSD(initial.pending);
     } catch (_) { /* noop */ }
-    return w;
   } catch (_) {
     try { document.getElementById('chip-bal').textContent = formatUSD(0); } catch (_) { /* noop */ }
     return null;
   }
+  // Live subscription: re-paint chip-bal on every wallet change.
+  stopHeader();
+  try {
+    _walletUnsub = subscribeWallet(user.uid, (w) => {
+      try {
+        const bal = document.getElementById('chip-bal');
+        if (bal) bal.textContent = formatUSD(w.pending);
+      } catch (_) { /* noop */ }
+    });
+  } catch (_) { /* live balance is a nicety — silent fail OK */ }
+  return initial;
 }
 
 export async function mountHeader(user) {
@@ -55,4 +71,6 @@ export async function mountHeader(user) {
   return paintMemberHeader(user);
 }
 
-export function stopHeader() {}
+export function stopHeader() {
+  try { if (_walletUnsub) { _walletUnsub(); _walletUnsub = null; } } catch (_) {}
+}

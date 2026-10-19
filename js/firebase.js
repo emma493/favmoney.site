@@ -14,6 +14,18 @@ import {
   runTransaction, onSnapshot
 } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
 
+// Re-export Firebase Auth functions needed by signin.html / signup.html.
+// They are imported from the SDK above but must be re-exported for ES module
+// consumers in other pages to use them.
+export {
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  createUserWithEmailAndPassword,
+  signOut,
+  GoogleAuthProvider,
+  signInWithPopup
+};
+
 import { coinPour } from './js/sfx.js';
 
 export const firebaseConfig = {

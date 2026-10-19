@@ -38,9 +38,13 @@
     .tick .frac.bump{animation:fracBump .38s ease-out}
     @keyframes fracBump{0%{transform:translateY(42%);opacity:.3;color:var(--green)}100%{transform:none;opacity:1}}
     .tick.still{opacity:.6}
+    /* Odometer roll for millionths-level digits */
+    .digit{display:inline-block;min-width:0.6ch;transition:transform 0.12s ease-out}
+    .digit.rolling{transform:translateY(-1.2em);animation:rollDigit .18s ease-out forwards}
+    @keyframes rollDigit{0%{transform:translateY(-1.2em) opacity:0}100%{transform:translateY(0) opacity:1}}
     .boost-pill.attn{animation:ctaPulse 1.6s ease-in-out infinite}
     @keyframes ctaPulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.45)}50%{box-shadow:0 0 0 10px rgba(16,185,129,0)}}
-    @media (prefers-reduced-motion:reduce){.boost-pill.attn{animation:none}.tick .frac.bump{animation:none}}
+    @media (prefers-reduced-motion:reduce){.boost-pill.attn{animation:none}.tick .frac.bump{animation:none}.digit.rolling{animation:none;transform:none}}
     .apr-badge{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:#0F172A;background:var(--green);border-radius:999px;padding:4px 14px}
     .apr-badge.boost{background:linear-gradient(135deg,#f6c453,#e08900);color:#2a1a00}
     .apr-badge svg{width:14px;height:14px}
@@ -253,7 +257,7 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
   // fraction flashes on change for motion. No clipping tricks — the number
   // copies as clean text. Structure rebuilds only on integer-width or
   // currency change; text nodes update in place every frame.
-  var numKey='',lastFrac=null,lastBumpMs=0,elInt=null,elFrac=null;
+  var numKey='',lastFrac=null,lastBumpMs=0,elInt=null,elFrac=null,elDigits=[];
   function paintNum(shown,cur){
     var el=document.getElementById('tick');
     if(!el)return;
@@ -266,7 +270,14 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
       elFrac=document.createElement('span');
       elFrac.className='frac';
       elFrac.setAttribute('aria-hidden','true');
-      elFrac.textContent=fp;
+      elDigits=[];
+      for(var i=0;i<fp.length;i++){
+        var d=document.createElement('span');
+        d.className='digit d'+i;
+        d.textContent=fp[i];
+        elFrac.appendChild(d);
+        elDigits.push(d);
+      }
       el.appendChild(elInt);
       el.appendChild(elFrac);
       el.appendChild(document.createTextNode(' '));
@@ -279,7 +290,12 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
     }
     if(elInt)elInt.nodeValue=ip+'.';
     if(elFrac&&lastFrac!==fp){
-      elFrac.textContent=fp;lastFrac=fp;
+      for(var i=0;i<fp.length;i++){
+        if(elDigits[i]&&elDigits[i].textContent!==fp[i]){
+          rollDigit(elDigits[i],fp[i]);
+        }
+      }
+      lastFrac=fp;
       if(!reduced){
         var nowMs=Date.now();
         if(nowMs-lastBumpMs>400){
@@ -291,11 +307,22 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
       }
     }
   }
+  function rollDigit(el,newDigit){
+    el.classList.add('rolling');
+    el.setAttribute('data-to',newDigit);
+    requestAnimationFrame(function(){
+      el.textContent=newDigit;
+      el.classList.remove('rolling');
+    });
+  }
   function liveShown(){
     var now=Date.now();
     var r=computeYield(state.invested, investAnchor, now, state.boostUntilMs, null, null, state.mineUntilMs);
     var totalYield=anchorAccrued+r.yield;
-    return {shown:convertUSD(state.invested+totalYield,currentCountry().currency),totalYield:totalYield,now:now};
+    // Raw USD for the ticker — convertUSD rounds to hundredths, which kills
+    // millionths-level increments. The ticker label already says USD.
+    var raw=state.invested+totalYield;
+    return {shown:raw,totalYield:totalYield,now:now};
   }
   function paintLive(){
     if(!state)return;

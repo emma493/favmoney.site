@@ -192,7 +192,7 @@ if (window.FavLoader) FavLoader.hold();
   /* ---------- router ---------- */
   var VIEW_LOADERS = { overview: loadOverview, users: initUsers, payouts: loadPayouts, ledger: loadLedger, providers: loadProviders, earn: loadEarn, system: loadSystem, audit: loadAudit };
   function showView(v) {
-    document.querySelectorAll('#ad-nav button[data-view], #ad-tabs button[data-view]').forEach(function (b) {
+    document.querySelectorAll('#ad-nav button[data-view]').forEach(function (b) {
       b.classList.toggle('on', b.getAttribute('data-view') === v);
     });
     document.querySelectorAll('.ad-view').forEach(function (s) { s.classList.remove('on'); });
@@ -209,7 +209,7 @@ if (window.FavLoader) FavLoader.hold();
     document.body.classList.remove('menu-open');
     if (!loaded[v]) { loaded[v] = true; VIEW_LOADERS[v](); }
   }
-  document.querySelectorAll('#ad-nav button[data-view], #ad-tabs button[data-view]').forEach(function (b) {
+  document.querySelectorAll('#ad-nav button[data-view]').forEach(function (b) {
     b.addEventListener('click', function () { showView(b.getAttribute('data-view')); });
   });
 

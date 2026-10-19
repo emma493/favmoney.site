@@ -27,7 +27,7 @@ export {
   onAuthStateChanged
 };
 
-import { coinPour } from './js/sfx.js';
+import { coinPour } from './sfx.js';
 
 export const firebaseConfig = {
   // Public web key (ships in client JS by design; GitHub secret-scan alert

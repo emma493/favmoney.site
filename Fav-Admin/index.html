@@ -90,8 +90,11 @@
     body.side-collapsed .ad-side .ad-nav button.on{background:rgba(1,214,118,0.16)}
     body.side-collapsed .ad-side .ad-nav .nbadge{margin-left:6px;position:absolute;left:50%;top:8px;transform:translateX(-50%)}
     /* main */
-    .ad-main{flex:1;min-width:0;padding:24px;max-width:1020px;width:100%;margin:0 auto;box-sizing:border-box}
-    body.side-collapsed .ad-main{max-width:none}
+    /* hide top header + bottom tabs: keep only side menu */
+    .ad-header{display:none}
+    .ad-tabs{display:none}
+    .ad-main{flex:1;min-width:0;padding:0;max-width:none;width:100%;margin:0}
+    body.side-collapsed .ad-main{padding:0}
     /* mobile header + tabs */
     .ad-header{display:none;align-items:center;justify-content:space-between;gap:10px;padding:0 16px 12px;background:var(--ad-bg);border-bottom:1px solid var(--ad-border)}
     .ad-header-title{font-size:17px;font-weight:800;color:var(--ad-text)}

@@ -80,8 +80,14 @@ export function requireAuth() {
     });
     setTimeout(function () {
       if (done || resolved) return; done = true;
-      if (readHint()) return; // member, still checking — hold, never redirect
-      goLogin();
+      if (readHint()) {
+        // Member still checking — resolve with hint user so the page paints
+        // instead of holding the loader forever. The app will re-resolve
+        // once Firebase answers and re-render with real data.
+        resolve({ uid: readHint().uid, email: '' });
+      } else {
+        goLogin();
+      }
     }, 8000);
   });
 }

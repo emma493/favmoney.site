@@ -62,6 +62,9 @@
       // Extra safety if load event never fires (CDN hang).
       setTimeout(scheduleAuto, MAX_MS + 1000);
     }
+    // Final safety net: the loader must never trap the user behind the
+    // overlay indefinitely, even if pageReady() is never called.
+    setTimeout(function () { if (!done) hide(); }, 20000);
   }
 
   var autoScheduled = false;

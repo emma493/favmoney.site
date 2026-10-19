@@ -99,7 +99,7 @@
 <a class="btn btn-ghost" href="settings.html" style="margin-left:auto;min-height:44px">Settings</a>
 </div>
 <div class="profile-head">
-<div class="who"><div id="avatar" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#10B981,#047857);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#0F172A">?</div><div><b id="p-name">···</b><span id="p-joined">···</span></div></div>
+<div class="who"><a class="user-chip" href="profile.html" id="chip-user"><span class="chip-face" id="chip-face">?</span></a><div><b id="p-name">···</b><span id="p-joined">···</span></div></div>
 <div class="stat-strip" style="margin:18px 0 0">
 <div class="stat-cell"><b id="p-earn" data-usd="0">$0.00</b><span>Total earnings</span></div>
 <div class="stat-cell"><b id="p-done">0</b><span>Offers completed</span></div>
@@ -137,7 +137,6 @@
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, fetchUserDocs, getUnclaimedRewards, getUserDoc, updateUserDoc } from './js/firebase.js';
 import { mountHeader } from './js/header.js';
-import { avatarImg } from './js/avatars.js';
 import { COUNTRY_MAP, flagUrl } from './js/countries.js';
 import { mountCountryPicker } from './js/country-picker.js';
 import { formatUSD, setStoredCountry, setMemoryCountry, currentCountry, refreshRates } from './js/currency.js';
@@ -194,7 +193,7 @@ import { requireAuth } from './js/guard.js';
     var cutoff=Date.now()-30*864e5,last30=proofs.filter(function(p){return tsOf(p)>cutoff;}).reduce(function(s,p){return s+Number(p.amount||0);},0);
     document.getElementById('p-30').textContent=formatUSD(last30,activeCur);
     var name=userEmail?userEmail.split('@')[0]:'Guest';
-    if(userEmail){document.getElementById('chip-name').textContent=name;try{document.getElementById('avatar').innerHTML=avatarImg(currentUid||userEmail,52,name);}catch(_){document.getElementById('avatar').textContent=name.charAt(0).toUpperCase();}}
+    if(userEmail){document.getElementById('chip-name').textContent=name;var face=document.getElementById('chip-face');if(face){face.textContent=(name||'M').charAt(0).toUpperCase();face.style.background='linear-gradient(135deg,#10B981,#047857)';face.style.color='#0F172A';}}
     document.getElementById('p-name').textContent=name;
     document.getElementById('p-joined').textContent=joinedLabel;
   }

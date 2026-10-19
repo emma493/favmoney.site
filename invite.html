@@ -199,7 +199,7 @@
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getUserDoc, getOrCreateMyCode, claimReferrals, claimCommissions, fetchReferrals, fetchUserDocs, track, getUnclaimedRewards, getTopInviters, logShare, SHARE_NAMES } from './js/firebase.js';
-import { avatarImg, maskHandle } from './js/avatars.js';
+import { maskHandle } from './js/avatars.js';
 import { mountHeader } from './js/header.js';
 import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 import { requireAuth } from './js/guard.js';
@@ -272,7 +272,7 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
       var e=entries[i], n=Math.max(0,Math.floor(Number(e.invited)||0));
       var isMe=!!(meUid&&e.uid===meUid);
       html+='<div class="row'+(isMe?' lb-you':'')+'"><span class="rank">'+(i+1)+'</span>'
-        +'<span class="lb-av"><span class="lb-face">'+avatarImg(e.uid,40)+'</span>'+crownSVG(i)+'</span>'
+        +'<span class="lb-av"><span class="chip-face" style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#10B981,#047857);color:#0F172A;display:inline-flex;align-items:center;justify-content:center;font-weight:800">'+(maskHandle(e.handle||'U').charAt(0))+'</span>'+crownSVG(i)+'</span>'
         +'<span style="flex:1">'+(isMe?'YOU':maskHandle(e.handle))+'</span><b>'+n+' invited</b></div>';
     }
     box.innerHTML=html;

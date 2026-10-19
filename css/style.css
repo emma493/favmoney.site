@@ -91,7 +91,10 @@ html[data-top-nav-scrolled="true"] .topnav{background:rgba(255,255,255,.94);box-
 .pay img{width:26px;height:26px;flex:none;object-fit:contain;border-radius:6px}
 .float img.ic{width:22px;height:22px;object-fit:contain}
 .float-img{position:absolute;pointer-events:none}
-.auth{display:flex;align-items:center;gap:10px}
+.topnav-inner{justify-content:space-between}
+.user-chip{margin-left:auto}
+#chip-bal{margin-left:8px}
+button.icon-btn{margin-left:8px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:var(--font);font-weight:600;border:0;cursor:pointer;text-decoration:none;border-radius:10px;transition:transform .08s,box-shadow .08s,background .15s}
 .btn-ghost{background:#F1F5F9;color:#0F172A;padding:10px 18px;font-size:14px}
 .btn-ghost:hover{background:#E2E8F0}
@@ -374,7 +377,7 @@ body{padding-bottom:0}
 @media(max-width:640px){
   .topnav-inner{padding:0 12px;gap:8px}
   .brand-word{font-size:16px}
-  .auth{gap:8px;margin-left:auto}
+  
   .btn-ghost{padding:10px 14px;min-height:44px}
   .btn-green{padding:10px 16px;min-height:44px}
   .hero{padding-top:calc(var(--header-h) + 20px)}
@@ -443,8 +446,8 @@ body{padding-bottom:0}
 @media(prefers-reduced-motion:reduce){.mobilenav a.active::after{box-shadow:none}}
 
 /* ---------- Freecash dashboard (earn, offers, profile, bonuses, affiliates, withdrawals) ---------- */
-.user-chip{display:inline-flex;align-items:center;gap:14px;background:#F1F5F9;border:1px solid var(--line-soft);border-radius:999px;padding:6px 16px;font-size:13px;font-weight:700;color:#0F172A;text-decoration:none}
-#chip-bal{display:inline-flex;align-items:center;justify-content:center;min-width:44px;height:26px;border:1px solid var(--line-soft);border-radius:999px;background:#FFFFFF;padding:0 10px;font-size:12px;font-weight:800;color:var(--green-ink)}
+.user-chip{display:inline-flex;align-items:center;gap:8px;background:#F1F5F9;border:1px solid var(--line-soft);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700;color:#0F172A;text-decoration:none}
+#chip-bal{display:inline-flex;align-items:center;justify-content:center;min-width:64px;height:28px;border:1px solid var(--line-soft);border-radius:999px;background:#FFFFFF;padding:0 12px;font-size:16px;font-weight:800;color:var(--green-ink)}
 #chip-name{width:28px;height:28px;min-width:28px;border-radius:50%;background:#E2E8F0;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#0F172A}
 .user-chip img{width:28px;height:28px;border-radius:50%;object-fit:cover;background:#E2E8F0}
 .chip-face{width:32px;height:32px;min-width:32px;border-radius:8px;background:linear-gradient(135deg,#10B981,#047857);color:#0F172A;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;text-align:center}
@@ -608,7 +611,7 @@ select.sel{height:44px;border-radius:10px;border:1px solid #CBD5E1;background:#f
 .oc-card{position:relative;display:flex;flex-direction:row;align-items:flex-start;justify-content:flex-start;gap:1rem;width:100%;max-width:900px;min-height:fit-content;height:auto;padding:1rem 1.5rem 1rem 0;border-radius:16px;border:1px solid var(--line);background:#F8FAFC;box-shadow:0 4px 20px -2px rgba(0,0,0,.05);overflow:visible;text-decoration:none;color:#0F172A;transition:border-color .15s ease-out}
 .oc-card:hover{border-color:#CBD5E1}
 .oc-asset{position:relative;width:120px;height:120px;margin-right:1rem;flex-shrink:0;border:0;border-radius:12px;background:transparent;overflow:hidden;display:flex;align-items:center;justify-content:center}
-.oc-asset img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;transform:none;filter:none}
+.oc-asset img{width:100%;height:100%;object-fit:contain;object-position:center;display:block;transform:none;filter:none}
 .oc-card--wide .oc-asset{width:120px}
 .oc-card--wide .oc-asset img{transform:scale(1.0)}
 .oc-body{display:flex;flex-direction:column;flex:1;min-width:0;margin-top:0;text-align:left}
@@ -628,7 +631,7 @@ select.sel{height:44px;border-radius:10px;border:1px solid #CBD5E1;background:#f
 .oc-cta:hover{opacity:.8}
 .oc-cta svg{width:14px;height:14px}
 @media(min-width:640px){.oc-card{gap:1rem;padding:1rem 1.5rem 1rem 0;border-radius:16px}.oc-asset{width:120px;height:120px;margin-right:1rem;border-radius:12px}.oc-body{text-align:left}.oc-head{gap:8px;margin-bottom:8px}.oc-title{gap:8px}.oc-title h2{font-size:15px;white-space:normal}.oc-pay{font-size:8px;margin-bottom:12px}.oc-pay b{font-size:10px}.oc-desc{font-size:11px;line-height:1.3}.oc-base{margin-top:12px}.oc-time small{font-size:9px}.oc-time b{font-size:12px}}
-@media(max-width:639px){.oc-card{padding:1rem;height:auto;min-height:fit-content}.oc-asset{width:90px;height:90px;margin-right:12px;border-radius:12px}.oc-asset img{object-fit:cover;object-position:center}.oc-title h2{font-size:13px;white-space:normal}.oc-pay{font-size:8px}.oc-pay b{font-size:9px}.oc-desc{font-size:10px;line-height:1.3}}}
+@media(max-width:639px){.oc-card{padding:1rem;height:auto;min-height:fit-content}.oc-asset{width:90px;height:90px;margin-right:12px;border-radius:12px}.oc-asset img{object-fit:contain;object-position:center}.oc-title h2{font-size:13px;white-space:normal}.oc-pay{font-size:8px}.oc-pay b{font-size:9px}.oc-desc{font-size:10px;line-height:1.3}}}
 
 /* ===== Rewards milestone badges: header bell count + mobile nav dot ===== */
 .icon-btn{position:relative}

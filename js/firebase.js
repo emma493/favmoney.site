@@ -99,7 +99,7 @@ export async function ensureUserDoc(user, provider, extra) {
 }
 
 export async function getWallet(uid) {
-  const snap = await getDoc(doc(db, 'wallets', uid));
+  const snap = await withTimeout(getDoc(doc(db, 'wallets', uid)), 10000);
   if (!snap.exists()) return { pending: 0, lifetime: 0, invested: 0, investedAt: 0, boostUntil: 0, mineUntil: 0 };
   const d = snap.data();
   return {
@@ -179,7 +179,7 @@ export async function requestCashout(uid, data) {
 
 // ---- Favmoney profile fields (replaces localStorage: streak, started, claimed) ----
 export async function getUserDoc(uid) {
-  const snap = await getDoc(doc(db, 'users', uid));
+  const snap = await withTimeout(getDoc(doc(db, 'users', uid)), 10000);
   if (!snap.exists()) return { streak: { days: 0, last: '' }, started: {}, claimedQuests: [] };
   const d = snap.data();
   return {
@@ -403,7 +403,7 @@ export async function claimCommissions(uid) {
 
 export async function fetchReferrals(ownerUid, n) {
   try {
-    const snap = await getDocs(query(collection(db, 'referrals'), where('ownerUid', '==', ownerUid), limit(n || 50)));
+    const snap = await withTimeout(getDocs(query(collection(db, 'referrals'), where('ownerUid', '==', ownerUid), limit(n || 50))), 10000);
     const rows = [];
     snap.forEach(function (d) { rows.push({ id: d.id, ...d.data() }); });
     rows.sort(function (a, b) {
@@ -1081,6 +1081,16 @@ export async function getUnclaimedRewards(uid) {
   } catch (_) { return 0; }
 }
 
+// Run a promise with a hard timeout so a hung Firestore/CDN call can't
+// freeze the page forever. Resolves with the value, or rejects after `ms`.
+export function withTimeout(promise, ms) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error('firestore-timeout')), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 // First-unclaimed tier index on a track — the single active reward.
 // The shared lifetime counter keeps counting underneath; only display and
 // claiming advance one step at a time. Returns -1 when all are claimed.
@@ -1342,14 +1352,14 @@ export async function getLiveState(uid, atMs) {
     apr: boosted ? INVEST_BOOST_APR : INVEST_BASE_APR,
     investedUser: s.investedUser, taskEarned: s.taskEarned,
     graceMsLeft: grace ? Math.max(0, grace.graceUntilMs - now) : 0,
-    stakeable: Math.max(0, Math.floor((s.pending - s.investedUser) * 100) / 100)
+    stakeable: Math.max(0, Math.floor(s.pending * 100) / 100)
   };
 }
 
 // Move available -> invested. Settles first so no yield is lost or double-paid.
 export async function stakeInvest(uid, rawAmount) {
   const amount = Math.floor(Number(rawAmount || 0) * 100) / 100;
-  if (!(amount >= INVEST_MIN_STAKE)) return { ok: false, reason: 'min' };
+  if (!(amount > 0)) return { ok: false, reason: 'min' };
   await settleInvest(uid);
   const s = await readInvestState(uid);
   if (amount > s.pending + 1e-9) return { ok: false, reason: 'funds' };
@@ -1476,9 +1486,9 @@ export function wasMigrated() {
 
 // Recent docs for one user (client-sorted, no composite index needed).
 export async function fetchUserDocs(uid, name, n) {
-  const snap = await getDocs(query(
+  const snap = await withTimeout(getDocs(query(
     collection(db, name), where('uid', '==', uid), limit(n || 20)
-  ));
+  )), 10000);
   const rows = [];
   snap.forEach(function (d) { rows.push({ id: d.id, ...d.data() }); });
   rows.sort(function (a, b) {

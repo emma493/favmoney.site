@@ -232,7 +232,7 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
   trackVisitor(location.pathname);
-  var uid=null, state=null, investAnchor=0, anchorAccrued=0, raf=null, slowTimer=null, lastPaint=0, lastBtnSec=-1, unclaimedN=0;
+  var uid=null, state={mineUntilMs:0,boostUntilMs:0,invested:0,pending:0,lifetime:0}, investAnchor=0, anchorAccrued=0, raf=null, slowTimer=null, lastPaint=0, lastBtnSec=-1, unclaimedN=0;
   var reduced=false;
   try{reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}
   var toast=document.getElementById('toast'),tm=null;
@@ -633,6 +633,7 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
       if(window.FavLoader)FavLoader.pageReady();
       if(raf)cancelAnimationFrame(raf);
       lastPaint=0;startFastLoop();
+      setInterval(paintLive,1000);
   });
   // Periodic state refresh every 30s (balance, yield, miner state).
   setInterval(async function(){

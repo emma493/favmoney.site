@@ -128,6 +128,8 @@ export async function creditWallet(uid, amount, label) {
     uid, amount, label: label || 'quest',
     status: 'pending', at: serverTimestamp()
   });
+  // Sound on every credit (muted-safe: coinPour() is a no-op when muted).
+  try { if (Number(amount) > 0) coinPour(); } catch (_) {}
 }
 
 export async function submitProof(uid, data) {
@@ -1270,7 +1272,7 @@ export async function getLiveState(uid, atMs) {
     apr: boosted ? INVEST_BOOST_APR : INVEST_BASE_APR,
     investedUser: s.investedUser, taskEarned: s.taskEarned,
     graceMsLeft: grace ? Math.max(0, grace.graceUntilMs - now) : 0,
-    stakeable: Math.max(0, Math.floor((s.taskEarned - s.investedUser) * 100) / 100)
+    stakeable: Math.max(0, Math.floor((s.pending - s.investedUser) * 100) / 100)
   };
 }
 
@@ -1281,8 +1283,6 @@ export async function stakeInvest(uid, rawAmount) {
   await settleInvest(uid);
   const s = await readInvestState(uid);
   if (amount > s.pending + 1e-9) return { ok: false, reason: 'funds' };
-  if (s.investedUser + amount > INVEST_MAX_STAKE + 1e-9) return { ok: false, reason: 'cap' };
-  if (s.investedUser + amount > s.taskEarned + 1e-9) return { ok: false, reason: 'task-only' };
   try {
     await updateDoc(doc(db, 'wallets', uid), {
       pending: increment(-amount), invested: increment(amount),

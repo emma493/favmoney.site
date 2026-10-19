@@ -11,6 +11,8 @@
   gtag('config', 'G-EXZLQH80RS');
 </script>
   <meta charset="UTF-8" />
+  <meta name="referrer" content="no-referrer-when-downgrade" />
+  <meta name="4ea0db2e548277efb9d34efc21dd80e100f4d77d" content="4ea0db2e548277efb9d34efc21dd80e100f4d77d" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="monetag" content="4babf96cc751e5ede83b60823c481baf" />
   <title>My Profile · Favmoney</title>
@@ -19,7 +21,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=2" />
   <style>
   .fav-country{position:relative}
   .fav-country-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid #CBD5E1;color:#0F172A;border-radius:12px;padding:12px 14px;font:inherit;cursor:pointer;min-height:48px}
@@ -87,7 +89,7 @@
 <a href="rewards.html">Rewards<span class="dot"></span></a>
 <a href="withdraw.html">Cashout<span class="dot"></span></a>
 </nav>
-<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal"><span class="skeleton" style="width:52px"></span></span><span id="chip-name"><span class="skeleton" style="width:64px"></span></span></a></div>
+<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span id="chip-name"><span class="skeleton" style="width:64px"></span></span></a><span class="bal" id="chip-bal"><span class="skeleton" style="width:52px"></span></span></div>
 </div></header>
 <main>
 <section class="page-hero"><div class="dash-shell">
@@ -256,8 +258,6 @@ import { requireAuth } from './js/guard.js';
         joinedLabel=ago(Date.now()-meta);
       }catch(e){joinedLabel='Member';}
       try{
-        // Parallelize the two independent reads so first paint isn't gated
-        // on a serial Firestore waterfall.
         var udoc=null, w=null;
         var _r = await Promise.all([
           getUserDoc(user.uid).then(function(d){udoc=d;}).catch(function(){udoc=null;}),
@@ -270,7 +270,6 @@ import { requireAuth } from './js/guard.js';
         try{document.getElementById('chip-bal').textContent=formatUSD(w&&w.pending);}catch(_){}
         earn=Number(w&&w.lifetime||0);
         proofs=await fetchUserDocs(user.uid,'proofs',50);
-        if(window.FavLoader)FavLoader.pageReady();
         paintStats();render();
         // Deferred: unclaimed-rewards badge does not block first paint.
         try{
@@ -278,7 +277,10 @@ import { requireAuth } from './js/guard.js';
           var __nd=document.getElementById('navdot-rewards');
           if(__nd){if(__n>0){__nd.textContent=__n>9?'9+':__n;__nd.style.display='flex';}else{__nd.style.display='none';}}
         }catch(_){}
-      }catch(e){earn=0;proofs=[]; if(window.FavLoader)FavLoader.pageReady(); paintStats();render();}
+      }catch(e){earn=0;proofs=[]; paintStats();render();}
+      finally{
+        if(window.FavLoader)FavLoader.pageReady();
+      }
   });
   // Live wallet balance: re-read every 10s so credits from other tabs show.
   setInterval(async function(){
@@ -295,3 +297,4 @@ import { requireAuth } from './js/guard.js';
 </script>
 </body>
 </html>
+

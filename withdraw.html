@@ -11,6 +11,8 @@
   gtag('config', 'G-EXZLQH80RS');
 </script>
   <meta charset="UTF-8" />
+  <meta name="referrer" content="no-referrer-when-downgrade" />
+  <meta name="4ea0db2e548277efb9d34efc21dd80e100f4d77d" content="4ea0db2e548277efb9d34efc21dd80e100f4d77d" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="monetag" content="4babf96cc751e5ede83b60823c481baf" />
   <title>Cashout · Favmoney</title>
@@ -19,7 +21,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=2" />
   <style>#page-loader{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}#page-loader.hide{opacity:0;pointer-events:none}.spinner{width:36px;height:36px;border-radius:50%;border:4px solid #E2E8F0;border-top-color:#10B981;animation:lspin .8s linear infinite}@keyframes lspin{to{transform:rotate(360deg)}}#loader-retry{display:none;width:48px;height:48px;border-radius:50%;background:#10B981;border:0;cursor:pointer;align-items:center;justify-content:center;color:#0F172A;padding:0}#loader-retry svg{width:22px;height:22px}#page-loader.slow #loader-retry{display:inline-flex}#page-loader.slow #loader-spin{display:none}</style>
   <script src="js/loader.js"></script>
 </head>
@@ -71,7 +73,7 @@
 <a href="rewards.html">Rewards<span class="dot"></span></a>
 <a href="withdraw.html" class="active">Cashout<span class="dot"></span></a>
 </nav>
-<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal"><span class="skeleton" style="width:52px"></span></span><span id="chip-name"><span class="skeleton" style="width:64px"></span></span></a></div>
+<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span id="chip-name"><span class="skeleton" style="width:64px"></span></span></a><span class="bal" id="chip-bal"><span class="skeleton" style="width:52px"></span></span></div>
 </div></header>
 <main>
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
@@ -249,9 +251,11 @@ import { requireAuth } from './js/guard.js';
           }catch(_){setMethodsFor(currentCountry().country||'US');}
           try{paintBadges(await getUnclaimedRewards(uid));}catch(_){}
         }
+        paintHero();renderMethods();
       }catch(e){}
-      paintHero();renderMethods();
-      if(window.FavLoader)FavLoader.pageReady();
+      finally{
+        if(window.FavLoader)FavLoader.pageReady();
+      }
   });
   // Live available balance: re-read wallet every 10s.
   setInterval(async function(){
@@ -271,3 +275,4 @@ import { requireAuth } from './js/guard.js';
 </script>
 </body>
 </html>
+

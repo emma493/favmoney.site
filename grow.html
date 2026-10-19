@@ -11,6 +11,8 @@
   gtag('config', 'G-EXZLQH80RS');
 </script>
   <meta charset="UTF-8" />
+  <meta name="referrer" content="no-referrer-when-downgrade" />
+  <meta name="4ea0db2e548277efb9d34efc21dd80e100f4d77d" content="4ea0db2e548277efb9d34efc21dd80e100f4d77d" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="monetag" content="4babf96cc751e5ede83b60823c481baf" />
   <title>Grow Your Earnings — Staking Rewards · Favmoney</title>
@@ -641,7 +643,9 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
         try{document.getElementById('chip-bal').textContent=formatUSD(w.pending);}catch(_){}
       }catch(e){}
       await refresh();
-      if(window.FavLoader)FavLoader.pageReady();
+      finally{
+        if(window.FavLoader)FavLoader.pageReady();
+      }
       if(raf)cancelAnimationFrame(raf);
       lastPaint=0;startFastLoop();
       setInterval(paintLive,1000);

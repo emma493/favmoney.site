@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Offerwall.me Demo — Favmoney</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body { margin: 0; font-family: var(--font, Inter, sans-serif); background: #F8FAFC; color: #0F172A; }
+    .demo-shell { max-width: 520px; margin: 40px auto; padding: 0 16px; }
+    .demo-card { background: #fff; border: 1px solid var(--line, #CBD5E1); border-radius: 16px; padding: 24px; box-shadow: var(--shadow-lg, 0 10px 25px -5px rgba(0,0,0,.1)); }
+    .demo-title { font-size: 20px; font-weight: 800; margin: 0 0 8px; }
+    .demo-sub { font-size: 13px; color: var(--muted, #64748B); margin: 0 0 20px; }
+    .demo-field { margin-bottom: 14px; }
+    .demo-field label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em; }
+    .demo-input { width: 100%; height: 44px; border-radius: 10px; border: 1px solid var(--line, #CBD5E1); background: #fff; color: #0F172A; padding: 0 14px; font: inherit; font-size: 14px; outline: none; box-sizing: border-box; }
+    .demo-input:focus { border-color: var(--green, #10B981); box-shadow: 0 0 0 3px rgba(16,185,129,.18); }
+    .demo-btn { width: 100%; height: 48px; border-radius: 10px; background: var(--green, #10B981); color: #06240f; border: 0; font: inherit; font-size: 15px; font-weight: 800; cursor: pointer; margin-top: 8px; }
+    .demo-btn:disabled { opacity: .55; cursor: not-allowed; }
+    .demo-result { margin-top: 16px; padding: 12px 14px; border-radius: 10px; background: #F1F5F9; font-size: 12px; color: #475569; word-break: break-all; display: none; }
+    .demo-result.show { display: block; }
+    .demo-badge { display: inline-block; font-size: 11px; font-weight: 800; color: var(--green-ink, #047857); background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.25); border-radius: 999px; padding: 3px 10px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="demo-shell">
+    <div class="demo-card">
+      <span class="demo-badge">OFFERWALL.ME · DEMO</span>
+      <h2 class="demo-title">Offerwall.me Configuration</h2>
+      <p class="demo-sub">Configure and test your offerwall.me placement. Sign in, enter your demo user ID, then open the wall.</p>
+
+      <div class="demo-field">
+        <label for="demo-uid">Demo User ID</label>
+        <input id="demo-uid" type="text" class="demo-input" placeholder="e.g. test-user-123" />
+      </div>
+
+      <button id="open-wall" class="demo-btn" disabled>Open Offerwall in New Tab</button>
+
+      <div id="demo-result" class="demo-result"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script type="module">
+    import { auth, onAuthStateChanged } from './js/firebase.js';
+    import { requireAuth } from './js/guard.js';
+
+    const toast = document.getElementById('toast');
+    const uidInput = document.getElementById('demo-uid');
+    const openBtn = document.getElementById('open-wall');
+    const resultEl = document.getElementById('demo-result');
+
+    function show(m) {
+      toast.textContent = m;
+      toast.classList.add('show');
+      clearTimeout(window.__demoToastTm);
+      window.__demoToastTm = setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function setResult(msg, ok) {
+      resultEl.textContent = msg;
+      resultEl.className = 'demo-result show';
+      resultEl.style.background = ok ? '#ECFDF5' : '#FEF2F2';
+      resultEl.style.color = ok ? '#047857' : '#991B1B';
+      resultEl.style.border = ok ? '1px solid #86EFAC' : '1px solid #FCA5A5';
+    }
+
+    async function fetchSignedUrl(uid, idToken) {
+      const res = await fetch('/api/offerwall-url?uid=' + encodeURIComponent(uid) + '&idToken=' + encodeURIComponent(idToken));
+      return res.json();
+    }
+
+    function enable() {
+      openBtn.disabled = false;
+    }
+
+    async function onOpen() {
+      const uid = (uidInput.value || '').trim();
+      if (!uid) { show('Enter a demo user ID first.'); return; }
+      openBtn.disabled = true;
+      try {
+        const user = auth.currentUser;
+        if (!user) { show('Sign in required.'); enable(); return; }
+        const idToken = await user.getIdToken();
+        const data = await fetchSignedUrl(uid, idToken);
+        if (data.ok && data.url) {
+          setResult('Signed URL ready. Opening offerwall…', true);
+          window.open(data.url, '_blank');
+        } else {
+          setResult('Failed: ' + (data.reason || 'unknown'), false);
+        }
+      } catch (e) {
+        setResult('Error: ' + (e && e.message ? e.message : e), false);
+      } finally {
+        enable();
+      }
+    }
+
+    openBtn.addEventListener('click', onOpen);
+
+    // Auto-enable when a UID is typed
+    uidInput.addEventListener('input', () => { openBtn.disabled = !(uidInput.value || '').trim(); });
+
+    requireAuth().then(async (user) => {
+      // Pre-fill with the Firebase UID for convenience
+      if (user && user.uid) uidInput.value = user.uid;
+      enable();
+    }).catch(() => { enable(); });
+  </script>
+</body>
+</html>

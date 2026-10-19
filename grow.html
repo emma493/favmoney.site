@@ -130,7 +130,7 @@
 <a href="rewards.html">Rewards<span class="dot"></span></a>
 <a href="withdraw.html">Cashout<span class="dot"></span></a>
 </nav>
-<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span class="bal" id="chip-bal"><span class="skeleton" style="width:52px"></span></span><span id="chip-name"><span class="skeleton" style="width:64px"></span></span></a><button class="icon-btn" id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="ping"></span><span class="nbadge" id="bell-badge" style="display:none"></span></button></div>
+<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span id="chip-name"><span class="skeleton" style="width:64px"></span></span></a><span class="bal" id="chip-bal"><span class="skeleton" style="width:52px"></span></span><button class="icon-btn" id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="ping"></span><span class="nbadge" id="bell-badge" style="display:none"></span></button></div>
 </div></header>
 <main>
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
@@ -323,11 +323,12 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
     // If state has no mineUntil, try reading directly from wallet
     if (!state.mineUntilMs && uid) {
       try {
-        var wSnap = await getDoc(doc(db, 'wallets', uid));
-        if (wSnap.exists()) {
-          state.mineUntilMs = Number(wSnap.data().mineUntil || 0);
-          mining = state.mineUntilMs > now;
-        }
+        getDoc(doc(db, 'wallets', uid)).then(function(wSnap) {
+          if (wSnap.exists()) {
+            state.mineUntilMs = Number(wSnap.data().mineUntil || 0);
+            mining = state.mineUntilMs > now;
+          }
+        }).catch(function() {});
       } catch (_) {}
     }
     var shiftLeft=mining?Math.max(0,state.mineUntilMs-now):0;

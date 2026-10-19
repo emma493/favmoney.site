@@ -1201,7 +1201,6 @@ async function handleNotifyCashout(request, env) {
 // The Worker uses a service-account OAuth token (bypasses security rules),
 // so clients can never fabricate or clear issues.
 
-const MONITOR_BASE = 'https://favmoney.site';
 const MONITOR_CHECKS = [
   { check: 'homepage', path: '/' },
   { check: 'earn-page', path: '/earn.html' },
@@ -1211,9 +1210,16 @@ const MONITOR_CHECKS = [
   { check: 'js-firebase', path: '/js/firebase.js' }
 ];
 
-async function probeUrl(url) {
-  const res = await fetch(url, { redirect: 'follow' });
-  return { ok: res.status >= 200 && res.status < 400, status: res.status };
+// Use env.ASSETS.fetch() internally — avoids the self-fetch limitation
+// where a Worker cannot reach its own custom domain over HTTP.
+async function probeAsset(env, path) {
+  try {
+    const req = new Request('https://favmoney.site' + path);
+    const res = await env.ASSETS.fetch(req);
+    return { ok: res.status >= 200 && res.status < 400, status: res.status };
+  } catch (e) {
+    return { ok: false, status: 0, message: (e && e.message ? e.message : String(e)).slice(0, 120) || 'unreachable' };
+  }
 }
 
 async function probeFirestore(projectId, token) {
@@ -1257,7 +1263,7 @@ async function monitor(env) {
     const check = c.check;
     let ok = false, message = '', status = 0;
     try {
-      const r = await probeUrl(MONITOR_BASE + c.path);
+      const r = await probeAsset(env, c.path);
       ok = r.ok; status = r.status;
       if (!ok) message = 'HTTP ' + r.status;
     } catch (e) {
@@ -1331,15 +1337,12 @@ export default {
       }
     }
     if (url.pathname === '/api/notify-cashout' || url.pathname === '/api/notify-cashout/') {
-    const url = new URL(request.url);
-    if (url.pathname === '/api/notify-cashout' || url.pathname === '/api/notify-cashout/') {
       if (request.method !== 'POST') return json({ ok: false, reason: 'method' }, 405);
       try { return await handleNotifyCashout(request, env); }
       catch (e) {
         console.log('notify-cashout error: ' + (e && e.message ? e.message : e));
         return json({ ok: false, reason: 'send' }, 502);
       }
-    }
     }
     if (url.pathname === '/api/ogads-offers' || url.pathname === '/api/ogads-offers/') {
       if (request.method !== 'GET') return json({ ok: false, reason: 'method' }, 405);

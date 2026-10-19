@@ -132,7 +132,7 @@
 <a href="rewards.html">Rewards<span class="dot"></span></a>
 <a href="withdraw.html">Cashout<span class="dot"></span></a>
 </nav>
-<div class="auth"><a class="user-chip" href="profile.html" id="user-chip"><span id="chip-name"><span class="skeleton" style="width:64px"></span></span></a><span class="bal" id="chip-bal"><span class="skeleton" style="width:52px"></span></span><button class="icon-btn" id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="ping"></span><span class="nbadge" id="bell-badge" style="display:none"></span></button></div>
+<a class="user-chip" href="profile.html" id="user-chip"><span id="chip-name"><span class="skeleton" style="width:64px"></span></span></a><span class="bal" id="chip-bal"><span class="skeleton" style="width:52px"></span></span><button class="icon-btn" id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="ping"></span><span class="nbadge" id="bell-badge" style="display:none"></span></button>
 </div></header>
 <main>
 <section class="page-hero"><div class="dash-shell" style="max-width:1000px">
@@ -146,15 +146,8 @@
 <span style="font-size:12px;font-weight:800;letter-spacing:.1em;color:var(--muted)">GROWING BALANCE</span>
 <span class="apr-badge" id="apr-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></svg><span id="apr-text">10,000% APR</span></span>
 </div>
-<div class="shift-ring-wrap">
-<svg class="shift-ring" viewBox="0 0 72 72">
-<circle class="shift-ring-track" cx="36" cy="36" r="30" fill="none" stroke="#E2E8F0" stroke-width="8"/>
-<circle class="shift-ring-fill" cx="36" cy="36" r="30" fill="none" stroke="#10B981" stroke-width="8" stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="0" transform="rotate(-90 36 36)"/>
-<text x="36" y="36" text-anchor="middle" font-size="15" font-weight="800" fill="#0F172A" id="shift-ring-time">6:00</text>
-</svg>
 </div>
-</div>
-<p class="tick-sub" id="tick-sub">Growing <b id="shift-per-day">—/day</b></p>
+<p class="tick-sub" id="tick-sub">Warming up…</p>
 <div class="tick" id="tick">0.0000000 <small>USD</small></div>
 <div class="boost-wrap">
 <button class="btn btn-green boost-pill" id="boost-btn" type="button"><span class="fill" id="boost-fill" aria-hidden="true"></span><span class="label"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5-11-6.5z"/></svg><span id="boost-text">Watch ad · boost 1 hour</span></span></button>
@@ -227,7 +220,6 @@
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveState, settleInvest, stakeInvest, unstakeAll, activateBoost, activateMining, fetchUserDocs, computeYield, utcDayStr, track, getUnclaimedRewards, INVEST_BASE_APR, INVEST_BOOST_APR, INVEST_BOOST_MS, MINE_SHIFT_MS, INVEST_SEED, trackVisitor, db } from './js/firebase.js';
-import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
 import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
 import { SPONSOR_URL } from './js/ptc-catalog.js';
 import { formatUSD, convertUSD, currentCountry, symbolFor, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';

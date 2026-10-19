@@ -930,8 +930,7 @@ async function handleOfferwallPostback(request, env) {
     return json({ ok: false, reason: 'write' }, 502);
   }
 }
-
-// ---------- Offerwall.me signed URL (identity signing) ----------
+/* ---------- Offerwall.me signed URL (identity signing) ----------
 // GET /api/offerwall-url?uid=USER_ID&idToken=FIREBASE_ID_TOKEN
 // Verifies the Firebase ID token, then returns a signed offerwall URL:
 // https://offerwall.me/offerwall/{PUBLIC_API_KEY}/{uid}?identityExpires=...&identitySignature=...
@@ -962,6 +961,7 @@ async function handleOfferwallUrl(request, env) {
     + '?' + new URLSearchParams({ identityExpires: expires, identitySignature: signature }).toString();
   return json({ ok: true, url: signedUrl, expires: expires });
 }
+*/
 
 // ---------- cashout mail (Resend) ----------
 // POST /api/notify-cashout { idToken, cashoutId, type: received|paid, displayAmount? }
@@ -1373,6 +1373,7 @@ export default {
         return json({ ok: false, reason: 'write' }, 502);
       }
     }
+/* ---------- OFFERWALL.ME ROUTES - COMMENTED OUT ----------
     if (url.pathname === '/api/offerwall-postback' || url.pathname === '/api/offerwall-postback/') {
       try { return await handleOfferwallPostback(request, env); }
       catch (e) {
@@ -1387,6 +1388,7 @@ export default {
         return json({ ok: false, reason: 'write' }, 502);
       }
     }
+END OFFERWALL.ME ROUTES - COMMENTED OUT ---------- */
     if (url.pathname !== '/api/gg-postback' && url.pathname !== '/api/gg-postback/') {
       try {
         if (env && env.ASSETS) return await env.ASSETS.fetch(request);

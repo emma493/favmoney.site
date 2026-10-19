@@ -149,7 +149,6 @@
 <circle class="shift-ring-track" cx="36" cy="36" r="30" fill="none" stroke="#E2E8F0" stroke-width="8"/>
 <circle class="shift-ring-fill" cx="36" cy="36" r="30" fill="none" stroke="#10B981" stroke-width="8" stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="0" transform="rotate(-90 36 36)"/>
 <text x="36" y="36" text-anchor="middle" font-size="15" font-weight="800" fill="#0F172A" id="shift-ring-time">6:00</text>
-<text x="36" y="54" text-anchor="middle" font-size="9" fill="#64748B" id="shift-ring-label">shift remaining</text>
 </svg>
 </div>
 </div>
@@ -325,7 +324,6 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
     var shiftPct=mining?Math.max(0,Math.min(1,shiftLeft/21600000)):0;
     var ring=document.getElementById('shift-ring-fill');
     var timeText=document.getElementById('shift-ring-time');
-    var labelText=document.getElementById('shift-ring-label');
     var perDayEl=document.getElementById('shift-per-day');
     if(ring){
       var offset=Math.round((1-shiftPct)*188*100)/100;
@@ -334,13 +332,10 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
       if(mining && shiftLeft>0){
         var h=Math.floor(shiftLeft/3600000), m=Math.floor((shiftLeft%3600000)/60000);
         timeText.textContent=(h>0?h+'h ':'')+m+'m';
-        labelText.textContent='shift remaining';
       } else if(mining && shiftLeft<=0){
         timeText.textContent='Shift ended';
-        labelText.textContent='watch ad to restart';
       } else {
         timeText.textContent='—';
-        labelText.textContent='no shift active';
       }
     }
     if(perDayEl){

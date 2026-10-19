@@ -148,17 +148,12 @@
 <svg class="shift-ring" viewBox="0 0 72 72">
 <circle class="shift-ring-track" cx="36" cy="36" r="30" fill="none" stroke="#E2E8F0" stroke-width="8"/>
 <circle class="shift-ring-fill" cx="36" cy="36" r="30" fill="none" stroke="#10B981" stroke-width="8" stroke-linecap="round" stroke-dasharray="188" stroke-dashoffset="0" transform="rotate(-90 36 36)"/>
-<text x="36" y="10" text-anchor="middle" font-size="10" fill="#64748B" font-weight="800">6h</text>
-<text x="56" y="42" font-size="10" fill="#64748B" font-weight="800">5h</text>
-<text x="64" y="58" font-size="10" fill="#64748B" font-weight="800">4h</text>
-<text x="50" y="70" font-size="10" fill="#64748B" font-weight="800">3h</text>
-<text x="22" y="70" font-size="10" fill="#64748B" font-weight="800">2h</text>
-<text x="8" y="58" font-size="10" fill="#64748B" font-weight="800">1h</text>
 <text x="36" y="36" text-anchor="middle" font-size="15" font-weight="800" fill="#0F172A" id="shift-ring-time">6:00</text>
 <text x="36" y="54" text-anchor="middle" font-size="9" fill="#64748B" id="shift-ring-label">shift remaining</text>
 </svg>
 </div>
 </div>
+<p class="tick-sub" id="tick-sub">Growing <b id="shift-per-day">—/day</b></p>
 <div class="tick" id="tick">0.0000000 <small>USD</small></div>
 <div class="boost-wrap">
 <button class="btn btn-green boost-pill" id="boost-btn" type="button"><span class="fill" id="boost-fill" aria-hidden="true"></span><span class="label"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5-11-6.5z"/></svg><span id="boost-text">Watch ad · boost 1 hour</span></span></button>
@@ -331,6 +326,7 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
     var ring=document.getElementById('shift-ring-fill');
     var timeText=document.getElementById('shift-ring-time');
     var labelText=document.getElementById('shift-ring-label');
+    var perDayEl=document.getElementById('shift-per-day');
     if(ring){
       var offset=Math.round((1-shiftPct)*188*100)/100;
       ring.style.strokeDashoffset=offset;
@@ -346,6 +342,9 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
         timeText.textContent='—';
         labelText.textContent='no shift active';
       }
+    }
+    if(perDayEl){
+      perDayEl.textContent=moneyPrec(perDay,4)+'/day';
     }
     var badge=document.getElementById('apr-badge');
     document.getElementById('apr-text').textContent=(boosted?'15,000% BOOSTED':(mining?'10,000% APR':'PAUSED'));

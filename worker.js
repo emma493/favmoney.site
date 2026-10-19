@@ -84,7 +84,7 @@ function timingSafeEqual(a, b) {
 }
 
 // ---------- Offerwall.me postback (signed user IDs + MD5 signature) ----------
-// MD5 (pure JS; crypto.subtle has no MD5)
+/* MD5 (pure JS; crypto.subtle has no MD5)
 function md5(str) {
   const s = String(str || '');
   let a = 1732584193, b = -271733879, c = -1732584194, d = 271733878;
@@ -195,6 +195,7 @@ function md5(str) {
   };
   return hex(a) + hex(b) + hex(c) + hex(d);
 }
+*/
 
 // ---------- Firebase Admin via REST (service account JWT -> OAuth) ----------
 let tokenCache = { token: '', exp: 0 };
@@ -1193,9 +1194,143 @@ async function handleNotifyCashout(request, env) {
   }
 }
 
+// ---------- Issues monitoring (cron + on-demand) ----------
+// Probes key pages + Firebase/Firestore every minute. Writes one doc per
+// check into issues/{check}: status error|resolved, message, firstSeen,
+// lastSeen, resolvedAt, count. Admin console reads issues/ in the Issues tab.
+// The Worker uses a service-account OAuth token (bypasses security rules),
+// so clients can never fabricate or clear issues.
+
+const MONITOR_BASE = 'https://favmoney.site';
+const MONITOR_CHECKS = [
+  { check: 'homepage', path: '/' },
+  { check: 'earn-page', path: '/earn.html' },
+  { check: 'signin-page', path: '/signin.html' },
+  { check: 'admin-console', path: '/Fav-Admin/' },
+  { check: 'css-style', path: '/css/style.css' },
+  { check: 'js-firebase', path: '/js/firebase.js' }
+];
+
+async function probeUrl(url) {
+  const res = await fetch(url, { redirect: 'follow' });
+  return { ok: res.status >= 200 && res.status < 400, status: res.status };
+}
+
+async function probeFirestore(projectId, token) {
+  try {
+    // Probe a doc that should exist: the admin console config / any anchor.
+    const d = await fsGet(projectId, token, 'issues/_probe');
+    return { ok: true, status: d ? 200 : 200 };
+  } catch (e) {
+    // 404 means Firestore is reachable (doc just doesn't exist) — that's OK.
+    const msg = String(e && e.message ? e.message : e);
+    if (msg.indexOf('404') >= 0) return { ok: true, status: 404 };
+    return { ok: false, status: 0, message: msg.slice(0, 120) };
+  }
+}
+
+function issueFields(status, message, count, firstSeen, resolvedAt) {
+  const f = {
+    check: S(''), status: S(status || 'error'), message: S(message || ''),
+    count: N(count || 1), lastSeen: T(),
+    resolvedAt: resolvedAt ? T() : null
+  };
+  if (firstSeen) f.firstSeen = T();
+  return f;
+}
+
+async function monitor(env) {
+  const projectId = (env && env.FIREBASE_PROJECT_ID) || 'favmoney';
+  const saJson = (env && (env.FIREBASE_SERVICE_ACCOUNT || env.FIREBASE_SERVICE_ACCOUNT_JSON)) || '';
+  if (!saJson) {
+    console.log('monitor: FIREBASE_SERVICE_ACCOUNT not configured');
+    return { checked: 0, errors: ['setup'] };
+  }
+  let token;
+  try { token = await googleAccessToken(saJson); }
+  catch (e) { console.log('monitor: oauth ' + (e && e.message ? e.message : e)); return { checked: 0, errors: ['oauth'] }; }
+
+  const results = [];
+  const now = new Date().toISOString();
+
+  for (const c of MONITOR_CHECKS) {
+    const check = c.check;
+    let ok = false, message = '', status = 0;
+    try {
+      const r = await probeUrl(MONITOR_BASE + c.path);
+      ok = r.ok; status = r.status;
+      if (!ok) message = 'HTTP ' + r.status;
+    } catch (e) {
+      ok = false; status = 0; message = (e && e.message ? e.message : String(e)).slice(0, 120) || 'unreachable';
+    }
+    results.push({ check, ok, status, message });
+
+    try {
+      const existing = await fsGet(projectId, token, 'issues/' + encodeURIComponent(check));
+      const fields = issueFields(ok ? 'resolved' : 'error', ok ? '' : message, ok ? 0 : 1, ok ? null : now, ok ? null : null);
+      if (existing) {
+        const curStatus = restStr(existing, 'status');
+        const curCount = restNum(existing, 'count');
+        if (ok) {
+          if (curStatus === 'error') {
+            // Recovered: flip to resolved, stamp resolvedAt.
+            await fsPatch(projectId, token, 'issues/' + encodeURIComponent(check), {
+              status: S('resolved'), message: S(''), resolvedAt: T(), lastSeen: T()
+            }, ['status', 'message', 'resolvedAt', 'lastSeen']);
+          }
+          // else already resolved — nothing to do.
+        } else {
+          if (curStatus === 'resolved' || !curStatus) {
+            // New error: firstSeen now, count 1.
+            await fsPatch(projectId, token, 'issues/' + encodeURIComponent(check), {
+              status: S('error'), message: S(message), firstSeen: T(), lastSeen: T(),
+              resolvedAt: null, count: N(1)
+            }, ['status', 'message', 'firstSeen', 'lastSeen', 'resolvedAt', 'count']);
+          } else {
+            // Ongoing error: bump count + lastSeen.
+            await fsPatch(projectId, token, 'issues/' + encodeURIComponent(check), {
+              message: S(message), lastSeen: T(), count: N(curCount + 1)
+            }, ['message', 'lastSeen', 'count']);
+          }
+        }
+      } else if (!ok) {
+        // No doc yet and it's failing: create it.
+        await fsCreate(projectId, token, 'issues', check, {
+          ...issueFields('error', message, 1, now, null)
+        });
+      }
+      // If no doc and it's OK, nothing to write (no issue to track).
+    } catch (e) {
+      console.log('monitor: issues write failed for ' + check + ': ' + (e && e.message ? e.message : e));
+    }
+  }
+
+  // Firestore connectivity probe (separate from page probes).
+  try {
+    const fr = await probeFirestore(projectId, token);
+    if (!fr.ok) {
+      console.log('monitor: firestore unreachable: ' + (fr.message || ''));
+    }
+  } catch (_) {}
+
+  return { checked: results.length, errors: results.filter(r => !r.ok).map(r => r.check) };
+}
+
 // ---------- request handler ----------
 export default {
   async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    if (url.pathname === '/api/monitor' || url.pathname === '/api/monitor/') {
+      if (request.method !== 'GET') return json({ ok: false, reason: 'method' }, 405);
+      try {
+        const result = await monitor(env);
+        return json({ ok: true, ...result });
+      } catch (e) {
+        console.log('monitor api error: ' + (e && e.message ? e.message : e));
+        return json({ ok: false, reason: 'monitor' }, 502);
+      }
+    }
+    if (url.pathname === '/api/notify-cashout' || url.pathname === '/api/notify-cashout/') {
     const url = new URL(request.url);
     if (url.pathname === '/api/notify-cashout' || url.pathname === '/api/notify-cashout/') {
       if (request.method !== 'POST') return json({ ok: false, reason: 'method' }, 405);
@@ -1204,6 +1339,7 @@ export default {
         console.log('notify-cashout error: ' + (e && e.message ? e.message : e));
         return json({ ok: false, reason: 'send' }, 502);
       }
+    }
     }
     if (url.pathname === '/api/ogads-offers' || url.pathname === '/api/ogads-offers/') {
       if (request.method !== 'GET') return json({ ok: false, reason: 'method' }, 405);
@@ -1354,9 +1490,12 @@ export default {
   },
   // Hourly cron (see wrangler.jsonc [triggers]): rebuild the public
   // top-inviters board. Never throws out — a failed run retries next hour.
+  // Every-minute cron: run site + Firebase issue monitoring.
   async scheduled(event, env, ctx) {
     try { await rebuildTopInviters(env); }
     catch (e) { console.log('top-inviters cron error: ' + (e && e.message ? e.message : e)); }
+    try { await monitor(env); }
+    catch (e) { console.log('monitor cron error: ' + (e && e.message ? e.message : e)); }
   }
 };
 

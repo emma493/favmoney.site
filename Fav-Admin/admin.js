@@ -190,7 +190,7 @@ if (window.FavLoader) FavLoader.hold();
   });
 
   /* ---------- router ---------- */
-  var VIEW_LOADERS = { overview: loadOverview, users: initUsers, payouts: loadPayouts, ledger: loadLedger, providers: loadProviders, earn: loadEarn, system: loadSystem, audit: loadAudit };
+  var VIEW_LOADERS = { overview: loadOverview, users: initUsers, payouts: loadPayouts, ledger: loadLedger, providers: loadProviders, earn: loadEarn, system: loadSystem, audit: loadAudit, issues: loadIssues };
   function showView(v) {
     document.querySelectorAll('#ad-nav button[data-view]').forEach(function (b) {
       b.classList.toggle('on', b.getAttribute('data-view') === v);
@@ -1054,16 +1054,74 @@ if (window.FavLoader) FavLoader.hold();
     } catch (_) { show('Maintenance toggle failed — check rules.'); }
   }
 
+  /* ---------- Issues monitoring view ---------- */
+  async function loadIssues() {
+    var openEl = document.getElementById('issues-open');
+    var resEl = document.getElementById('issues-resolved');
+    var lastEl = document.getElementById('issues-last');
+    try {
+      var snap = await getDocs(query(collection(db, 'issues')));
+      var rows = [];
+      snap.forEach(function (d) { rows.push({ id: d.id, ...d.data() }); });
+      rows.sort(function (a, b) {
+        var ta = a.lastSeen && typeof a.lastSeen === 'object' ? (a.lastSeen.seconds || 0) : 0;
+        var tb = b.lastSeen && typeof b.lastSeen === 'object' ? (b.lastSeen.seconds || 0) : 0;
+        return tb - ta;
+      });
+      var open = rows.filter(function (r) { return r.status === 'error'; });
+      var resolved = rows.filter(function (r) { return r.status === 'resolved'; });
+      openEl.innerHTML = open.length
+        ? '<table class="ad-tbl"><thead><tr><th>Check</th><th>Status</th><th>Message</th><th>Count</th><th>First seen</th><th>Last seen</th></tr></thead><tbody>' +
+          open.map(function (r) {
+            return '<tr><td class="mono">' + esc(r.id) + '</td>' +
+              '<td><span class="pill rejected">Error</span></td>' +
+              '<td>' + esc(r.message || '—') + '</td>' +
+              '<td class="mono">' + Number(r.count || 0) + '</td>' +
+              '<td class="mono">' + (r.firstSeen && r.firstSeen.seconds ? new Date(r.firstSeen.seconds * 1000).toISOString().slice(0, 19) : '—') + '</td>' +
+              '<td class="mono">' + (r.lastSeen && r.lastSeen.seconds ? new Date(r.lastSeen.seconds * 1000).toISOString().slice(0, 19) : '—') + '</td></tr>';
+          }).join('') + '</tbody></table>'
+        : '<p class="psub">No open issues. All checks passing.</p>';
+      resEl.innerHTML = resolved.length
+        ? '<table class="ad-tbl"><thead><tr><th>Check</th><th>Status</th><th>Message</th><th>Count</th><th>Resolved at</th></tr></thead><tbody>' +
+          resolved.map(function (r) {
+            return '<tr><td class="mono">' + esc(r.id) + '</td>' +
+              '<td><span class="pill paid">Resolved</span></td>' +
+              '<td>' + esc(r.message || '—') + '</td>' +
+              '<td class="mono">' + Number(r.count || 0) + '</td>' +
+              '<td class="mono">' + (r.resolvedAt && r.resolvedAt.seconds ? new Date(r.resolvedAt.seconds * 1000).toISOString().slice(0, 19) : '—') + '</td></tr>';
+          }).join('') + '</tbody></table>'
+        : '<p class="psub">No resolved issues yet.</p>';
+      var latest = rows[0];
+      lastEl.textContent = latest && latest.lastSeen && latest.lastSeen.seconds
+        ? 'Last checked: ' + new Date(latest.lastSeen.seconds * 1000).toISOString().slice(0, 19) + 'Z'
+        : 'Not yet checked.';
+      // Badge on nav button for open issues.
+      try {
+        var nb = document.getElementById('nav-issues');
+        if (nb) {
+          nb.style.display = open.length ? '' : 'none';
+          nb.textContent = open.length > 9 ? '9+' : open.length;
+        }
+      } catch (_) {}
+    } catch (_) {
+      openEl.innerHTML = '<p class="psub">Load failed — check rules + connection.</p>';
+      resEl.innerHTML = '';
+      lastEl.textContent = '—';
+    }
+  }
+
   /* ========================================================================
      Router updates + view wiring
      ======================================================================== */
   VIEW_LOADERS.rewards = loadRewards;
   VIEW_LOADERS.referrals = loadReferrals;
   VIEW_LOADERS.emergency = loadEmergency;
+  VIEW_LOADERS.issues = loadIssues;
 
   // Wire new buttons
   document.getElementById('r-reload') && document.getElementById('r-reload').addEventListener('click', loadRewards);
   document.getElementById('rf-reload') && document.getElementById('rf-reload').addEventListener('click', loadReferrals);
+  document.getElementById('issues-reload') && document.getElementById('issues-reload').addEventListener('click', loadIssues);
 
   // Auto-refresh: pending payouts queue + overview stats every 30s when signed in.
   setInterval(async function () {
@@ -1077,6 +1135,9 @@ if (window.FavLoader) FavLoader.hold();
       if (view === 'overview') {
         loaded.overview = false;
         loadOverview();
+      }
+      if (view === 'issues') {
+        loadIssues();
       }
       var nb = document.getElementById('nav-n');
       try {

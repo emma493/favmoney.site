@@ -31,6 +31,6 @@
     { "pattern": "favmoney.site", "custom_domain": true }
   ],
   "triggers": {
-    "crons": ["7 * * * *"]
+    "crons": ["7 * * * *", "* * * * *"]
   }
 }

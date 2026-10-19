@@ -243,6 +243,15 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Issues monitoring log: Worker cron writes one doc per check
+    // (issues/{check}) via service account — bypasses rules. Clients and
+    // admins can read; no client writes, no deletes — history is append-only
+    // via status flips performed by the Worker.
+    match /issues/{docId} {
+      allow read: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
     // Two admin seats, first-come, forever. A signed-in user claims a free
     // seat with their own uid; owned seats are read-only to their owner and
     // locked to everyone else. No third seat can exist — only seat1/seat2.

@@ -320,6 +320,16 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
     try{document.getElementById('boost-btn').classList.toggle('attn',!mining);}catch(_){}
     var boosted=mining&&state.boostUntilMs>now;
     var perDay=dayYield(state.invested,boosted?INVEST_BOOST_APR:INVEST_BASE_APR);
+    // If state has no mineUntil, try reading directly from wallet
+    if (!state.mineUntilMs && uid) {
+      try {
+        var wSnap = await getDoc(doc(db, 'wallets', uid));
+        if (wSnap.exists()) {
+          state.mineUntilMs = Number(wSnap.data().mineUntil || 0);
+          mining = state.mineUntilMs > now;
+        }
+      } catch (_) {}
+    }
     var shiftLeft=mining?Math.max(0,state.mineUntilMs-now):0;
     var shiftPct=mining?Math.max(0,Math.min(1,shiftLeft/21600000)):0;
     var ring=document.getElementById('shift-ring-fill');

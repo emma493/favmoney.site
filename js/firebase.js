@@ -23,7 +23,8 @@ export {
   createUserWithEmailAndPassword,
   signOut,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  onAuthStateChanged
 };
 
 import { coinPour } from './js/sfx.js';

@@ -190,7 +190,7 @@ if (window.FavLoader) FavLoader.hold();
   });
 
   /* ---------- router ---------- */
-  var VIEW_LOADERS = { overview: loadOverview, users: initUsers, payouts: loadPayouts, ledger: loadLedger, providers: loadProviders, earn: loadEarn, system: loadSystem, audit: loadAudit, rewards: loadRewards, referrals: loadReferrals, issues: loadIssues, emergency: loadEmergency };
+  var VIEW_LOADERS = { overview: loadOverview, users: initUsers, payouts: loadPayouts, ledger: loadLedger, providers: loadProviders, earn: loadEarn, system: loadSystem, audit: loadAudit, rewards: loadRewards, referrals: loadReferrals, issues: loadIssues, emergency: loadEmergency, visitors: loadVisitors };
   function showView(v) {
     document.querySelectorAll('#ad-nav button[data-view]').forEach(function (b) {
       b.classList.toggle('on', b.getAttribute('data-view') === v);
@@ -1111,17 +1111,80 @@ if (window.FavLoader) FavLoader.hold();
   }
 
   /* ========================================================================
+     VISITORS — anonymous session tracking + conversion
+     ======================================================================== */
+  var visitorsRows = [], visitorsLimit = 200;
+  async function loadVisitors() {
+    var out = document.getElementById('vs-out');
+    var stats = document.getElementById('vs-stats');
+    try {
+      var snap = await getDocs(query(collection(db, 'visitors'), limit(visitorsLimit)));
+      visitorsRows = [];
+      snap.forEach(function (d) { visitorsRows.push({ id: d.id, ...d.data() }); });
+      visitorsRows.sort(function (a, b) {
+        var ta = a.lastSeen && typeof a.lastSeen === 'object' ? (a.lastSeen.seconds || 0) : 0;
+        var tb = b.lastSeen && typeof b.lastSeen === 'object' ? (b.lastSeen.seconds || 0) : 0;
+        return tb - ta;
+      });
+      var total = visitorsRows.length;
+      var converted = visitorsRows.filter(function (r) { return r.converted === true; }).length;
+      var rate = total ? Math.round(converted / total * 100) : 0;
+      stats.innerHTML =
+        '<div class="ad-stat"><b>' + total + '</b><span>Total visitors</span></div>' +
+        '<div class="ad-stat"><b>' + converted + '</b><span>Signed up</span></div>' +
+        '<div class="ad-stat"><b>' + rate + '%</b><span>Conversion rate</span></div>' +
+        '<div class="ad-stat"><b>' + (total - converted) + '</b><span>Not converted</span></div>';
+      paintVisitors();
+    } catch (_) {
+      out.innerHTML = '<p class="psub">Load failed — check rules + connection.</p>';
+      stats.innerHTML = '';
+    }
+  }
+  function paintVisitors() {
+    var q = (document.getElementById('vs-q').value || '').toLowerCase().trim();
+    var f = document.getElementById('vs-filter').value;
+    var rows = visitorsRows.filter(function (r) {
+      if (q && String(r.id || '').toLowerCase().indexOf(q) < 0) return false;
+      if (f === 'converted' && r.converted !== true) return false;
+      if (f === 'not-converted' && r.converted !== false && r.uid === null) return false;
+      return true;
+    }).slice(0, 100);
+    document.getElementById('vs-out').innerHTML =
+      '<table class="ad-tbl"><thead><tr><th>Session</th><th>Country</th><th>First seen</th><th>Last seen</th><th>Page views</th><th>Page</th><th>Signed up</th><th>UID</th></tr></thead><tbody>' +
+      rows.map(function (r) {
+        var uid = r.uid || '—';
+        return '<tr><td class="mono">' + esc(r.id) + '</td>' +
+          '<td>' + esc(r.country || '—') + '</td>' +
+          '<td class="mono">' + (r.firstSeen && r.firstSeen.seconds ? new Date(r.firstSeen.seconds * 1000).toISOString().slice(0, 19) : '—') + '</td>' +
+          '<td class="mono">' + (r.lastSeen && r.lastSeen.seconds ? new Date(r.lastSeen.seconds * 1000).toISOString().slice(0, 19) : '—') + '</td>' +
+          '<td class="mono">' + Number(r.pageViews || 1) + '</td>' +
+          '<td class="mono">' + esc(r.page || '—') + '</td>' +
+          '<td><span class="pill ' + (r.converted ? 'paid' : 'pending') + '">' + (r.converted ? 'yes' : 'no') + '</span></td>' +
+          '<td class="mono">' + (uid !== '—' ? String(uid).slice(0, 8) + '…' : '—') + '</td></tr>';
+      }).join('') || '<tr><td colspan="8">No visitors yet.</td></tr>' + '</tbody></table>';
+  }
+
+  /* ========================================================================
      Router updates + view wiring
      ======================================================================== */
   VIEW_LOADERS.rewards = loadRewards;
   VIEW_LOADERS.referrals = loadReferrals;
   VIEW_LOADERS.emergency = loadEmergency;
   VIEW_LOADERS.issues = loadIssues;
+  VIEW_LOADERS.visitors = loadVisitors;
 
   // Wire new buttons
   document.getElementById('r-reload') && document.getElementById('r-reload').addEventListener('click', loadRewards);
   document.getElementById('rf-reload') && document.getElementById('rf-reload').addEventListener('click', loadReferrals);
   document.getElementById('issues-reload') && document.getElementById('issues-reload').addEventListener('click', loadIssues);
+  document.getElementById('vs-reload') && document.getElementById('vs-reload').addEventListener('click', function () { visitorsLimit = 200; loadVisitors(); });
+  document.getElementById('vs-q') && document.getElementById('vs-q').addEventListener('input', paintVisitors);
+  document.getElementById('vs-filter') && document.getElementById('vs-filter').addEventListener('change', paintVisitors);
+  document.getElementById('vs-csv') && document.getElementById('vs-csv').addEventListener('click', function () {
+    if (!visitorsRows.length) { show('Reload visitors first.'); return; }
+    downloadCSV('favmoney-visitors.csv', ['sessionId', 'country', 'firstSeen', 'lastSeen', 'pageViews', 'page', 'converted', 'uid'],
+      visitorsRows.map(function (r) { return [r.id, r.country || '', r.firstSeen ? r.firstSeen.seconds : '', r.lastSeen ? r.lastSeen.seconds : '', r.pageViews || 1, r.page || '', r.converted === true ? 'yes' : 'no', r.uid || '']; }));
+  });
 
   // Auto-refresh: pending payouts queue + overview stats every 30s when signed in.
   setInterval(async function () {

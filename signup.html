@@ -113,13 +113,14 @@
 </div></main>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, ensureUserDoc, redeemReferral, track, createUserWithEmailAndPassword } from './js/firebase.js';
+import { auth, ensureUserDoc, redeemReferral, track, createUserWithEmailAndPassword, trackVisitor, linkVisitorToUser } from './js/firebase.js';
 import { COUNTRY_MAP } from './js/countries.js';
 import { mountCountryPicker } from './js/country-picker.js';
 import { setStoredCountry, formatUSD } from './js/currency.js';
 import { currentUserOnce } from './js/guard.js';
 (function(){
   if(window.FavLoader){FavLoader.hold();setTimeout(function(){FavLoader.pageReady();},2500);}
+  trackVisitor(location.pathname);
   // Already logged in? Never show the form — bounce straight into the app.
   try{currentUserOnce().then(function(u){if(u){try{location.replace('earn.html');}catch(_){}}});}catch(_){}
   var toast=document.getElementById('toast'),tm=null;function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
@@ -176,6 +177,7 @@ import { currentUserOnce } from './js/guard.js';
       var cc=COUNTRY_MAP[countryCode];
       try{setStoredCountry(countryCode);}catch(_){}
       await ensureUserDoc(cred.user,'email',{country:countryCode,currency:cc.currency,countryName:cc.name});
+      try{await linkVisitorToUser(cred.user.uid);}catch(_){}
       var refMsg='';
       if(ref){
         try{

@@ -332,5 +332,20 @@ service cloud.firestore {
         && request.resource.data.amount == resource.data.amount;
       allow delete: if false;
     }
+
+    // Visitor session tracking: anonymous session docs keyed by random id.
+    // Visitors (unauthenticated) create/update their own doc — no PII stored.
+    // Admins can read all docs and link sessions to users on signup.
+    match /visitors/{visitorId} {
+      allow create: if !authed()
+        && request.resource.data.keys().hasOnly(['sessionId', 'firstSeen', 'lastSeen', 'page', 'country', 'uid', 'converted', 'pageViews'])
+        && request.resource.data.converted == false;
+      allow read: if authed() && isAdmin();
+      allow update: if !authed()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastSeen', 'page', 'pageViews']);
+      allow update: if authed()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uid', 'converted']);
+      allow delete: if false;
+    }
   }
 }

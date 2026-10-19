@@ -210,13 +210,14 @@
 <div class="npanel" id="bell-panel" hidden></div>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveState, settleInvest, stakeInvest, unstakeAll, activateBoost, activateMining, fetchUserDocs, computeYield, utcDayStr, track, getUnclaimedRewards, INVEST_BASE_APR, INVEST_BOOST_APR, INVEST_BOOST_MS, MINE_SHIFT_MS, INVEST_SEED } from './js/firebase.js';
+import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveState, settleInvest, stakeInvest, unstakeAll, activateBoost, activateMining, fetchUserDocs, computeYield, utcDayStr, track, getUnclaimedRewards, INVEST_BASE_APR, INVEST_BOOST_APR, INVEST_BOOST_MS, MINE_SHIFT_MS, INVEST_SEED, trackVisitor } from './js/firebase.js';
 import { SPONSOR_URL } from './js/ptc-catalog.js';
 import { formatUSD, convertUSD, currentCountry, symbolFor, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 import { requireAuth } from './js/guard.js';
 import { bellUnread, paintBell, bellToggle } from './js/notify.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
+  trackVisitor(location.pathname);
   var uid=null, state=null, investAnchor=0, anchorAccrued=0, raf=null, slowTimer=null, lastPaint=0, lastBtnSec=-1, unclaimedN=0;
   var reduced=false;
   try{reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}

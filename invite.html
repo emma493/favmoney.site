@@ -195,7 +195,7 @@
 <div class="npanel" id="bell-panel" hidden></div>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet, getUserDoc, getOrCreateMyCode, claimReferrals, claimCommissions, fetchReferrals, fetchUserDocs, track, getUnclaimedRewards, getTopInviters, logShare, SHARE_NAMES } from './js/firebase.js';
+import { auth, onAuthStateChanged, getWallet, getUserDoc, getOrCreateMyCode, claimReferrals, claimCommissions, fetchReferrals, fetchUserDocs, track, getUnclaimedRewards, getTopInviters, logShare, SHARE_NAMES, trackVisitor } from './js/firebase.js';
 import { maskHandle } from './js/avatars.js';
 import { mountHeader } from './js/header.js';
 import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
@@ -203,6 +203,7 @@ import { requireAuth } from './js/guard.js';
 import { bellUnread, paintBell, bellToggle } from './js/notify.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
+  trackVisitor(location.pathname);
   setTimeout(function(){if(document.documentElement.getAttribute('data-auth')==='member'&&window.FavLoader)FavLoader.pageReady();},6000);
   var uid=null, myCode='', poll=null, unclaimedN=0;
   var toast=document.getElementById('toast'),tm=null;

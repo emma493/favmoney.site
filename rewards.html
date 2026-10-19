@@ -149,7 +149,7 @@
 <div class="npanel" id="bell-panel" hidden></div>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet, getUserDoc, getRewardsProgress, claimMilestone, fetchUserDocs, track } from './js/firebase.js';
+import { auth, onAuthStateChanged, getWallet, getUserDoc, getRewardsProgress, claimMilestone, fetchUserDocs, track, trackVisitor } from './js/firebase.js';
 import { mountHeader } from './js/header.js';
 import { coinPour } from './js/sfx.js';
 import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
@@ -158,6 +158,7 @@ import { notifyUser } from './js/firebase.js';
 import { bellUnread, paintBell, bellToggle } from './js/notify.js';
 (function(){
   if(window.FavLoader)FavLoader.hold();
+  trackVisitor(location.pathname);
   setTimeout(function(){if(document.documentElement.getAttribute('data-auth')==='member'&&window.FavLoader)FavLoader.pageReady();},6000);
   var uid=null, unclaimedN=0;
   var toast=document.getElementById('toast'),tm=null;

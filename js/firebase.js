@@ -1139,6 +1139,63 @@ export async function logShare(uid, channel) {
   return { ok: true };
 }
 
+// ---- Visitor tracking: anonymous session docs in visitors/ collection ----
+// Each page load creates/updates a visitor doc keyed by a random session id
+// stored in localStorage (favmoney_visitor_id). No PII is stored — only
+// session id, first/last seen timestamps, page path, country, and a uid
+// link that gets filled in when the visitor signs up.
+// Admin can then see how many visitors arrive and how many convert to members.
+export const VISITOR_SESSION_KEY = 'favmoney_visitor_id';
+
+export function visitorSessionId() {
+  try {
+    var id = localStorage.getItem(VISITOR_SESSION_KEY);
+    if (!id) {
+      id = 'v_' + Math.random().toString(36).slice(2, 14) + '_' + Date.now().toString(36);
+      localStorage.setItem(VISITOR_SESSION_KEY, id);
+    }
+    return id;
+  } catch (_) { return null; }
+}
+
+export async function trackVisitor(page, country) {
+  var vid = visitorSessionId();
+  if (!vid) return null;
+  try {
+    var ref = doc(db, 'visitors', vid);
+    var snap = await getDoc(ref);
+    var now = serverTimestamp();
+    if (!snap.exists()) {
+      await setDoc(ref, {
+        sessionId: vid, firstSeen: now, lastSeen: now, page: page || '/',
+        country: country || null, uid: null, converted: false, pageViews: 1
+      });
+    } else {
+      var d = snap.data() || {};
+      await updateDoc(ref, {
+        lastSeen: now, page: page || '/', country: country || null,
+        pageViews: Number(d.pageViews || 0) + 1
+      }, ['lastSeen', 'page', 'country', 'pageViews']);
+    }
+    return vid;
+  } catch (_) { return null; }
+}
+
+// Called after a visitor signs up: links the visitor session to the new user
+// doc so Admin can see which visitors converted to members.
+export async function linkVisitorToUser(uid) {
+  var vid = visitorSessionId();
+  if (!vid) return null;
+  try {
+    var ref = doc(db, 'visitors', vid);
+    var snap = await getDoc(ref);
+    if (snap.exists()) {
+      await updateDoc(ref, { uid: uid, converted: true }, ['uid', 'converted']);
+    }
+    return vid;
+  } catch (_) { return null; }
+}
+
 // ---- Grow engine: invest task earnings, live ticker, 6-hour mining shifts ----
 // Mining runs in 6h shifts: watching an ad sets mineUntil = now + 6h, and
 // yield accrues ONLY while now <= mineUntil. Watching an ad during a live

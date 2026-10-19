@@ -133,11 +133,12 @@
 <footer><div class="wrap"><div class="foot-bottom"><span>© 2026 Favmoney · favmoney.site</span><span><a href="earn.html">Earn</a></span></div></div></footer>
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
-import { auth, onAuthStateChanged, getWallet, getUserDoc, fetchUserDocs, ptcState, claimPtcView, getUnclaimedRewards, track, PTC_DAILY_CAP } from './js/firebase.js';
+import { auth, onAuthStateChanged, getWallet, getUserDoc, fetchUserDocs, ptcState, claimPtcView, getUnclaimedRewards, track, PTC_DAILY_CAP, trackVisitor } from './js/firebase.js';
 import { adsForSlot, slotResetMs, getAd, PTC_VISIBLE_COUNT } from './js/ptc-catalog.js';
 import { formatUSD, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 import { requireAuth } from './js/guard.js';
 if (window.FavLoader) FavLoader.hold();
+trackVisitor(location.pathname);
 (function () {
   var uid=null, proofs=[], tickTimer=null, pollTimer=null;
   var toast=document.getElementById('toast'), tm=null;

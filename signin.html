@@ -81,10 +81,11 @@
 <div class="toast" id="toast" role="status"></div>
 
 <script type="module">
-import { auth, ensureUserDoc, track, signInWithEmailAndPassword, sendPasswordResetEmail } from './js/firebase.js';
+import { auth, ensureUserDoc, track, signInWithEmailAndPassword, sendPasswordResetEmail, trackVisitor, linkVisitorToUser } from './js/firebase.js';
 import { currentUserOnce, nextTarget } from './js/guard.js';
 (function(){
   if(window.FavLoader){FavLoader.hold();setTimeout(function(){FavLoader.pageReady();},2500);}
+  trackVisitor(location.pathname);
   // Already logged in? Never show the form — bounce straight into the app.
   try{currentUserOnce().then(function(u){if(u){try{location.replace(nextTarget('earn.html'));}catch(_){}}});}catch(_){}
   var toast=document.getElementById('toast'),tm=null;function show(m){toast.textContent=m;toast.classList.add('show');clearTimeout(tm);tm=setTimeout(function(){toast.classList.remove('show');},3400);}
@@ -96,6 +97,7 @@ import { currentUserOnce, nextTarget } from './js/guard.js';
     try{
       var cred=await signInWithEmailAndPassword(auth,e,p);
       await ensureUserDoc(cred.user,'email');
+      try{await linkVisitorToUser(cred.user.uid);}catch(_){}
       try{track('login',{method:'email'});}catch(_){}
       show('Signed in. Redirecting…');setTimeout(function(){try{location.href=nextTarget('earn.html');}catch(_){location.href='earn.html';}},900);
     }catch(err){

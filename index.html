@@ -390,10 +390,11 @@
   <script src="js/i18n.js"></script>
   <script src="js/main.js" defer></script>
   <script type="module">
-  import { auth, onAuthStateChanged, getWallet } from './js/firebase.js';
+  import { auth, onAuthStateChanged, getWallet, trackVisitor } from './js/firebase.js';
   import { mountHeader } from './js/header.js';
   import { formatUSD } from './js/currency.js';
   try{
+    trackVisitor(location.pathname);
     onAuthStateChanged(auth,async function(user){
       var cta=document.getElementById('guest-cta');
       var chip=document.getElementById('user-chip');

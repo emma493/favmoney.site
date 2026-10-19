@@ -227,6 +227,7 @@
 <div class="toast" id="toast" role="status"></div>
 <script type="module">
 import { auth, onAuthStateChanged, getWallet, getUserDoc, ensureSeed, getLiveState, settleInvest, stakeInvest, unstakeAll, activateBoost, activateMining, fetchUserDocs, computeYield, utcDayStr, track, getUnclaimedRewards, INVEST_BASE_APR, INVEST_BOOST_APR, INVEST_BOOST_MS, MINE_SHIFT_MS, INVEST_SEED, trackVisitor } from './js/firebase.js';
+import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
 import { SPONSOR_URL } from './js/ptc-catalog.js';
 import { formatUSD, convertUSD, currentCountry, symbolFor, adoptUserCountry, paintMoney, refreshRates } from './js/currency.js';
 import { requireAuth } from './js/guard.js';
@@ -313,7 +314,7 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
   function paintLive(){
     if(!state)return;
     var now=Date.now();
-    var mining=state.mineUntilMs>now;
+    var mining=false;
     var lv=liveShown();
     var shown=lv.shown;
     var cur=currentCountry().currency||'USD';
@@ -322,37 +323,35 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
     try{document.getElementById('boost-btn').classList.toggle('attn',!mining);}catch(_){}
     var boosted=mining&&state.boostUntilMs>now;
     var perDay=dayYield(state.invested,boosted?INVEST_BOOST_APR:INVEST_BASE_APR);
-    // If state has no mineUntil, try reading directly from wallet
-    if (!state.mineUntilMs && uid) {
-      try {
-        getDoc(doc(db, 'wallets', uid)).then(function(wSnap) {
-          if (wSnap.exists()) {
-            state.mineUntilMs = Number(wSnap.data().mineUntil || 0);
-            mining = state.mineUntilMs > now;
-          }
-        }).catch(function() {});
-      } catch (_) {}
-    }
-    var shiftLeft=mining?Math.max(0,state.mineUntilMs-now):0;
-    var shiftPct=mining?Math.max(0,Math.min(1,shiftLeft/21600000)):0;
-    var ring=document.getElementById('shift-ring-fill');
-    var timeText=document.getElementById('shift-ring-time');
     var perDayEl=document.getElementById('shift-per-day');
-    if(ring){
-      var offset=Math.round((1-shiftPct)*188*100)/100;
-      ring.style.strokeDashoffset=offset;
-      ring.classList.toggle('low', shiftLeft>0 && shiftLeft<3600000);
-      if(mining && shiftLeft>0){
-        var h=Math.floor(shiftLeft/3600000), m=Math.floor((shiftLeft%3600000)/60000);
-        timeText.textContent=(h>0?h+'h ':'')+m+'m';
-      } else if(mining && shiftLeft<=0){
-        timeText.textContent='Shift ended';
-      } else {
-        timeText.textContent='—';
-      }
-    }
     if(perDayEl){
       perDayEl.textContent=moneyPrec(perDay,4)+'/day';
+    }
+    // Read shift time directly from wallet for accurate timer
+    if (uid) {
+      getDoc(doc(db, 'wallets', uid)).then(function(wSnap) {
+        if (wSnap.exists()) {
+          var mineUntil = Number(wSnap.data().mineUntil || 0);
+          var mining = mineUntil > now;
+          var shiftLeft = mining ? Math.max(0, mineUntil - now) : 0;
+          var shiftPct = mining ? Math.max(0, Math.min(1, shiftLeft / 21600000)) : 0;
+          var ring = document.getElementById('shift-ring-fill');
+          var timeText = document.getElementById('shift-ring-time');
+          if (ring) {
+            var offset = Math.round((1 - shiftPct) * 188 * 100) / 100;
+            ring.style.strokeDashoffset = offset;
+            ring.classList.toggle('low', shiftLeft > 0 && shiftLeft < 3600000);
+            if (mining && shiftLeft > 0) {
+              var h = Math.floor(shiftLeft / 3600000), m = Math.floor((shiftLeft % 3600000) / 60000);
+              timeText.textContent = (h > 0 ? h + 'h ' : '') + m + 'm';
+            } else if (mining && shiftLeft <= 0) {
+              timeText.textContent = 'Shift ended';
+            } else {
+              timeText.textContent = '—';
+            }
+          }
+        }
+      }).catch(function() {});
     }
     var badge=document.getElementById('apr-badge');
     document.getElementById('apr-text').textContent=(boosted?'15,000% BOOSTED':(mining?'10,000% APR':'PAUSED'));
@@ -642,8 +641,9 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
         var w=await getWallet(uid);
         try{document.getElementById('chip-bal').textContent=formatUSD(w.pending);}catch(_){}
       }catch(e){}
-      await refresh();
-      finally{
+      try{
+        await refresh();
+      }finally{
         if(window.FavLoader)FavLoader.pageReady();
       }
       if(raf)cancelAnimationFrame(raf);

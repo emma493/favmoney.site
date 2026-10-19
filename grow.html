@@ -593,7 +593,7 @@ import { bellUnread, paintBell, bellToggle } from './js/notify.js';
       uid=user.uid;
       document.getElementById('member-zone').style.display='';
       document.getElementById('user-chip').setAttribute('href','profile.html');
-      document.getElementById('chip-name').textContent=(user.email||'Member').split('@')[0];
+      document.getElementById('chip-name').textContent=((user&&(user.email||'Member'))||'Member').charAt(0).toUpperCase();
       try{
         var w=await getWallet(uid);
         try{document.getElementById('chip-bal').textContent=formatUSD(w.pending);}catch(_){}

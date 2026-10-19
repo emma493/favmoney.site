@@ -33,12 +33,13 @@ export function paintGuestHeader() {
 }
 
 export async function paintMemberHeader(user) {
-  const email = (user && user.email) || 'Member';
+  const chipInitial = ((user && (user.email || user.displayName || 'Member')) || 'Member')
+    .charAt(0).toUpperCase();
   try {
     const chip = document.getElementById('user-chip');
     const name = document.getElementById('chip-name');
     if (chip) chip.setAttribute('href', 'profile.html');
-    if (name) name.textContent = email.split('@')[0];
+    if (name) name.textContent = chipInitial;
     clearAvatar();
   } catch (_) { /* noop */ }
   // Initial read to paint immediately.

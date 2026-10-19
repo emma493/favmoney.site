@@ -203,7 +203,7 @@ if (window.FavLoader) FavLoader.hold();
   requireAuth().then(async function(user){
       uid=user.uid;
       document.getElementById('user-chip').setAttribute('href','profile.html');
-      document.getElementById('chip-name').textContent=(user.email||'Member').split('@')[0];
+      document.getElementById('chip-name').textContent=((user&&(user.email||'Member'))||'Member').charAt(0).toUpperCase();
       try{
         var w=await getWallet(uid);
         try{document.getElementById('chip-bal').textContent=formatUSD(w.pending);}catch(_){}

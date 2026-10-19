@@ -190,7 +190,8 @@ import { requireAuth } from './js/guard.js';
     var cutoff=Date.now()-30*864e5,last30=proofs.filter(function(p){return tsOf(p)>cutoff;}).reduce(function(s,p){return s+Number(p.amount||0);},0);
     document.getElementById('p-30').textContent=formatUSD(last30,activeCur);
     var name=userEmail?userEmail.split('@')[0]:'Guest';
-    if(userEmail){document.getElementById('chip-name').textContent=name;var face=document.getElementById('chip-face');if(face){face.textContent=(name||'M').charAt(0).toUpperCase();face.style.background='linear-gradient(135deg,#10B981,#047857)';face.style.color='#0F172A';}}
+    var initial=(name||'M').charAt(0).toUpperCase();
+    if(userEmail){document.getElementById('chip-name').textContent=initial;var face=document.getElementById('chip-face');if(face){face.textContent=initial;face.style.background='linear-gradient(135deg,#10B981,#047857)';face.style.color='#0F172A';}}
     document.getElementById('p-name').textContent=name;
     document.getElementById('p-joined').textContent=joinedLabel;
   }

@@ -190,7 +190,7 @@ if (window.FavLoader) FavLoader.hold();
   });
 
   /* ---------- router ---------- */
-  var VIEW_LOADERS = { overview: loadOverview, users: initUsers, payouts: loadPayouts, ledger: loadLedger, providers: loadProviders, earn: loadEarn, system: loadSystem, audit: loadAudit, issues: loadIssues };
+  var VIEW_LOADERS = { overview: loadOverview, users: initUsers, payouts: loadPayouts, ledger: loadLedger, providers: loadProviders, earn: loadEarn, system: loadSystem, audit: loadAudit, rewards: loadRewards, referrals: loadReferrals, issues: loadIssues, emergency: loadEmergency };
   function showView(v) {
     document.querySelectorAll('#ad-nav button[data-view]').forEach(function (b) {
       b.classList.toggle('on', b.getAttribute('data-view') === v);

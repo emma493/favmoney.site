@@ -31,13 +31,26 @@
   ];
 
   // Direct (non-Adsterra) links rotated 1:1 with the Adsterra pool.
+  // Served in strict round-robin order so each link gets equal plays.
   var DIRECT_LINKS = [
-    'https://uplcm.com/4/12053586'
+    'https://uplcm.com/4/12053586',
+    'https://uplcm.com/4/12071361',
+    'https://uplcm.com/4/12071359',
+    'https://uplcm.com/4/12071357',
+    'https://uplcm.com/4/12071352',
+    'https://uplcm.com/4/12071351',
+    'https://uplcm.com/4/12071346',
+    'https://uplcm.com/4/12071345',
+    'https://uplcm.com/4/12071344',
+    'https://uplcm.com/4/9325845',
+    'https://uplcm.com/4/9396823'
   ];
+  var directIndex = 0;
 
   // 50/50 group pick: Adsterra vs direct link. Within Adsterra wins, one of
   // the 22 codes is chosen at random so a user never sees the same code
-  // repeatedly at one spot.
+  // repeatedly at one spot. Direct links cycle round-robin for equal
+  // distribution across the pool.
   function pickAdSource() {
     if (Math.random() < 0.5) {
       return {
@@ -45,9 +58,11 @@
         code: ADSTERRA_CODES[Math.floor(Math.random() * ADSTERRA_CODES.length)]
       };
     }
+    var url = DIRECT_LINKS[directIndex];
+    directIndex = (directIndex + 1) % DIRECT_LINKS.length;
     return {
       type: 'direct',
-      url: DIRECT_LINKS[Math.floor(Math.random() * DIRECT_LINKS.length)]
+      url: url
     };
   }
 

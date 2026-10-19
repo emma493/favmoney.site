@@ -443,9 +443,10 @@ body{padding-bottom:0}
 @media(prefers-reduced-motion:reduce){.mobilenav a.active::after{box-shadow:none}}
 
 /* ---------- Freecash dashboard (earn, offers, profile, bonuses, affiliates, withdrawals) ---------- */
-.user-chip{width:36px;height:36px;border-radius:50%;background:#F1F5F9;border:1px solid var(--line-soft);display:inline-flex;align-items:center;justify-content:center;gap:0;padding:0;font-size:14px;font-weight:700;color:#0F172A;text-decoration:none}
+.user-chip{display:inline-flex;align-items:center;gap:8px;background:#F1F5F9;border:1px solid var(--line-soft);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700;color:#0F172A;text-decoration:none}
+#chip-name{width:28px;height:28px;min-width:28px;border-radius:50%;background:#E2E8F0;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#0F172A}
+.user-chip .bal{color:var(--green-ink);font-weight:800}
 .user-chip img{width:28px;height:28px;border-radius:50%;object-fit:cover;background:#E2E8F0}
-.user-chip .bal{display:none}
 .chip-face{width:32px;height:32px;min-width:32px;border-radius:8px;background:linear-gradient(135deg,#10B981,#047857);color:#0F172A;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;text-align:center}
 .icon-btn{position:relative;width:44px;height:44px;border-radius:12px;background:#F1F5F9;border:1px solid var(--line-soft);color:#64748B;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 .icon-btn:hover{color:#0F172A;border-color:rgba(16,185,129,.5)}

